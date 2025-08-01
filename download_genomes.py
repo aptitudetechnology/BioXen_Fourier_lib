@@ -16,6 +16,13 @@ import shutil
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 try:
+    import questionary
+    from questionary import Choice
+except ImportError:
+    print("❌ questionary not installed. Install with: pip install questionary")
+    sys.exit(1)
+
+try:
     from genome.converter import convert_ncbi_bacteria_download
     from genome.schema import BioXenGenomeValidator
 except ImportError as e:
@@ -211,73 +218,193 @@ def list_available_genomes():
         print(f"   Description: {info['description']}")
         print(f"   Assembly level: {info['assembly_level']}")
 
-def main():
-    """Main CLI interface."""
-    
-    if len(sys.argv) < 2:
-        print("🧬 BioXen Genome Downloader")
-        print("\nUsage:")
-        print("  python download_genomes.py list                    # List available genomes")
-        print("  python download_genomes.py <genome_key>            # Download and convert")
-        print("  python download_genomes.py <genome_key> --keep     # Keep download files")
-        print("  python download_genomes.py all                     # Download all genomes")
-        print("\nExamples:")
-        print("  python download_genomes.py mycoplasma_genitalium")
-        print("  python download_genomes.py carsonella_ruddii --keep")
-        sys.exit(1)
-    
-    command = sys.argv[1]
-    keep_downloads = '--keep' in sys.argv
+def interactive_genome_selection():
+    """Interactive genome selection using questionary."""
+    print("🧬 BioXen Interactive Genome Downloader")
+    print("=" * 50)
     
     # Create output directory
     output_dir = Path('genomes')
     output_dir.mkdir(exist_ok=True)
     
-    if command == 'list':
-        list_available_genomes()
+    while True:
+        action = questionary.select(
+            "What would you like to do?",
+            choices=[
+                Choice("📋 List Available Genomes", "list"),
+                Choice("📥 Download Single Genome", "single"),
+                Choice("🌐 Download All Genomes", "all"),
+                Choice("❌ Exit", "exit")
+            ]
+        ).ask()
         
-    elif command == 'all':
-        print("🌐 Downloading all minimal genomes...")
-        
-        success_count = 0
-        for genome_key in MINIMAL_GENOMES.keys():
-            print(f"\n{'='*60}")
-            print(f"Processing: {genome_key}")
-            print(f"{'='*60}")
+        if action == "exit":
+            print("\n👋 Goodbye!")
+            break
             
-            if download_and_convert_genome(genome_key, output_dir, keep_downloads):
-                success_count += 1
+        elif action == "list":
+            list_available_genomes()
+            questionary.press_any_key_to_continue().ask()
+            
+        elif action == "single":
+            # Interactive single genome selection
+            genome_choices = []
+            for key, info in MINIMAL_GENOMES.items():
+                display_name = f"{info['scientific_name']} - {info['description']}"
+                genome_choices.append(Choice(display_name, key))
+            
+            selected_genome = questionary.select(
+                "Which genome would you like to download?",
+                choices=genome_choices + [Choice("🔙 Back to main menu", "back")]
+            ).ask()
+            
+            if selected_genome == "back":
+                continue
+            
+            # Ask about keeping downloads
+            keep_downloads = questionary.confirm(
+                "Keep download files after conversion? (useful for debugging)"
+            ).ask()
+            
+            print(f"\n🧬 Processing: {MINIMAL_GENOMES[selected_genome]['scientific_name']}")
+            
+            if download_and_convert_genome(selected_genome, output_dir, keep_downloads):
+                print(f"\n🎉 Successfully downloaded and converted {selected_genome}")
+                
+                # Show what was created
+                safe_name = MINIMAL_GENOMES[selected_genome]['scientific_name'].replace(' ', '_')
+                bioxen_file = output_dir / f"{safe_name}.genome"
+                json_file = output_dir / f"{safe_name}.json"
+                
+                print(f"\n📁 Files created:")
+                print(f"   {bioxen_file}")
+                print(f"   {json_file}")
+                
+                print(f"\n🧪 Test with BioXen:")
+                print(f"   python3 interactive_bioxen.py")
+                
+                # Ask if they want to run interactive BioXen
+                run_interactive = questionary.confirm(
+                    "Launch interactive BioXen now?"
+                ).ask()
+                
+                if run_interactive:
+                    print("🚀 Launching interactive BioXen...")
+                    import subprocess
+                    subprocess.run([sys.executable, "interactive_bioxen.py"])
+                    
             else:
-                print(f"❌ Failed to process {genome_key}")
-        
-        print(f"\n🎉 Downloaded and converted {success_count}/{len(MINIMAL_GENOMES)} genomes")
-        
-    elif command in MINIMAL_GENOMES:
-        print(f"🧬 Processing: {command}")
-        
-        if download_and_convert_genome(command, output_dir, keep_downloads):
-            print(f"\n🎉 Successfully downloaded and converted {command}")
+                print(f"❌ Failed to process {selected_genome}")
             
-            # Show what was created
-            safe_name = MINIMAL_GENOMES[command]['scientific_name'].replace(' ', '_')
-            bioxen_file = output_dir / f"{safe_name}.genome"
-            json_file = output_dir / f"{safe_name}.json"
+            questionary.press_any_key_to_continue().ask()
             
-            print(f"\n📁 Files created:")
-            print(f"   {bioxen_file}")
-            print(f"   {json_file}")
+        elif action == "all":
+            # Confirm downloading all genomes
+            confirm = questionary.confirm(
+                f"Download all {len(MINIMAL_GENOMES)} minimal genomes? This may take several minutes."
+            ).ask()
             
-            print(f"\n🧪 Test with BioXen:")
-            print(f"   python3 test_real_genome.py  # (using your existing syn3A.genome)")
-            print(f"   # Or modify test to use: {bioxen_file}")
+            if not confirm:
+                continue
+            
+            keep_downloads = questionary.confirm(
+                "Keep download files after conversion?"
+            ).ask()
+            
+            print("🌐 Downloading all minimal genomes...")
+            
+            success_count = 0
+            for genome_key in MINIMAL_GENOMES.keys():
+                print(f"\n{'='*60}")
+                print(f"Processing: {MINIMAL_GENOMES[genome_key]['scientific_name']}")
+                print(f"{'='*60}")
+                
+                if download_and_convert_genome(genome_key, output_dir, keep_downloads):
+                    success_count += 1
+                else:
+                    print(f"❌ Failed to process {genome_key}")
+            
+            print(f"\n🎉 Downloaded and converted {success_count}/{len(MINIMAL_GENOMES)} genomes")
+            
+            if success_count > 0:
+                run_interactive = questionary.confirm(
+                    "Launch interactive BioXen to explore your genomes?"
+                ).ask()
+                
+                if run_interactive:
+                    print("🚀 Launching interactive BioXen...")
+                    import subprocess
+                    subprocess.run([sys.executable, "interactive_bioxen.py"])
+            
+            questionary.press_any_key_to_continue().ask()
+
+def main():
+    """Main CLI interface with fallback to command line."""
+    
+    # If command line arguments provided, use legacy CLI
+    if len(sys.argv) >= 2:
+        command = sys.argv[1]
+        keep_downloads = '--keep' in sys.argv
+        
+        # Create output directory
+        output_dir = Path('genomes')
+        output_dir.mkdir(exist_ok=True)
+        
+        if command == 'list':
+            list_available_genomes()
+            
+        elif command == 'all':
+            print("🌐 Downloading all minimal genomes...")
+            
+            success_count = 0
+            for genome_key in MINIMAL_GENOMES.keys():
+                print(f"\n{'='*60}")
+                print(f"Processing: {genome_key}")
+                print(f"{'='*60}")
+                
+                if download_and_convert_genome(genome_key, output_dir, keep_downloads):
+                    success_count += 1
+                else:
+                    print(f"❌ Failed to process {genome_key}")
+            
+            print(f"\n🎉 Downloaded and converted {success_count}/{len(MINIMAL_GENOMES)} genomes")
+            
+        elif command in MINIMAL_GENOMES:
+            print(f"🧬 Processing: {command}")
+            
+            if download_and_convert_genome(command, output_dir, keep_downloads):
+                print(f"\n🎉 Successfully downloaded and converted {command}")
+                
+                # Show what was created
+                safe_name = MINIMAL_GENOMES[command]['scientific_name'].replace(' ', '_')
+                bioxen_file = output_dir / f"{safe_name}.genome"
+                json_file = output_dir / f"{safe_name}.json"
+                
+                print(f"\n📁 Files created:")
+                print(f"   {bioxen_file}")
+                print(f"   {json_file}")
+                
+                print(f"\n🧪 Test with BioXen:")
+                print(f"   python3 interactive_bioxen.py")
+            else:
+                print(f"❌ Failed to process {command}")
+                sys.exit(1)
+        
         else:
-            print(f"❌ Failed to process {command}")
+            print(f"❌ Unknown genome: {command}")
+            print("Run 'python download_genomes.py list' to see available genomes")
             sys.exit(1)
     
     else:
-        print(f"❌ Unknown genome: {command}")
-        print("Run 'python download_genomes.py list' to see available genomes")
-        sys.exit(1)
+        # No arguments - run interactive mode
+        try:
+            interactive_genome_selection()
+        except KeyboardInterrupt:
+            print("\n\n👋 Goodbye!")
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     main()
