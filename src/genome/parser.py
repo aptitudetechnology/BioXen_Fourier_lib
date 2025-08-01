@@ -212,22 +212,27 @@ class BioXenRealGenomeIntegrator:
             genes = []
             for gene_record in schema.genes:
                 gene = Gene(
-                    name=gene_record.name,
-                    essential=gene_record.essential,
-                    function=gene_record.function or "Unknown function",
+                    name=gene_record.name or gene_record.gene_id,
+                    essential=gene_record.essential or False,
+                    function=gene_record.function or gene_record.description or "Unknown function",
                     start=gene_record.start,
                     end=gene_record.end,
-                    strand=gene_record.strand.value if hasattr(gene_record.strand, 'value') else str(gene_record.strand)
+                    strand=gene_record.strand if isinstance(gene_record.strand, str) else str(gene_record.strand)
                 )
                 genes.append(gene)
             
-            # Create RealGenome instance
+            # Create RealGenome instance with correct parameters
             real_genome = RealGenome(
                 organism=schema.organism,
                 genes=genes,
-                genome_length_bp=schema.genome_size,
-                gc_content=schema.gc_content
+                total_length=schema.genome_size or 0
             )
+            
+            # Add gc_content as an attribute if available
+            if hasattr(schema, 'gc_content') and schema.gc_content:
+                real_genome.gc_content = schema.gc_content
+            else:
+                real_genome.gc_content = 40.0  # Default value
             
             return real_genome
             
