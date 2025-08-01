@@ -4,6 +4,7 @@ Interactive BioXen CLI using questionary for user-friendly genome selection and 
 """
 
 import sys
+import time
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -20,7 +21,7 @@ except ImportError:
 try:
     from genome.parser import BioXenRealGenomeIntegrator
     from genome.schema import BioXenGenomeValidator
-    from hypervisor.core import BioXenHypervisor, ResourceAllocation
+    from hypervisor.core import BioXenHypervisor, ResourceAllocation, VMState
     from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
 except ImportError as e:
     print(f"❌ Import error: {e}")
@@ -741,37 +742,43 @@ class InteractiveBioXen:
             if vm_count > 0:
                 print(f"\nVM Details:")
                 for vm_id, vm in self.hypervisor.vms.items():
-                    status_emoji = "🟢" if hasattr(vm, 'status') and vm.status == "running" else "🔴"
-                    # Convert memory_kb back to MB for display
-                    memory_kb = vm.allocation.memory_kb if hasattr(vm, 'allocation') else 0
+                    status_emoji = "🟢" if vm.state == VMState.RUNNING else "🔴" if vm.state == VMState.ERROR else "🟡" if vm.state == VMState.PAUSED else "�"
+                    # Get resource information
+                    memory_kb = vm.resources.memory_kb if vm.resources else 0
                     memory_mb = memory_kb / 1024 if memory_kb > 0 else 0
-                    ribosomes = vm.allocation.ribosomes if hasattr(vm, 'allocation') else "Unknown"
+                    ribosomes = vm.resources.ribosomes if vm.resources else "Unknown"
+                    atp_percent = vm.resources.atp_percentage if vm.resources else "Unknown"
                     
-                    print(f"  {status_emoji} {vm.name} (ID: {vm_id})")
-                    print(f"    Memory: {memory_mb:.1f} MB")
-                    print(f"    Ribosomes: {ribosomes}")
-                    print(f"    Genome size: {len(vm.genome_data):,} bp")
+                    print(f"  {status_emoji} {vm_id}")
+                    print(f"    📊 State: {vm.state.value}")
+                    print(f"    💾 Memory: {memory_mb:.1f} MB ({memory_kb} KB)")
+                    print(f"    🧬 Ribosomes: {ribosomes}")
+                    print(f"    ⚡ ATP: {atp_percent}%")
+                    print(f"    🧬 Genome: {vm.genome_template}")
+                    if vm.start_time:
+                        uptime = time.time() - vm.start_time
+                        print(f"    ⏱️  Uptime: {uptime:.1f}s")
             
             # Resource utilization  
-            total_memory_kb = sum(vm.allocation.memory_kb for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            total_memory_kb = sum(vm.resources.memory_kb for vm in self.hypervisor.vms.values() if vm.resources)
             total_memory_mb = total_memory_kb / 1024 if total_memory_kb > 0 else 0
-            total_ribosomes = sum(vm.allocation.ribosomes for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            total_ribosomes = sum(vm.resources.ribosomes for vm in self.hypervisor.vms.values() if vm.resources)
             
             print(f"\nResource Utilization:")
-            print(f"  Memory: {total_memory_mb:.1f} MB")
-            print(f"  Ribosomes: {total_ribosomes}")
+            print(f"  💾 Memory: {total_memory_mb:.1f} MB ({total_memory_kb} KB)")
+            print(f"  🧬 Ribosomes: {total_ribosomes}")
             
             # VM state breakdown
             if vm_count > 0:
                 states = {}
                 for vm in self.hypervisor.vms.values():
-                    state = getattr(vm, 'status', 'unknown')
+                    state = vm.state.value
                     states[state] = states.get(state, 0) + 1
                 
                 if states:
                     print(f"\nVM States:")
                     for state, count in states.items():
-                        emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(state, "⚪")
+                        emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵", "error": "❌"}.get(state, "⚪")
                         print(f"  {emoji} {state.title()}: {count}")
             
             # Show warning for placeholder implementations
@@ -779,13 +786,7 @@ class InteractiveBioXen:
                 print(f"\n⚠️  Note: Yeast chassis is currently a PLACEHOLDER implementation")
         else:
             print(f"\nHypervisor Status: ❌ Not initialized")
-            print(f"Use 'Select chassis and initialize hypervisor' to start")
-        
-        # Genome information
-        print(f"\nAvailable Genomes: {len(self.available_genomes)}")
-        if self.available_genomes:
-            for genome in self.available_genomes:
-                print(f"  📁 {genome['name']} ({genome['accession']}) - {len(genome['data']):,} bp")
+            print(f"Use '🖥️ Initialize Hypervisor' to start")
         
         questionary.press_any_key_to_continue().ask()
 
