@@ -147,9 +147,9 @@ def test_real_genome_integration():
                 print(f"   Available ribosomes: {resources['available_ribosomes']}")
                 print(f"   Total VMs: {len(hypervisor.vms)}")
                 
-                # Stop VM
-                hypervisor.stop_vm(vm_id)
-                print(f"   Stopped VM successfully")
+                # Pause VM (equivalent to stopping)
+                hypervisor.pause_vm(vm_id)
+                print(f"   Paused VM successfully")
             else:
                 print(f"❌ Failed to create VM: {vm_id}")
             
