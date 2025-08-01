@@ -52,14 +52,14 @@ MINIMAL_GENOMES = {
         'taxid': '114186',
         'description': 'Smallest known bacterial genome (~160kb, ~182 genes)',
         'assembly_level': 'complete',
-        'refseq_category': 'representative'
+        'refseq_category': 'reference,representative'
     },
     'buchnera_aphidicola': {
         'scientific_name': 'Buchnera aphidicola',
         'taxid': '107806',
         'description': 'Endosymbiotic bacterium with reduced genome (~640kb, ~583 genes)',
         'assembly_level': 'complete',
-        'refseq_category': 'representative'
+        'refseq_category': 'reference,representative'
     }
 }
 
@@ -78,7 +78,7 @@ def check_dependencies():
     return True
 
 def download_genome(genome_key: str, download_dir: Path) -> bool:
-    """Download a genome using ncbi-genome-download."""
+    """Download a genome using ncbi-genome-download with fallback strategies."""
     
     if genome_key not in MINIMAL_GENOMES:
         print(f"❌ Unknown genome: {genome_key}")
@@ -90,37 +90,64 @@ def download_genome(genome_key: str, download_dir: Path) -> bool:
     print(f"🌐 Downloading {info['scientific_name']}...")
     print(f"   Description: {info['description']}")
     
-    # Prepare download command
-    cmd = [
-        'ncbi-genome-download',
-        'bacteria',
-        '--taxids', info['taxid'],
-        '--assembly-levels', info['assembly_level'],
-        '--refseq-categories', info['refseq_category'],
-        '--formats', 'fasta,gff',
-        '--output-folder', str(download_dir),
-        '--parallel', '2',
-        '--retries', '3'
+    # Try different download strategies
+    strategies = [
+        # Strategy 1: Try with specified refseq category
+        {
+            'refseq_categories': info['refseq_category'],
+            'assembly_levels': info['assembly_level']
+        },
+        # Strategy 2: Try without refseq category restriction
+        {
+            'assembly_levels': info['assembly_level']
+        },
+        # Strategy 3: Try with any assembly level
+        {}
     ]
     
-    try:
-        print(f"📥 Running: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    for i, strategy in enumerate(strategies, 1):
+        print(f"📥 Attempt {i}/3: ", end="")
         
-        if result.returncode == 0:
-            print("✅ Download completed successfully")
-            return True
-        else:
-            print(f"❌ Download failed:")
-            print(f"Error: {result.stderr}")
-            return False
+        # Prepare download command
+        cmd = [
+            'ncbi-genome-download',
+            'bacteria',
+            '--taxids', info['taxid'],
+            '--formats', 'fasta,gff',
+            '--output-folder', str(download_dir),
+            '--parallel', '2',
+            '--retries', '3'
+        ]
+        
+        # Add optional parameters
+        if 'assembly_levels' in strategy:
+            cmd.extend(['--assembly-levels', strategy['assembly_levels']])
+        if 'refseq_categories' in strategy:
+            cmd.extend(['--refseq-categories', strategy['refseq_categories']])
+        
+        try:
+            print(f"Running: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
             
-    except subprocess.TimeoutExpired:
-        print("❌ Download timed out (>5 minutes)")
-        return False
-    except Exception as e:
-        print(f"❌ Download error: {e}")
-        return False
+            if result.returncode == 0:
+                print("✅ Download completed successfully")
+                return True
+            else:
+                print(f"❌ Failed: {result.stderr.strip()}")
+                if i < len(strategies):
+                    print("   Trying alternative strategy...")
+                
+        except subprocess.TimeoutExpired:
+            print("❌ Download timed out (>5 minutes)")
+            if i < len(strategies):
+                print("   Trying alternative strategy...")
+        except Exception as e:
+            print(f"❌ Download error: {e}")
+            if i < len(strategies):
+                print("   Trying alternative strategy...")
+    
+    print("❌ All download strategies failed")
+    return False
 
 def find_downloaded_genome(download_dir: Path, scientific_name: str) -> Path:
     """Find the downloaded genome directory."""
