@@ -47,7 +47,7 @@ class EcoliChassis(BaseChassis):
             self.current_resources = ChassisResources(
                 available_ribosomes=self.capabilities.max_ribosomes,
                 available_atp=100.0,  # 100% ATP capacity
-                available_memory_kb=2000,  # 2MB genomic space
+                available_memory_kb=1000000,  # 1GB genomic space (1,000,000 KB)
                 organelle_capacity={}  # No organelles in prokaryotes
             )
             
