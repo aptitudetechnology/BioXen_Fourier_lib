@@ -1,0 +1,17 @@
+# BioXen Project Requirements
+
+## Core Dependencies
+# No external dependencies required for basic functionality
+
+## Development Dependencies  
+pytest>=6.0
+pytest-cov>=2.0
+black>=21.0
+flake8>=3.8
+mypy>=0.800
+
+## Optional Dependencies for Enhanced Features
+# numpy>=1.20.0        # For advanced numerical computations
+# matplotlib>=3.3.0    # For performance visualization
+# biopython>=1.78      # For real biological sequence manipulation
+# jupyter>=1.0.0       # For interactive notebooks
