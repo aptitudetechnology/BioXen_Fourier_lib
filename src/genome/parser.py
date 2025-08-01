@@ -190,11 +190,50 @@ class BioXenRealGenomeIntegrator:
     def load_genome(self) -> RealGenome:
         """Load and parse the real genome."""
         if self.genome_path.name.lower().startswith('syn3a'):
+            # Legacy syn3A format
             self.real_genome = RealGenomeParser.parse_syn3a(self.genome_path)
+        elif self.genome_path.suffix == '.genome':
+            # New BioXen schema format
+            self.real_genome = self._parse_bioxen_format()
         else:
             raise ValueError(f"Unsupported genome format: {self.genome_path.name}")
         
         return self.real_genome
+    
+    def _parse_bioxen_format(self) -> RealGenome:
+        """Parse BioXen schema format genome files."""
+        from .schema import BioXenGenomeSchema
+        
+        try:
+            # Load the BioXen schema
+            schema = BioXenGenomeSchema.load_from_file(self.genome_path)
+            
+            # Convert to RealGenome format
+            genes = []
+            for gene_record in schema.genes:
+                gene = Gene(
+                    name=gene_record.name,
+                    essential=gene_record.essential,
+                    function=gene_record.function or "Unknown function",
+                    start=gene_record.start,
+                    end=gene_record.end,
+                    strand=gene_record.strand.value if hasattr(gene_record.strand, 'value') else str(gene_record.strand)
+                )
+                genes.append(gene)
+            
+            # Create RealGenome instance
+            real_genome = RealGenome(
+                organism=schema.organism,
+                genes=genes,
+                genome_length_bp=schema.genome_size,
+                gc_content=schema.gc_content
+            )
+            
+            return real_genome
+            
+        except Exception as e:
+            raise ValueError(f"Failed to parse BioXen format genome: {e}")
+    
     
     def create_vm_template(self) -> Dict:
         """Create BioXen VM template from real genome."""

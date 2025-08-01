@@ -58,6 +58,10 @@ class BioXenGeneRecord:
     vm_priority: Optional[int] = None
     resource_weight: Optional[float] = None
     
+    # Compatibility fields for parser integration
+    name: Optional[str] = None
+    function: Optional[str] = None
+    
     def validate(self) -> bool:
         """Validate gene record integrity."""
         if self.start <= 0 or self.end <= 0:
@@ -128,6 +132,79 @@ class BioXenGenomeSchema:
         if self.genes is None:
             self.genes = []
         self.calculate_statistics()
+    
+    @classmethod
+    def load_from_file(cls, genome_path: Path) -> 'BioXenGenomeSchema':
+        """Load a BioXen genome schema from a .genome file."""
+        genes = []
+        metadata = {}
+        
+        with open(genome_path, 'r') as f:
+            lines = f.readlines()
+        
+        # Parse file
+        for line in lines:
+            line = line.strip()
+            
+            # Skip empty lines
+            if not line:
+                continue
+                
+            # Parse metadata from comments
+            if line.startswith('#'):
+                if 'Organism:' in line:
+                    metadata['organism'] = line.split('Organism:', 1)[1].strip()
+                elif 'Strain:' in line:
+                    metadata['strain'] = line.split('Strain:', 1)[1].strip()
+                elif 'Genome size:' in line:
+                    # Extract number from "# Genome size: 580,076 bp"
+                    size_str = line.split(':', 1)[1].strip().replace(',', '').split()[0]
+                    try:
+                        metadata['genome_size'] = int(size_str)
+                    except ValueError:
+                        pass
+                continue
+            
+            # Parse gene records
+            try:
+                parts = line.split('\t')
+                if len(parts) >= 7:
+                    start = int(parts[0])
+                    length = int(parts[1])
+                    end = int(parts[2])
+                    strand = int(parts[3])
+                    gene_type = int(parts[4])
+                    gene_id = parts[5]
+                    description = parts[6] if len(parts) > 6 else ""
+                    
+                    # Create gene record
+                    gene = BioXenGeneRecord(
+                        start=start,
+                        length=length,
+                        end=end,
+                        strand=strand,
+                        gene_type=gene_type,
+                        gene_id=gene_id,
+                        description=description,
+                        essential=(gene_type == 1),  # Default: protein coding genes are essential
+                        name=gene_id,
+                        function=description
+                    )
+                    genes.append(gene)
+                    
+            except (ValueError, IndexError) as e:
+                # Skip invalid lines
+                continue
+        
+        # Create schema instance
+        schema = cls(
+            organism=metadata.get('organism', 'Unknown'),
+            strain=metadata.get('strain'),
+            genome_size=metadata.get('genome_size', 0),
+            genes=genes
+        )
+        
+        return schema
     
     def calculate_statistics(self):
         """Calculate genome statistics from gene records."""
