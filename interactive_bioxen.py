@@ -30,7 +30,6 @@ except ImportError as e:
 class InteractiveBioXen:
     def __init__(self):
         """Initialize the interactive BioXen interface."""
-        self.integrator = BioXenRealGenomeIntegrator()
         self.validator = BioXenGenomeValidator()
         self.hypervisor = None
         self.available_genomes = []
