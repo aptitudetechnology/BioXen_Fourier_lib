@@ -393,18 +393,65 @@ class InteractiveBioXen:
         if not self._check_hypervisor():
             return
             
-        if not self.available_genomes:
-            print("❌ No genomes available. Download some genomes first.")
+        print("\n🧬 Load Genome for Analysis")
+        print("📋 Scanning for available genomes...")
+        
+        # Check for real genomes in genomes directory
+        genome_dir = Path("genomes")
+        if not genome_dir.exists():
+            print("❌ No genomes directory found.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
             questionary.press_any_key_to_continue().ask()
             return
+            
+        # Find all .genome files
+        genome_files = list(genome_dir.glob("*.genome"))
         
-        print("\n🧬 Validate Genomes")
+        if not genome_files:
+            print("❌ No genome files found in genomes/ directory.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        print(f"✅ Found {len(genome_files)} genome files")
         
-        # Show available genomes
-        genome_choices = [
-            Choice(f"{g['name']} ({g['accession']})", g) 
-            for g in self.available_genomes
-        ]
+        # Create genome choices from actual files
+        genome_choices = []
+        valid_genomes = []
+        
+        for genome_file in genome_files:
+            try:
+                name = genome_file.stem
+                size_kb = genome_file.stat().st_size / 1024
+                
+                # Try to get basic stats
+                integrator = BioXenRealGenomeIntegrator(genome_file)
+                try:
+                    stats = integrator.get_genome_stats()
+                    organism = stats.get('organism', name)
+                    gene_count = stats.get('total_genes', 'Unknown')
+                    display_name = f"🧬 {organism} ({gene_count} genes, {size_kb:.1f} KB)"
+                except Exception:
+                    display_name = f"🧬 {name} ({size_kb:.1f} KB)"
+                
+                genome_info = {
+                    'name': name,
+                    'file_path': genome_file,
+                    'display_name': display_name
+                }
+                
+                genome_choices.append(Choice(display_name, genome_info))
+                valid_genomes.append(genome_info)
+                
+            except Exception as e:
+                print(f"⚠️  Warning: Could not read {genome_file.name}: {e}")
+        
+        if not valid_genomes:
+            print("❌ No valid genomes found.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
         genome_choices.append(Choice("🔍 Validate all genomes", "all"))
         
         choice = questionary.select(
@@ -415,18 +462,33 @@ class InteractiveBioXen:
         if choice is None:
             return
         
-        genomes_to_validate = self.available_genomes if choice == "all" else [choice]
+        genomes_to_validate = valid_genomes if choice == "all" else [choice]
         
         print(f"\n🔄 Validating {len(genomes_to_validate)} genome(s)...")
         
         for genome in genomes_to_validate:
             print(f"\n📋 Validating {genome['name']}...")
             try:
-                is_valid = self.validator.validate_genome(genome['data'])
-                if is_valid:
-                    print(f"   ✅ {genome['name']} - Valid genome structure")
-                else:
-                    print(f"   ❌ {genome['name']} - Invalid genome structure")
+                # Create integrator for this genome file
+                integrator = BioXenRealGenomeIntegrator(genome['file_path'])
+                
+                # Try to load and validate the genome
+                genome_data = integrator.load_genome()
+                stats = integrator.get_genome_stats()
+                
+                print(f"   ✅ {genome['name']} - Successfully loaded")
+                print(f"      🧬 Organism: {stats.get('organism', 'Unknown')}")
+                print(f"      📊 Total genes: {stats.get('total_genes', 'Unknown')}")
+                if 'essential_genes' in stats:
+                    essential_pct = stats.get('essential_percentage', 0)
+                    print(f"      ⚡ Essential genes: {stats['essential_genes']} ({essential_pct:.1f}%)")
+                
+                # Test VM template creation
+                template = integrator.create_vm_template()
+                if template:
+                    print(f"      🖥️  VM requirements: {template.get('min_memory_kb')} KB memory")
+                    print(f"      ⏱️  Estimated boot time: {template.get('boot_time_ms')} ms")
+                
             except Exception as e:
                 print(f"   ❌ {genome['name']} - Validation error: {e}")
         
@@ -437,73 +499,214 @@ class InteractiveBioXen:
         if not self._check_hypervisor():
             return
             
-        if not self.available_genomes:
-            print("❌ No genomes available. Download some genomes first.")
+        print("\n⚡ Create Virtual Machine")
+        print("📋 Scanning for available genomes...")
+        
+        # Check for real genomes in genomes directory
+        genome_dir = Path("genomes")
+        if not genome_dir.exists():
+            print("❌ No genomes directory found.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        # Find all .genome files
+        genome_files = list(genome_dir.glob("*.genome"))
+        
+        if not genome_files:
+            print("❌ No genome files found in genomes/ directory.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        print(f"✅ Found {len(genome_files)} genome files")
+        
+        # Create genome choices from actual files
+        genome_choices = []
+        valid_genomes = []
+        
+        for genome_file in genome_files:
+            try:
+                name = genome_file.stem
+                size_kb = genome_file.stat().st_size / 1024
+                
+                # Try to get detailed stats for VM requirements
+                integrator = BioXenRealGenomeIntegrator(genome_file)
+                try:
+                    stats = integrator.get_genome_stats()
+                    template = integrator.create_vm_template()
+                    
+                    organism = stats.get('organism', name)
+                    gene_count = stats.get('total_genes', 'Unknown')
+                    essential_count = stats.get('essential_genes', 'Unknown')
+                    min_memory = template.get('min_memory_kb', 136) if template else 136
+                    
+                    display_name = f"🧬 {organism} ({essential_count} essential genes, min {min_memory} KB)"
+                    
+                    genome_info = {
+                        'name': name,
+                        'organism': organism,
+                        'file_path': genome_file,
+                        'stats': stats,
+                        'template': template,
+                        'display_name': display_name
+                    }
+                    
+                except Exception:
+                    display_name = f"🧬 {name} ({size_kb:.1f} KB)"
+                    genome_info = {
+                        'name': name,
+                        'organism': name,
+                        'file_path': genome_file,
+                        'stats': None,
+                        'template': None,
+                        'display_name': display_name
+                    }
+                
+                genome_choices.append(Choice(display_name, genome_info))
+                valid_genomes.append(genome_info)
+                
+            except Exception as e:
+                print(f"⚠️  Warning: Could not read {genome_file.name}: {e}")
+        
+        if not valid_genomes:
+            print("❌ No valid genomes found.")
+            print("💡 Use 'Download New Genomes' to get real bacterial genomes from NCBI")
             questionary.press_any_key_to_continue().ask()
             return
         
-        print("\n💾 Create Virtual Machine")
-        
         # Select genome
-        genome_choices = [
-            Choice(f"{g['name']} ({g['accession']}) - {len(g['data']):,} bp", g) 
-            for g in self.available_genomes
-        ]
-        
         selected_genome = questionary.select(
-            "Select genome for the VM:",
+            "Which genome should the VM use?",
             choices=genome_choices
         ).ask()
         
         if selected_genome is None:
             return
         
-        # Get VM name
-        vm_name = questionary.text(
-            "Enter VM name:",
+            return
+        
+        # Get VM ID
+        vm_id = questionary.text(
+            "VM ID (unique identifier):",
             default=f"vm_{selected_genome['name']}"
         ).ask()
         
-        if not vm_name:
+        if not vm_id:
             return
         
-        # Resource allocation
-        print("\n⚙️  Resource Allocation")
-        memory_mb = questionary.text(
-            "Memory allocation (MB):",
-            default="512"
+        # Show genome requirements if available
+        if selected_genome['template']:
+            template = selected_genome['template']
+            min_memory_kb = template.get('min_memory_kb', 136)
+            min_cpu = template.get('min_cpu_percent', 15)
+            boot_time = template.get('boot_time_ms', 500)
+            
+            print(f"\n📊 Genome requirements:")
+            print(f"   💾 Min memory: {min_memory_kb} KB")
+            print(f"   🔧 Min CPU: {min_cpu}%")
+            print(f"   ⏱️  Boot time: {boot_time} ms")
+        else:
+            min_memory_kb = 136  # Default minimum
+        
+        # Resource allocation with intelligent defaults
+        memory_kb = questionary.text(
+            f"Memory allocation in KB (min: {min_memory_kb}):",
+            default=str(max(min_memory_kb * 2, 500))  # At least 2x minimum or 500KB
         ).ask()
         
-        if not memory_mb:
+        if not memory_kb:
             return
         
         try:
-            memory_mb = int(memory_mb)
+            memory_kb = int(memory_kb)
+            if memory_kb < min_memory_kb:
+                print(f"⚠️  Warning: Memory {memory_kb} KB is below minimum {min_memory_kb} KB")
         except ValueError:
             print("❌ Invalid memory value")
             questionary.press_any_key_to_continue().ask()
             return
         
-        print(f"\n🔄 Creating VM '{vm_name}'...")
-        print(f"   Genome: {selected_genome['name']} ({selected_genome['accession']})")
-        print(f"   Memory: {memory_mb} MB")
-        print(f"   Chassis: {self.chassis_type.value}")
+        # ATP percentage
+        atp_percentage = questionary.text(
+            "ATP percentage (10-50%):",
+            default="25"
+        ).ask()
+        
+        if not atp_percentage:
+            return
         
         try:
-            # Convert MB to KB for ResourceAllocation
-            memory_kb = memory_mb * 1024  # 1 MB = 1024 KB
+            atp_percentage = float(atp_percentage)
+            if not (10 <= atp_percentage <= 50):
+                print("⚠️  Warning: ATP percentage should be between 10-50%")
+        except ValueError:
+            print("❌ Invalid ATP percentage")
+            questionary.press_any_key_to_continue().ask()
+            return
+        
+        # Ribosome allocation
+        ribosomes = questionary.text(
+            "Ribosome allocation (5-40):",
+            default="20"
+        ).ask()
+        
+        if not ribosomes:
+            return
+        
+        try:
+            ribosomes = int(ribosomes)
+            if not (5 <= ribosomes <= 40):
+                print("⚠️  Warning: Ribosome count should be between 5-40")
+        except ValueError:
+            print("❌ Invalid ribosome count")
+            questionary.press_any_key_to_continue().ask()
+            return
+        
+        # VM Priority
+        priority_choices = [
+            Choice("🔴 High (1)", 1),
+            Choice("🟢 Normal (2)", 2),
+            Choice("🟡 Low (3)", 3)
+        ]
+        
+        priority = questionary.select(
+            "VM Priority:",
+            choices=priority_choices
+        ).ask()
+        
+        if priority is None:
+            priority = 2  # Default to normal
+        
+        print(f"\n🔄 Creating VM '{vm_id}'...")
+        print(f"   🧬 Genome: {selected_genome['organism']}")
+        print(f"   💾 Memory: {memory_kb} KB")
+        print(f"   🧬 Ribosomes: {ribosomes}")
+        print(f"   ⚡ ATP: {atp_percentage}%")
+        print(f"   🎯 Priority: {priority}")
+        print(f"   🖥️  Chassis: {self.chassis_type.value}")
+        
+        try:
+            # Load the actual genome data
+            integrator = BioXenRealGenomeIntegrator(selected_genome['file_path'])
+            genome_data = integrator.load_genome()
             
             allocation = ResourceAllocation(
                 memory_kb=memory_kb,
-                ribosomes=20  # Default ribosome allocation
+                ribosomes=ribosomes,
+                atp_percentage=atp_percentage,
+                priority=priority
             )
             
-            vm_id = self.hypervisor.create_vm(vm_name, selected_genome['data'], allocation)
-            if vm_id:
-                print(f"✅ VM created successfully!")
-                print(f"   VM ID: {vm_id}")
-                print(f"   Name: {vm_name}")
-                print(f"   Status: Ready")
+            vm_result = self.hypervisor.create_vm(vm_id, genome_data, allocation)
+            if vm_result:
+                print(f"\n✅ Virtual Machine '{vm_id}' created successfully!")
+                print(f"   🧬 Genome: {selected_genome['organism']}")
+                print(f"   💾 Memory: {memory_kb} KB")
+                print(f"   🧬 Ribosomes: {ribosomes}")
+                print(f"   ⚡ ATP: {atp_percentage}%")
+                print(f"   🎯 Priority: {priority}")
+                print(f"   📊 Status: Ready for startup")
             else:
                 print(f"❌ Failed to create VM")
         except Exception as e:
