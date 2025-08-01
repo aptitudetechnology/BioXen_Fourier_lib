@@ -174,11 +174,17 @@ class InteractiveBioXen:
         print("\n📥 Download Genomes from NCBI")
         print("✅ BioXen supports real bacterial genome downloads and management")
         print("📋 Current collection: 5 real minimal bacterial genomes available")
-        print("🔄 You can add more genomes or create simulated data for testing.")
+        print("🔄 Options: Download all real genomes, individual genomes, or create simulated data for testing.")
         
         
         # Predefined interesting genomes with emojis and descriptions
         genome_options = [
+            {
+                "display": "🌐 Download All Real Bacterial Genomes - Complete minimal genome collection",
+                "accession": "download_all_real",
+                "name": "all_real_genomes", 
+                "size": 0
+            },
             {
                 "display": "🦠 E. coli K-12 MG1655 - Classic lab strain",
                 "accession": "NC_000913.3",
@@ -225,7 +231,51 @@ class InteractiveBioXen:
         if choice is None:
             return
             
-        if choice["accession"] == "custom":
+        if choice["accession"] == "download_all_real":
+            # Launch the download_genomes.py script for real genome downloads
+            print("\n🌐 Downloading All Real Bacterial Genomes")
+            print("🔄 Launching genome downloader for complete minimal genome collection...")
+            print("📋 This will download: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola")
+            
+            confirm = questionary.confirm(
+                "Download all 5 real bacterial genomes? This may take several minutes."
+            ).ask()
+            
+            if not confirm:
+                return
+                
+            try:
+                import subprocess
+                import sys
+                
+                print("\n🔄 Starting real genome download process...")
+                
+                # Run the download_genomes.py script with 'all' command
+                result = subprocess.run([
+                    sys.executable, 'download_genomes.py', 'all'
+                ], capture_output=True, text=True, cwd=Path(__file__).parent)
+                
+                if result.returncode == 0:
+                    print("✅ Successfully downloaded all real bacterial genomes!")
+                    print("📋 Available genomes:")
+                    print("   • JCVI-Syn3A (538 KB, 187 genes)")
+                    print("   • Mycoplasma genitalium (580 KB, 1,108 genes)")
+                    print("   • Mycoplasma pneumoniae (823 KB, 1,503 genes)")
+                    print("   • Carsonella ruddii (174 KB, 473 genes)")
+                    print("   • Buchnera aphidicola (640 KB, 583 genes)")
+                    print("\n🧬 You can now use 'Browse Available Genomes' to work with these real genomes!")
+                else:
+                    print(f"❌ Download failed: {result.stderr}")
+                    print("💡 Try running 'python3 download_genomes.py' separately for more details")
+                    
+            except Exception as e:
+                print(f"❌ Error launching genome downloader: {e}")
+                print("💡 Try running 'python3 download_genomes.py all' manually")
+                
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        elif choice["accession"] == "custom":
             accession = questionary.text("Enter NCBI accession number (e.g., NC_000913.3):").ask()
             if not accession:
                 return
