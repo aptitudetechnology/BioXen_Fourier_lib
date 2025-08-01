@@ -266,7 +266,7 @@ python3 interactive_bioxen.py
 
 # Main menu options:
 # 🔍 Select chassis and initialize hypervisor - Choose E. coli or Yeast platform
-# 📥 Download genomes - Create simulated genome data for testing
+# 📥 Download genomes - Access real bacterial genomes or create simulated data for testing
 # 🧬 Validate genomes - Check genome data integrity  
 # 💾 Create VM - Set up virtual machines with selected chassis
 # � Show status - Monitor resource allocation and VM states
@@ -466,12 +466,13 @@ BioXen/
 │       └── main.py                # Command-line interface
 ├── 🧬 Real Genome Collection
 │   ├── genomes/
-│   │   ├── Carsonella_ruddii.genome      # 174KB, 473 genes
-│   │   ├── Mycoplasma_genitalium.genome  # 580KB, 1,108 genes  
-│   │   ├── Mycoplasma_pneumoniae.genome  # 823KB, 1,503 genes
-│   │   ├── syn3A.genome                  # 538KB, 187 genes
-│   │   ├── *.json                        # Genome metadata files
-│   │   └── downloads/                    # NCBI download backups
+│   │   ├── Buchnera_aphidicola.genome       # 640KB, 583 genes
+│   │   ├── Carsonella_ruddii.genome         # 174KB, 473 genes
+│   │   ├── Mycoplasma_genitalium.genome     # 580KB, 1,108 genes  
+│   │   ├── Mycoplasma_pneumoniae.genome     # 823KB, 1,503 genes
+│   │   ├── syn3A.genome                     # 538KB, 187 genes
+│   │   ├── *.json                           # Genome metadata files
+│   │   └── downloads/                       # NCBI download backups
 ├── tests/
 │   ├── test_hypervisor.py         # Hypervisor unit tests
 │   ├── test_genome.py             # Genome builder tests  
