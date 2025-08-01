@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 from genome.parser import BioXenRealGenomeIntegrator
-from hypervisor.core import BioXenHypervisor, VMConfig, ResourceAllocation
+from hypervisor.core import BioXenHypervisor, VirtualMachine, ResourceAllocation
 
 def test_real_genome_integration():
     """Test BioXen with actual Syn3A genome data."""
@@ -107,42 +107,49 @@ def test_real_genome_integration():
         print("\n🏗️  Testing with BioXen Hypervisor...")
         hypervisor = BioXenHypervisor()
         
-        # Create a VM config based on real genome
-        vm_config = VMConfig(
-            vm_id="real_syn3a_vm",
-            organism="JCVI-Syn3A",
-            genome_template="real_syn3a",
-            essential_genes=template['minimal_gene_set'][:10],  # Sample essential genes
-            genetic_circuits=[]
-        )
-        
+        # Create resource allocation based on real genome requirements
         resource_allocation = ResourceAllocation(
             memory_kb=template['min_memory_kb'] * 2,
-            cpu_percent=25,
-            storage_mb=100
+            atp_percentage=25.0,
+            ribosomes=20,
+            rna_polymerase=10,
+            priority=1
         )
         
         try:
-            # Create VM
-            vm = hypervisor.create_vm(vm_config, resource_allocation)
-            print(f"✅ Created VM: {vm.vm_id}")
-            print(f"   Status: {vm.status}")
-            print(f"   Organism: {vm.organism}")
-            print(f"   Essential genes: {len(vm.essential_genes)}")
+            # Create VM using the hypervisor's create_vm method
+            vm_id = "real_syn3a_vm"
+            success = hypervisor.create_vm(
+                vm_id=vm_id,
+                genome_template="real_syn3a",
+                resource_allocation=resource_allocation
+            )
             
-            # Start VM
-            hypervisor.start_vm(vm.vm_id)
-            vm_status = hypervisor.get_vm_status(vm.vm_id)
-            print(f"   Started VM - Status: {vm_status['status']}")
-            
-            # Test some operations
-            performance = hypervisor.get_performance_metrics()
-            print(f"   Hypervisor overhead: {performance['hypervisor_overhead']:.1f}%")
-            print(f"   Active VMs: {performance['active_vms']}")
-            
-            # Stop VM
-            hypervisor.stop_vm(vm.vm_id)
-            print(f"   Stopped VM successfully")
+            if success:
+                print(f"✅ Created VM: {vm_id}")
+                
+                # Get VM details
+                vm = hypervisor.vms[vm_id]
+                print(f"   Status: {vm.state}")
+                print(f"   Genome template: {vm.genome_template}")
+                print(f"   Memory allocated: {vm.resources.memory_kb} KB")
+                print(f"   Ribosomes: {vm.resources.ribosomes}")
+                
+                # Start VM
+                hypervisor.start_vm(vm_id)
+                vm_status = hypervisor.get_vm_status(vm_id)
+                print(f"   Started VM - Status: {vm_status['status']}")
+                
+                # Test some operations
+                performance = hypervisor.get_performance_metrics()
+                print(f"   Hypervisor overhead: {performance['hypervisor_overhead']:.1f}%")
+                print(f"   Active VMs: {performance['active_vms']}")
+                
+                # Stop VM
+                hypervisor.stop_vm(vm_id)
+                print(f"   Stopped VM successfully")
+            else:
+                print(f"❌ Failed to create VM: {vm_id}")
             
         except Exception as e:
             print(f"❌ Hypervisor test failed: {e}")
