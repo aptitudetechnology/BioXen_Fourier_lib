@@ -195,7 +195,7 @@ class BioXenGenomeSchema:
                     genes.append(gene)
                     
             except (ValueError, IndexError) as e:
-                # Skip invalid lines
+                # Skip invalid lines - don't print errors for now
                 continue
         
         # Create schema instance
