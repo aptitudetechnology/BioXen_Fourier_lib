@@ -2,7 +2,7 @@
 BioXen Hypervisor Core - Main hypervisor control logic
 
 This module implements the core biological hypervisor functionality,
-managing virtual machines running JCVI-Syn3A minimal genomes on E. coli hardware.
+managing virtual machines running bacterial genomes on configurable cellular chassis.
 """
 
 import time
@@ -10,6 +10,16 @@ import logging
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
+
+# Import chassis support
+try:
+    from ..chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
+except ImportError:
+    # Fallback for direct execution
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent.parent))
+    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
 
 class VMState(Enum):
     """Virtual Machine states"""
@@ -57,24 +67,54 @@ class BioXenHypervisor:
     """
     Main hypervisor class implementing biological virtualization
     
-    Manages multiple Syn3A virtual machines on E. coli hardware,
+    Manages multiple virtual machines on configurable cellular chassis,
     handling resource allocation, scheduling, and isolation.
     """
     
-    def __init__(self, max_vms: int = 4, total_ribosomes: int = 80):
+    def __init__(self, max_vms: int = 4, chassis_type: ChassisType = ChassisType.ECOLI, 
+                 chassis_config: Optional[Dict[str, Any]] = None):
         self.max_vms = max_vms
-        self.total_ribosomes = total_ribosomes
+        self.chassis_type = chassis_type
+        self.chassis_config = chassis_config or {}
+        
+        # Initialize chassis
+        self.chassis = self._initialize_chassis()
+        if not self.chassis or not self.chassis.initialize():
+            raise RuntimeError(f"Failed to initialize {chassis_type.value} chassis")
+        
         self.vms: Dict[str, VirtualMachine] = {}
         self.active_vm: Optional[str] = None
         self.resource_monitor = ResourceMonitor()
         self.scheduler = RoundRobinScheduler()
         
+        # Get chassis-specific resource limits
+        capabilities = self.chassis.get_capabilities()
+        self.total_ribosomes = capabilities.max_ribosomes
+        
         # Hypervisor overhead tracking
         self.hypervisor_overhead = 0.15  # 15% overhead
-        self.available_ribosomes = int(total_ribosomes * (1 - self.hypervisor_overhead))
+        self.available_ribosomes = int(self.total_ribosomes * (1 - self.hypervisor_overhead))
         
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
+        self.logger.info(f"BioXen Hypervisor initialized with {chassis_type.value} chassis")
+    
+    def _initialize_chassis(self) -> Optional[BaseChassis]:
+        """Initialize the appropriate chassis based on type"""
+        chassis_id = self.chassis_config.get("chassis_id", f"{self.chassis_type.value}_primary")
+        
+        if self.chassis_type == ChassisType.ECOLI:
+            return EcoliChassis(chassis_id)
+        elif self.chassis_type == ChassisType.YEAST:
+            return YeastChassis(chassis_id)
+        else:
+            raise ValueError(f"Unsupported chassis type: {self.chassis_type}")
+    
+    def get_chassis_info(self) -> Dict[str, Any]:
+        """Get information about the current chassis"""
+        if self.chassis:
+            return self.chassis.get_chassis_info()
+        return {"error": "No chassis initialized"}
         
     def create_vm(self, vm_id: str, genome_template: str = "syn3a_minimal", 
                   resource_allocation: Optional[ResourceAllocation] = None) -> bool:
@@ -89,23 +129,46 @@ class BioXenHypervisor:
             return False
             
         if resource_allocation is None:
-            # Default resource allocation
+            # Default resource allocation based on chassis
+            capabilities = self.chassis.get_capabilities()
+            default_ribosomes = self.available_ribosomes // 4  # Fair share
+            default_memory = 120 if self.chassis_type == ChassisType.ECOLI else 500  # KB
+            
             resource_allocation = ResourceAllocation(
-                ribosomes=self.available_ribosomes // 4,  # Fair share
+                ribosomes=default_ribosomes,
                 atp_percentage=25.0,  # 25% of ATP
                 rna_polymerase=10,
-                memory_kb=120,  # ~473 genes worth of space
+                memory_kb=default_memory,
                 priority=1
             )
-            
+        
+        # Prepare resource request for chassis
+        resource_request = {
+            "ribosomes": resource_allocation.ribosomes,
+            "atp_percentage": resource_allocation.atp_percentage,
+            "memory_kb": resource_allocation.memory_kb,
+            "rna_polymerase": resource_allocation.rna_polymerase
+        }
+        
+        # Try to allocate resources through chassis
+        if not self.chassis.allocate_resources(vm_id, resource_request):
+            self.logger.error(f"Failed to allocate chassis resources for VM {vm_id}")
+            return False
+        
+        # Create VM instance
         vm = VirtualMachine(
             vm_id=vm_id,
             genome_template=genome_template,
             resources=resource_allocation
         )
         
+        # Create isolation environment
+        if not self.chassis.create_isolation_environment(vm_id):
+            self.logger.warning(f"Failed to create isolation environment for VM {vm_id}")
+            # Continue anyway - isolation is best-effort
+        
         self.vms[vm_id] = vm
-        self.logger.info(f"Created VM {vm_id} with genome {genome_template}")
+        self.logger.info(f"VM {vm_id} created successfully with {genome_template} on {self.chassis_type.value} chassis")
         return True
         
     def start_vm(self, vm_id: str) -> bool:
@@ -160,7 +223,15 @@ class BioXenHypervisor:
             
         vm = self.vms[vm_id]
         
-        # Cleanup resources
+        # Cleanup chassis resources
+        if not self.chassis.deallocate_resources(vm_id):
+            self.logger.warning(f"Failed to deallocate chassis resources for VM {vm_id}")
+        
+        # Cleanup chassis environment
+        if not self.chassis.cleanup_vm_environment(vm_id):
+            self.logger.warning(f"Failed to cleanup chassis environment for VM {vm_id}")
+        
+        # Cleanup VM-specific resources
         self._cleanup_vm(vm)
         
         # Remove from scheduler if active
@@ -168,7 +239,7 @@ class BioXenHypervisor:
             self.active_vm = None
             
         del self.vms[vm_id]
-        self.logger.info(f"Destroyed VM {vm_id}")
+        self.logger.info(f"Destroyed VM {vm_id} and cleaned up {self.chassis_type.value} chassis resources")
         return True
         
     def get_vm_status(self, vm_id: str) -> Optional[Dict[str, Any]]:

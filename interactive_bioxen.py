@@ -21,6 +21,7 @@ try:
     from genome.parser import BioXenRealGenomeIntegrator
     from genome.schema import BioXenGenomeValidator
     from hypervisor.core import BioXenHypervisor, ResourceAllocation
+    from chassis import ChassisType
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Make sure you're running from the BioXen root directory")
@@ -31,6 +32,7 @@ class InteractiveBioXen:
     
     def __init__(self):
         self.hypervisor = None
+        self.chassis_type = ChassisType.ECOLI  # Default chassis
         self.available_genomes = {}
         self.loaded_genomes = {}
         self.active_vms = {}
@@ -51,6 +53,7 @@ class InteractiveBioXen:
                     Choice("🔍 Browse Available Genomes", "browse"),
                     Choice("🧬 Load Genome for Analysis", "load"),
                     Choice("🖥️  Initialize Hypervisor", "init_hypervisor"),
+                    Choice("⚙️  Select Chassis Type", "select_chassis"),
                     Choice("⚡ Create Virtual Machine", "create_vm"),
                     Choice("📊 Manage Running VMs", "manage_vms"),
                     Choice("📈 View System Status", "status"),
@@ -68,6 +71,8 @@ class InteractiveBioXen:
                 self.load_genome()
             elif action == "init_hypervisor":
                 self.initialize_hypervisor()
+            elif action == "select_chassis":
+                self.select_chassis()
             elif action == "create_vm":
                 self.create_virtual_machine()
             elif action == "manage_vms":
@@ -234,10 +239,63 @@ class InteractiveBioXen:
             import traceback
             traceback.print_exc()
     
+    def select_chassis(self):
+        """Select the cellular chassis for biological virtualization."""
+        print("\n⚙️  Select Chassis Type")
+        print("=" * 40)
+        
+        chassis_choice = questionary.select(
+            "Select the cellular chassis for virtualization:",
+            choices=[
+                Choice("🦠 E. coli (Prokaryotic) - Stable, well-tested", ChassisType.ECOLI),
+                Choice("🍄 Yeast (Eukaryotic) - PLACEHOLDER - Advanced features", ChassisType.YEAST),
+                Choice("🧬 Mammalian (Future) - Not yet implemented", "mammalian_disabled"),
+                Choice("🌱 Plant (Future) - Not yet implemented", "plant_disabled")
+            ]
+        ).ask()
+        
+        if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST]:
+            self.chassis_type = chassis_choice
+            
+            # Display chassis information
+            if chassis_choice == ChassisType.ECOLI:
+                print("\n🦠 E. coli Chassis Selected")
+                print("✅ Features:")
+                print("   • Prokaryotic architecture")
+                print("   • 80 ribosomes (typical)")
+                print("   • Single cellular compartment")
+                print("   • Well-characterized resource model")
+                print("   • Production-ready")
+                print("   • Maximum 4 concurrent VMs")
+                
+            elif chassis_choice == ChassisType.YEAST:
+                print("\n🍄 Yeast Chassis Selected")
+                print("⚠️  PLACEHOLDER IMPLEMENTATION")
+                print("✅ Features:")
+                print("   • Eukaryotic architecture")
+                print("   • ~200,000 ribosomes")
+                print("   • Nuclear compartmentalization")
+                print("   • Mitochondrial support")
+                print("   • Endoplasmic reticulum")
+                print("   • Advanced protein processing")
+                print("   • Maximum 2 concurrent VMs")
+                print("   • ⚠️  Currently simulated - not fully functional")
+                
+            # Reset hypervisor if it was already initialized
+            if self.hypervisor:
+                print(f"\n🔄 Hypervisor will be reinitialized with {chassis_choice.value} chassis")
+                self.hypervisor = None
+                
+            questionary.press_any_key_to_continue().ask()
+            
+        else:
+            print("❌ Selected chassis type is not yet implemented")
+            questionary.press_any_key_to_continue().ask()
+    
     def initialize_hypervisor(self):
         """Initialize the BioXen hypervisor with user configuration."""
-        print("\n🖥️  Initializing BioXen Hypervisor")
-        print("=" * 40)
+        print(f"\n🖥️  Initializing BioXen Hypervisor with {self.chassis_type.value.title()} Chassis")
+        print("=" * 60)
         
         # Get hypervisor configuration
         max_vms = questionary.text(
@@ -245,29 +303,59 @@ class InteractiveBioXen:
             default="4"
         ).ask()
         
-        total_ribosomes = questionary.text(
-            "Total ribosomes available (default: 80):",
-            default="80"
+        # Show chassis-specific information
+        if self.chassis_type == ChassisType.ECOLI:
+            default_ribosomes = "80"
+            print("🦠 E. coli chassis: prokaryotic, single compartment")
+        elif self.chassis_type == ChassisType.YEAST:
+            default_ribosomes = "200000"
+            print("🍄 Yeast chassis: eukaryotic, nuclear + organelles (PLACEHOLDER)")
+        else:
+            default_ribosomes = "80"
+        
+        # For chassis-based hypervisor, we don't directly specify ribosomes
+        # as they're determined by the chassis capabilities
+        confirm_chassis = questionary.confirm(
+            f"Initialize hypervisor with {self.chassis_type.value} chassis?"
         ).ask()
+        
+        if not confirm_chassis:
+            print("❌ Hypervisor initialization cancelled")
+            return
         
         try:
             max_vms = int(max_vms)
-            total_ribosomes = int(total_ribosomes)
             
+            # Initialize hypervisor with chassis
             self.hypervisor = BioXenHypervisor(
                 max_vms=max_vms,
-                total_ribosomes=total_ribosomes
+                chassis_type=self.chassis_type
             )
             
-            print(f"✅ Hypervisor initialized:")
+            # Get chassis info
+            chassis_info = self.hypervisor.get_chassis_info()
+            capabilities = self.hypervisor.chassis.get_capabilities()
+            
+            print(f"✅ Hypervisor initialized successfully!")
+            print(f"   🔧 Chassis: {self.chassis_type.value}")
             print(f"   🖥️  Max VMs: {max_vms}")
-            print(f"   🧬 Ribosomes: {total_ribosomes}")
+            print(f"   🧬 Ribosomes: {capabilities.max_ribosomes}")
+            print(f"   💾 Memory Architecture: {capabilities.memory_architecture}")
+            print(f"   🔬 Organelles: {'Yes' if capabilities.has_nucleus else 'No'}")
+            if self.chassis_type == ChassisType.YEAST:
+                print("   ⚠️  Note: Yeast chassis is a PLACEHOLDER implementation")
             print(f"   📊 Status: Ready")
             
             questionary.press_any_key_to_continue().ask()
             
         except ValueError as e:
             print(f"❌ Invalid configuration: {e}")
+        except RuntimeError as e:
+            print(f"❌ Failed to initialize hypervisor: {e}")
+            if "yeast" in str(e).lower():
+                print("   💡 Yeast chassis is currently a placeholder implementation")
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
     
     def create_virtual_machine(self):
         """Create a virtual machine with interactive configuration."""
@@ -523,16 +611,36 @@ class InteractiveBioXen:
         
         print(f"Available genomes: {len(self.available_genomes)}")
         print(f"Loaded genomes: {len(self.loaded_genomes)}")
+        print(f"Selected chassis: {self.chassis_type.value}")
         
         if self.hypervisor:
-            resources = self.hypervisor.get_system_resources()
+            chassis_info = self.hypervisor.get_chassis_info()
+            capabilities = self.hypervisor.chassis.get_capabilities()
+            resources = self.hypervisor.chassis.get_resource_status()
+            
             print(f"\nHypervisor Status: ✅ Active")
+            print(f"Chassis Type: {chassis_info['chassis_type']}")
             print(f"Total VMs: {len(self.hypervisor.vms)}")
-            print(f"Active VMs: {resources['active_vms']}")
-            print(f"Total ribosomes: {resources['total_ribosomes']}")
-            print(f"Available ribosomes: {resources['available_ribosomes']}")
-            print(f"Allocated ribosomes: {resources['allocated_ribosomes']}")
-            print(f"Max VMs supported: {self.hypervisor.max_vms}")
+            print(f"Max VMs supported: {capabilities.max_concurrent_vms}")
+            
+            # Chassis-specific resource information
+            print(f"\nChassis Resources:")
+            print(f"  🧬 Total ribosomes: {capabilities.max_ribosomes}")
+            print(f"  🧬 Available ribosomes: {resources.available_ribosomes}")
+            print(f"  ⚡ Available ATP: {resources.available_atp:.1f}%")
+            print(f"  💾 Available memory: {resources.available_memory_kb} KB")
+            print(f"  🏗️  Architecture: {capabilities.memory_architecture}")
+            
+            # Eukaryotic-specific organelle information
+            if capabilities.has_nucleus:
+                print(f"  🔬 Organelles:")
+                print(f"     • Nucleus: {'Yes' if capabilities.has_nucleus else 'No'}")
+                print(f"     • Mitochondria: {'Yes' if capabilities.has_mitochondria else 'No'}")
+                print(f"     • ER: {'Yes' if capabilities.has_endoplasmic_reticulum else 'No'}")
+                
+                if hasattr(self.hypervisor.chassis, 'get_organelle_status'):
+                    organelle_status = self.hypervisor.chassis.get_organelle_status()
+                    print(f"     • Available mitochondria: {organelle_status.get('mitochondria', {}).get('available', 'N/A')}")
             
             # VM breakdown by state
             states = {}
@@ -545,8 +653,13 @@ class InteractiveBioXen:
                 for state, count in states.items():
                     emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(state, "⚪")
                     print(f"  {emoji} {state.title()}: {count}")
+                    
+            # Show warning for placeholder implementations
+            if self.chassis_type == ChassisType.YEAST:
+                print(f"\n⚠️  Note: Yeast chassis is currently a PLACEHOLDER implementation")
         else:
             print(f"\nHypervisor Status: ❌ Not initialized")
+            print(f"Use 'Initialize Hypervisor' to start with {self.chassis_type.value} chassis")
         
         questionary.press_any_key_to_continue().ask()
     
