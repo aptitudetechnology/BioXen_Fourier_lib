@@ -168,7 +168,16 @@ class BioXenHypervisor:
             # Continue anyway - isolation is best-effort
         
         self.vms[vm_id] = vm
-        self.logger.info(f"VM {vm_id} created successfully with {genome_template} on {self.chassis_type.value} chassis")
+        
+        # Create concise genome description for logging
+        if hasattr(genome_template, 'organism'):
+            genome_desc = f"{genome_template.organism} ({len(genome_template.genes)} genes)"
+        elif isinstance(genome_template, str):
+            genome_desc = genome_template
+        else:
+            genome_desc = f"{type(genome_template).__name__}"
+            
+        self.logger.info(f"VM {vm_id} created successfully with {genome_desc} on {self.chassis_type.value} chassis")
         return True
         
     def start_vm(self, vm_id: str) -> bool:
