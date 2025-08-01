@@ -12,19 +12,38 @@ python3 --version || {
 
 echo "✅ Python 3 found"
 
-# Run quick tests
+# Install pytest if not available
 echo ""
-echo "Running basic functionality tests..."
-python3 -m pytest tests/ -v --tb=short || {
-    echo "⚠️  Some tests failed, but continuing with demo"
+echo "Installing pytest for testing..."
+python3 -m pip install pytest --user --quiet 2>/dev/null || {
+    echo "⚠️  Could not install pytest, skipping tests"
+    SKIP_TESTS=1
 }
 
+# Run quick tests
+if [ -z "$SKIP_TESTS" ]; then
+    echo ""
+    echo "Running basic functionality tests..."
+    python3 -m pytest tests/ -v --tb=short 2>/dev/null || {
+        echo "⚠️  Some tests failed, but continuing with demo"
+    }
+else
+    echo "⚠️  Skipping tests (pytest not available)"
+fi
+
 echo ""
-echo "🚀 Starting BioXen demo..."
+echo "🚀 Running BioXen test suite..."
 echo ""
 
-# Run the demo
-python3 demo.py
+# Run our custom test script
+python3 test_bioxen.py
+
+echo ""
+echo "🎬 Running simple demo..."
+echo ""
+
+# Run the simple demo
+python3 simple_demo.py
 
 echo ""
 echo "🎉 BioXen demo completed!"
