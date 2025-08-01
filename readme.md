@@ -667,6 +667,120 @@ python3 test_genome_scanning.py
 - [ ] **Genome comparison tools** - Analyze differences between bacterial species
 - [ ] **Synthetic genome designer** - Create custom minimal genomes for virtualization
 
+## ❓ Frequently Asked Questions
+
+### **Q: What happens inside the VMs?**
+
+That's the fascinating core of BioXen - what actually happens inside these virtual machines when they're "running." Here's what's being simulated:
+
+#### **🧬 Virtual Cellular Processes**
+When a VM is created with a bacterial genome (like JCVI-Syn3A or Mycoplasma genitalium), it simulates the essential biological processes:
+
+```python
+# What's happening inside vm_syn3A:
+- 🧬 Gene Expression: 187 genes being "transcribed" and "translated"
+- 🔄 Protein Synthesis: Virtual ribosomes (20 allocated) producing proteins
+- ⚡ Energy Management: 25% ATP allocation powering cellular processes
+- 💾 Memory Usage: 500 KB simulating cellular workspace for molecular processes
+- 🎯 Essential Functions: 68 critical genes (36.4%) maintaining "cell viability"
+```
+
+#### **🔬 Core Biological Simulation**
+Each VM models these fundamental cellular operations:
+
+**Gene Expression Pipeline:**
+```
+DNA → RNA → Proteins → Cellular Functions
+```
+- **Transcription**: Converting gene sequences to mRNA templates
+- **Translation**: Ribosomes reading mRNA to synthesize proteins  
+- **Protein Folding**: Simulated protein structures and functions
+- **Metabolic Pathways**: Essential biochemical reactions for survival
+
+**Resource Management:**
+- **Ribosome Scheduling**: Time-sliced access to protein synthesis machinery
+- **ATP Consumption**: Energy costs for different cellular processes
+- **Memory Allocation**: Space for storing molecular intermediates
+- **Priority Systems**: Critical survival functions get guaranteed resources
+
+#### **🧬 Real Genome Constraints**
+The VMs aren't arbitrary - they follow real biological rules from the actual genomes:
+
+**JCVI-Syn3A VM** (187 genes):
+```
+Essential Functions:
+- DNA replication (DNA polymerase III)
+- Protein synthesis (ribosomal proteins, tRNA ligases)
+- Energy production (ATP synthase components)
+- Cell division machinery
+- Basic metabolism (glycolysis, nucleotide synthesis)
+```
+
+**Mycoplasma pneumoniae VM** (1,503 genes):
+```
+Enhanced Capabilities:
+- More complex metabolism
+- Additional regulatory systems
+- Expanded protein synthesis machinery
+- More sophisticated DNA repair
+- Enhanced stress response
+```
+
+#### **📊 Virtual Machine States**
+VMs progress through realistic biological states:
+
+- **🔵 Created**: Genome loaded, resources allocated, ready to "boot"
+- **🟢 Running**: All biological processes actively simulated
+- **🟡 Paused**: Processes suspended (like cellular dormancy)
+- **🔴 Stopped**: All processes halted, resources released
+- **❌ Error**: Critical process failure (like cell death)
+
+#### **🖥️ Hypervisor Orchestration**
+The BioXen hypervisor manages multiple VMs by:
+
+```python
+# Multi-VM coordination
+vm_syn3A = {
+    'active_genes': 142,     # Genes currently being expressed
+    'ribosome_usage': 18/20, # 90% ribosome utilization
+    'atp_consumption': 22%,  # Current energy usage
+    'uptime': 24.6,         # Seconds of continuous operation
+}
+
+vm_pneumoniae = {
+    'active_genes': 890,     # More complex gene expression
+    'ribosome_usage': 19/20, # High protein synthesis
+    'atp_consumption': 24%,  # Similar energy needs
+    'uptime': 6.3,          # Recently created
+}
+```
+
+#### **⚖️ Biological Realism**
+The simulations incorporate real biological constraints:
+
+- **Essential Gene Requirements**: VMs can't survive without critical genes
+- **Resource Competition**: Multiple VMs compete for limited ribosomes/ATP
+- **Metabolic Bottlenecks**: Some processes require specific enzyme availability
+- **Growth Phases**: VMs simulate bacterial growth curves and division cycles
+
+#### **📈 Monitoring & Debugging**
+You can observe VM internals through:
+
+```bash
+# System status shows live VM metrics
+📊 VM Details:
+  🔵 vm_syn3A
+    📊 State: created (ready to start biological processes)
+    🧬 Genome: JCVI-Syn3A (187 genes loaded)
+    ⚡ Active Processes: Gene expression, protein synthesis
+    💾 Molecular Workspace: 500 KB allocated
+    🔄 Resource Usage: 20 ribosomes, 25% ATP
+```
+
+**The Big Picture:** Each BioXen VM is essentially a **computational model of a living bacterial cell**, running the same essential processes that keep real bacteria alive - just simulated in software rather than actual biochemistry. The hypervisor manages multiple "cells" sharing the same computational "host organism" (E. coli chassis).
+
+It's like having multiple bacterial species living inside a single simulated E. coli cell, each running their own genetic programs while sharing the cellular machinery! 🦠✨
+
 ## 🤝 Contributing
 
 This project represents a novel intersection of computer science and computational biology. Contributions welcome in:
