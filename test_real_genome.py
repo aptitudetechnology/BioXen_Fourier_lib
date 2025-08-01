@@ -141,9 +141,11 @@ def test_real_genome_integration():
                 print(f"   Started VM - Status: {vm_status['state']}")
                 
                 # Test some operations
-                performance = hypervisor.get_performance_metrics()
-                print(f"   Hypervisor overhead: {performance['hypervisor_overhead']:.1f}%")
-                print(f"   Active VMs: {performance['active_vms']}")
+                resources = hypervisor.get_system_resources()
+                active_vms = len([vm for vm in hypervisor.vms.values() if vm.state.value == 'running'])
+                print(f"   Active VMs: {active_vms}")
+                print(f"   Available ribosomes: {resources['available_ribosomes']}")
+                print(f"   Total VMs: {len(hypervisor.vms)}")
                 
                 # Stop VM
                 hypervisor.stop_vm(vm_id)
