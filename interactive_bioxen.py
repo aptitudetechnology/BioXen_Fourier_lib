@@ -44,12 +44,14 @@ class InteractiveBioXen:
             print("="*60)
             
             choices = [
-                Choice("🔍 Select chassis and initialize hypervisor", "init_hypervisor"),
+                Choice("🔍 Browse Available Genomes", "browse_genomes"),
+                Choice("🧬 Load Genome for Analysis", "validate"),
+                Choice("🖥️  Initialize Hypervisor", "init_hypervisor"),
                 Choice("📥 Download genomes", "download"),
-                Choice("🧬 Validate genomes", "validate"),
-                Choice("💾 Create VM", "create_vm"),
-                Choice("📊 Show status", "status"),
-                Choice("🗑️  Destroy VM", "destroy_vm"),
+                Choice("⚡ Create Virtual Machine", "create_vm"),
+                Choice("� Manage Running VMs", "status"),
+                Choice("� View System Status", "view_status"),
+                Choice("� Download New Genomes", "download_new"),
                 Choice("❌ Exit", "exit"),
             ]
             
@@ -64,16 +66,22 @@ class InteractiveBioXen:
                 break
             
             try:
-                if action == "init_hypervisor":
+                if action == "browse_genomes":
+                    self.browse_available_genomes()
+                elif action == "init_hypervisor":
                     self.initialize_hypervisor()
                 elif action == "download":
                     self.download_genomes()
+                elif action == "download_new":
+                    self.download_genomes()  # Same as download for now
                 elif action == "validate":
                     self.validate_genomes()
                 elif action == "create_vm":
                     self.create_vm()
                 elif action == "status":
                     self.show_status()
+                elif action == "view_status":
+                    self.show_status()  # Same as status for now
                 elif action == "destroy_vm":
                     self.destroy_vm()
             except KeyboardInterrupt:
@@ -163,6 +171,71 @@ class InteractiveBioXen:
             
         except Exception as e:
             print(f"❌ Failed to initialize hypervisor: {e}")
+        
+        questionary.press_any_key_to_continue().ask()
+
+    def browse_available_genomes(self):
+        """Browse and display available genomes with detailed information."""
+        print("\n🔍 Browse Available Genomes")
+        print("📋 Scanning local genome collection...")
+        
+        # Check for real genomes in genomes directory
+        genome_dir = Path("genomes")
+        if not genome_dir.exists():
+            print("❌ No genomes directory found.")
+            print("💡 Use 'Download genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        # Find all .genome files
+        genome_files = list(genome_dir.glob("*.genome"))
+        
+        if not genome_files:
+            print("❌ No genome files found in genomes/ directory.")
+            print("💡 Use 'Download genomes' to get real bacterial genomes from NCBI")
+            questionary.press_any_key_to_continue().ask()
+            return
+            
+        print(f"✅ Found {len(genome_files)} real bacterial genomes")
+        print("="*60)
+        
+        # Display each genome with details
+        for i, genome_file in enumerate(genome_files, 1):
+            try:
+                # Try to get basic info about the genome
+                name = genome_file.stem
+                size_kb = genome_file.stat().st_size / 1024
+                
+                print(f"\n{i}. 🧬 {name}")
+                print(f"   📁 File: {genome_file.name}")
+                print(f"   💾 Size: {size_kb:.1f} KB")
+                
+                # Try to load more detailed info if possible
+                integrator = BioXenRealGenomeIntegrator(genome_file)
+                try:
+                    stats = integrator.get_genome_stats()
+                    if stats:
+                        print(f"   🔬 Genes: {stats.get('total_genes', 'Unknown')}")
+                        if 'essential_genes' in stats:
+                            essential_pct = stats.get('essential_percentage', 0)
+                            print(f"   ⚡ Essential: {stats['essential_genes']} ({essential_pct:.1f}%)")
+                        print(f"   🦠 Organism: {stats.get('organism', 'Unknown')}")
+                        
+                        # Show VM requirements
+                        template = integrator.create_vm_template()
+                        if template:
+                            print(f"   🖥️  VM Memory: {template.get('min_memory_kb', 'Unknown')} KB")
+                            print(f"   ⏱️  Boot Time: {template.get('boot_time_ms', 'Unknown')} ms")
+                except Exception:
+                    print(f"   📊 Status: File available (details pending validation)")
+                    
+            except Exception as e:
+                print(f"   ❌ Error reading genome: {e}")
+                
+        print("\n" + "="*60)
+        print(f"📋 Total: {len(genome_files)} real bacterial genomes available")
+        print("💡 Use 'Load Genome for Analysis' to work with a specific genome")
+        print("🧬 Use 'Create Virtual Machine' to virtualize these genomes")
         
         questionary.press_any_key_to_continue().ask()
 
