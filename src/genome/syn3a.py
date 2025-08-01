@@ -201,7 +201,14 @@ class VMImageBuilder:
     
     def _add_vm_tags(self, genome: Syn3AGenome, vm_id: str) -> None:
         """Add VM-specific protein tags to all genes"""
-        from ..genetics.circuits import ProteinTagging
+        try:
+            from ..genetics.circuits import ProteinTagging
+        except ImportError:
+            # Fallback for direct execution
+            import sys
+            import os
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+            from genetics.circuits import ProteinTagging
         
         tagger = ProteinTagging()
         tag_sequence = tagger.get_protein_tag(vm_id)
