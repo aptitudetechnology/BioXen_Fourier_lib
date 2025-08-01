@@ -34,6 +34,7 @@ class InteractiveBioXen:
         self.hypervisor = None
         self.available_genomes = []
         self.chassis_type = ChassisType.ECOLI  # Default chassis
+        # Note: integrator will be created dynamically when needed for downloads
 
     def main_menu(self):
         """Display and handle the main menu."""
@@ -171,38 +172,46 @@ class InteractiveBioXen:
             return
             
         print("\n📥 Download Genomes from NCBI")
+        print("⚠️  Note: This is currently a placeholder feature")
+        print("For now, we'll create simulated genome data for testing.")
         
         # Predefined interesting genomes with emojis and descriptions
         genome_options = [
             {
                 "display": "🦠 E. coli K-12 MG1655 - Classic lab strain",
                 "accession": "NC_000913.3",
-                "name": "E_coli_K12_MG1655"
+                "name": "E_coli_K12_MG1655",
+                "size": 4641652
             },
             {
                 "display": "🍄 S. cerevisiae S288C - Baker's yeast reference",
                 "accession": "NC_001133.9", 
-                "name": "S_cerevisiae_S288C"
+                "name": "S_cerevisiae_S288C",
+                "size": 230218
             },
             {
                 "display": "🔬 Mycoplasma genitalium - Minimal genome",
                 "accession": "NC_000908.2",
-                "name": "M_genitalium"
+                "name": "M_genitalium",
+                "size": 580076
             },
             {
                 "display": "🌊 Prochlorococcus marinus - Tiny ocean bacteria",
                 "accession": "NC_009840.1",
-                "name": "P_marinus"
+                "name": "P_marinus",
+                "size": 1751080
             },
             {
                 "display": "💀 Clostridium botulinum - Botox producer",
                 "accession": "NC_009495.1", 
-                "name": "C_botulinum"
+                "name": "C_botulinum",
+                "size": 3886916
             },
             {
                 "display": "🧪 Custom genome - Enter your own accession",
                 "accession": "custom",
-                "name": "custom"
+                "name": "custom",
+                "size": 1000000
             }
         ]
         
@@ -221,14 +230,21 @@ class InteractiveBioXen:
             name = questionary.text("Enter a name for this genome:").ask()
             if not name:
                 name = accession.replace(".", "_")
+            size = 1000000  # Default size for custom genomes
         else:
             accession = choice["accession"]
             name = choice["name"]
+            size = choice["size"]
         
-        print(f"\n🔄 Downloading {accession}...")
+        print(f"\n🔄 Simulating download of {accession}...")
+        print(f"⚠️  Creating placeholder genome data for demonstration")
         
         try:
-            genome_data = self.integrator.download_genome(accession)
+            # Create simulated genome data (random DNA sequence)
+            import random
+            bases = ['A', 'T', 'G', 'C']
+            genome_data = ''.join(random.choice(bases) for _ in range(size))
+            
             if genome_data:
                 # Add to available genomes
                 self.available_genomes.append({
@@ -236,13 +252,14 @@ class InteractiveBioXen:
                     "name": name,
                     "data": genome_data
                 })
-                print(f"✅ Successfully downloaded {name}")
+                print(f"✅ Successfully created simulated {name}")
                 print(f"   Accession: {accession}")
                 print(f"   Size: {len(genome_data):,} base pairs")
+                print(f"   ⚠️  Note: This is simulated data for testing purposes")
             else:
-                print(f"❌ Failed to download {accession}")
+                print(f"❌ Failed to create genome data for {accession}")
         except Exception as e:
-            print(f"❌ Error downloading genome: {e}")
+            print(f"❌ Error creating genome data: {e}")
         
         questionary.press_any_key_to_continue().ask()
 
