@@ -754,7 +754,19 @@ class InteractiveBioXen:
                     print(f"    💾 Memory: {memory_mb:.1f} MB ({memory_kb} KB)")
                     print(f"    🧬 Ribosomes: {ribosomes}")
                     print(f"    ⚡ ATP: {atp_percent}%")
-                    print(f"    🧬 Genome: {vm.genome_template}")
+                    
+                    # Show concise genome info instead of full object
+                    if hasattr(vm.genome_template, 'organism'):
+                        # Real genome
+                        genome_info = f"{vm.genome_template.organism} ({len(vm.genome_template.genes)} genes)"
+                    elif isinstance(vm.genome_template, str):
+                        # Genome name string
+                        genome_info = vm.genome_template
+                    else:
+                        # Unknown format
+                        genome_info = f"{type(vm.genome_template).__name__}"
+                    
+                    print(f"    🧬 Genome: {genome_info}")
                     if vm.start_time:
                         uptime = time.time() - vm.start_time
                         print(f"    ⏱️  Uptime: {uptime:.1f}s")
