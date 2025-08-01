@@ -167,7 +167,9 @@ class BioXenGenomeSchema:
             
             # Parse gene records
             try:
-                parts = line.split('\t')
+                # The BioXen format uses space-separated values, not tabs
+                # Format: start length end strand type gene_id description
+                parts = line.split()
                 if len(parts) >= 7:
                     start = int(parts[0])
                     length = int(parts[1])
@@ -175,7 +177,7 @@ class BioXenGenomeSchema:
                     strand = int(parts[3])
                     gene_type = int(parts[4])
                     gene_id = parts[5]
-                    description = parts[6] if len(parts) > 6 else ""
+                    description = ' '.join(parts[6:]) if len(parts) > 6 else ""
                     
                     # Create gene record
                     gene = BioXenGeneRecord(

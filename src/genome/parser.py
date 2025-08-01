@@ -212,12 +212,13 @@ class BioXenRealGenomeIntegrator:
             genes = []
             for gene_record in schema.genes:
                 gene = Gene(
-                    name=gene_record.name or gene_record.gene_id,
-                    essential=gene_record.essential or False,
-                    function=gene_record.function or gene_record.description or "Unknown function",
                     start=gene_record.start,
+                    length=gene_record.length,
                     end=gene_record.end,
-                    strand=gene_record.strand if isinstance(gene_record.strand, str) else str(gene_record.strand)
+                    strand=gene_record.strand,
+                    type=gene_record.gene_type,
+                    id=gene_record.gene_id,
+                    description=gene_record.description or "Unknown function"
                 )
                 genes.append(gene)
             
