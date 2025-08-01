@@ -8,6 +8,8 @@
 
 **The world's first interactive biological hypervisor for virtualizing real bacterial genomes**
 
+> **🖥️ Computational Platform**: BioXen is a **pure software simulation** that models biological virtualization using real genome data from NCBI. No wet lab work required - everything runs as computational processes that simulate cellular biology.
+
 ## 🚀 **NEW: Interactive Real Genome Support!**
 
 BioXen now supports **real bacterial genomes** downloaded directly from NCBI with **questionary-powered interactive interfaces**:
@@ -16,6 +18,9 @@ BioXen now supports **real bacterial genomes** downloaded directly from NCBI wit
 - ✅ **Interactive CLI** - User-friendly questionary menus for all operations  
 - ✅ **NCBI Integration** - Automated genome download and conversion
 - ✅ **Production Ready** - Complete VM lifecycle with real biological constraints
+
+![BioXen Interactive Interface](screenshots/Screenshot%20From%202025-08-01%2014-27-02.png)
+*BioXen's main interactive interface showing real genome detection and questionary menus*
 
 ### 🎮 **Quick Interactive Start**
 ```bash
@@ -31,8 +36,8 @@ python3 bioxen.py
 
 ## System Overview
 **Target Genomes:** Real bacterial genomes from NCBI (Mycoplasma, Carsonella, Syn3A)  
-**Host Hardware:** E. coli chassis (well-characterized, robust)  
-**Hypervisor Model:** Type-1 (bare metal) - direct control of cellular hardware  
+**Host Hardware:** Simulated E. coli chassis (computational model)  
+**Hypervisor Model:** Type-1 (bare metal) - direct control of simulated cellular hardware  
 **Status:** ✅ **Production Ready** - Real genome support with interactive management
 
 ## 🧬 **Supported Real Genomes**
@@ -45,6 +50,9 @@ python3 bioxen.py
 | **JCVI-Syn3A** | 538 KB | 187 | 68 (36.4%) | ✅ Available |
 
 *All genomes downloaded from NCBI with automated conversion to BioXen format*
+
+![Real Genome Browser](screenshots/Screenshot%20From%202025-08-01%2014-28-42.png)
+*Detailed genome browser showing real bacterial genome statistics and validation status*
 
 ## 🚀 Quick Start
 
@@ -132,7 +140,7 @@ python3 download_genomes.py
 ├─────────────────────────────────────────────────────────────┤
 │  Syn3A-VM1  │  Syn3A-VM2  │  Syn3A-VM3  │     (unused)     │
 ├─────────────────────────────────────────────────────────────┤
-│                 E. coli Cellular Hardware                   │
+│                 E. coli Computational Model                 │
 │  Ribosomes │ tRNAs │ ATP │ Membranes │ Metabolic Enzymes   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -185,12 +193,12 @@ VM3: Modified genetic code using synthetic amino acids
 ### 5. Hardware Abstraction Layer
 
 #### Virtual Ribosomes
-- **Physical pool:** 50-100 ribosomes in E. coli host
+- **Simulated pool:** 50-100 ribosomes in computational E. coli model
 - **Virtual allocation:** Each VM thinks it has 20-30 dedicated ribosomes
-- **Scheduling:** Hypervisor maps virtual ribosome calls to physical availability
+- **Scheduling:** Hypervisor maps virtual ribosome calls to simulated availability
 
 #### Virtual Membrane
-- **Physical membrane:** Single E. coli cell membrane  
+- **Simulated membrane:** Single E. coli cell membrane model  
 - **Virtual spaces:** Synthetic membrane compartments for each VM
 - **Transport:** Controlled molecular shuttles between compartments
 
@@ -320,6 +328,9 @@ print(f"Boot time: {template['boot_time_ms']} ms")
    ⚡ ATP: 30.0%
    🎯 Priority: 2
 ```
+
+![VM Management Interface](screenshots/Screenshot%20From%202025-08-01%2014-31-15.png)
+*Interactive VM creation and management with real genome constraints*
 
 ### Genetic Circuit Compilation
 ```python
@@ -557,19 +568,19 @@ python3 test_genome_scanning.py
 6. **Workflow Integration** - Seamless genome download → load → virtualize → manage
 
 ### 🖥️ **Hypervisor Architecture**
-1. **Time-sliced ribosome allocation** using regulatory RNAs
-2. **Orthogonal genetic codes** for VM isolation (3 variants implemented)
+1. **Time-sliced ribosome allocation** using simulated regulatory RNAs
+2. **Orthogonal genetic codes** for VM isolation (3 variants modeled)
 3. **VM-specific protein tagging** for namespace separation
-4. **ATP-sensitive scheduling** with energy monitoring
-5. **Genetic circuit-based hypervisor control** (4 circuit types)
-6. **Real-time resource tracking** with 1000+ ribosome pools
+4. **ATP-sensitive scheduling** with energy monitoring simulation
+5. **Genetic circuit-based hypervisor control** (4 circuit types modeled)
+6. **Real-time resource tracking** with 1000+ simulated ribosome pools
 
 ### 🧬 **Biological Computing Breakthroughs**
-- **First real genome hypervisor** - Works with actual NCBI bacterial genomes
-- **Essential gene virtualization** - Manages critical cellular functions in VMs
+- **First computational genome hypervisor** - Works with actual NCBI bacterial genomes
+- **Essential gene virtualization** - Simulates critical cellular functions in VMs
 - **Multi-species support** - Handles diverse bacterial genome architectures
 - **Interactive biotechnology** - User-friendly interfaces for biological computing
-- **Production-ready system** - Complete pipeline from download to virtualization
+- **Production-ready simulation** - Complete computational pipeline from download to virtualization
 
 ## 🚀 Future Development
 
@@ -584,18 +595,18 @@ python3 test_genome_scanning.py
 ### 🎯 **Immediate Enhancements** 
 - [ ] **Additional genome support** - Expand to more minimal bacterial genomes
 - [ ] **Advanced scheduling algorithms** - Priority-based, deadline-aware VM scheduling
-- [ ] **Real biosensor integration** - Physical ATP/ribosome monitoring in E. coli
+- [ ] **Enhanced resource modeling** - More detailed ATP/ribosome simulation accuracy
 - [ ] **Batch VM operations** - Create/manage multiple VMs simultaneously
 - [ ] **Export/import VM configurations** - Save and share VM setups
 - [ ] **Performance optimization** - Faster genome loading and VM operations
 
 ### 🔬 **Research Directions**
-- [ ] **Physical implementation** - Deploy in actual E. coli strains
-- [ ] **VM migration** - Move VMs between different cellular hosts
-- [ ] **Network communication** - Inter-VM molecular messaging
-- [ ] **Multi-cell distributed hypervisor** - Scale across multiple E. coli instances
-- [ ] **Cross-species virtualization** - E. coli → Yeast, Bacteria → Archaea
-- [ ] **Biological container orchestration** - Bio-Kubernetes for cellular computing
+- [ ] **Computational scaling** - Larger bacterial genomes and more complex organisms
+- [ ] **VM migration** - Move VMs between different simulated cellular hosts
+- [ ] **Network communication** - Inter-VM molecular messaging simulation
+- [ ] **Multi-cell distributed modeling** - Scale across multiple simulated E. coli instances
+- [ ] **Cross-species virtualization** - E. coli → Yeast, Bacteria → Archaea models
+- [ ] **Biological container orchestration** - Bio-Kubernetes for computational cellular modeling
 
 ### 📋 **Additional Genome Formats**
 - [ ] **GenBank format support** - Parse .gb/.gbk genome files
@@ -606,11 +617,11 @@ python3 test_genome_scanning.py
 
 ## 🤝 Contributing
 
-This project represents a novel intersection of computer science and synthetic biology. Contributions welcome in:
+This project represents a novel intersection of computer science and computational biology. Contributions welcome in:
 
-- **Synthetic Biology:** Genetic circuit design, metabolic engineering
+- **Computational Biology:** Biological system modeling, genome analysis algorithms
 - **Computer Science:** Scheduling algorithms, virtualization techniques  
-- **Bioengineering:** Biosensor development, chassis optimization
+- **Bioinformatics:** Genome processing, biological constraint modeling
 - **Systems Biology:** Mathematical modeling, performance analysis
 
 ## 📚 References & Related Work
