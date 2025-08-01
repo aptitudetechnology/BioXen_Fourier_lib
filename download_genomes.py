@@ -124,26 +124,56 @@ def download_genome(genome_key: str, download_dir: Path) -> bool:
 def find_downloaded_genome(download_dir: Path, scientific_name: str) -> Path:
     """Find the downloaded genome directory."""
     
+    print(f"🔍 Searching for genome files in: {download_dir}")
+    
+    # List all directories to debug
+    if download_dir.exists():
+        print(f"📁 Contents of {download_dir}:")
+        for item in download_dir.iterdir():
+            print(f"   {item.name}{'/' if item.is_dir() else ''}")
+    
     # ncbi-genome-download creates: download_dir/bacteria/genus_species/...
+    # But sometimes it might create different structures
     bacteria_dir = download_dir / 'bacteria'
     
     if not bacteria_dir.exists():
+        # Try to find files directly in download_dir or subdirectories
+        print(f"⚠️  No 'bacteria' directory found, searching recursively...")
+        
+        # Search for .fna and .gff files recursively
+        fasta_files = list(download_dir.rglob("*.fna.gz")) + list(download_dir.rglob("*.fna"))
+        gff_files = list(download_dir.rglob("*.gff.gz")) + list(download_dir.rglob("*.gff"))
+        
+        if fasta_files and gff_files:
+            # Return the directory containing both files
+            return fasta_files[0].parent
+        
         raise FileNotFoundError(f"No bacteria directory found in {download_dir}")
+    
+    print(f"📁 Contents of bacteria directory:")
+    for item in bacteria_dir.iterdir():
+        print(f"   {item.name}{'/' if item.is_dir() else ''}")
     
     # Look for genus_species directory
     genus, species = scientific_name.split(' ', 1)
     expected_dir = f"{genus}_{species}"
     
     for subdir in bacteria_dir.iterdir():
-        if subdir.is_dir() and expected_dir.lower() in subdir.name.lower():
-            # Find the actual genome directory (contains assembly files)
-            for assembly_dir in subdir.iterdir():
-                if assembly_dir.is_dir():
-                    fasta_files = list(assembly_dir.glob("*.fna.gz")) + list(assembly_dir.glob("*.fna"))
-                    gff_files = list(assembly_dir.glob("*.gff.gz")) + list(assembly_dir.glob("*.gff"))
-                    
-                    if fasta_files and gff_files:
-                        return assembly_dir
+        if subdir.is_dir():
+            print(f"🔍 Checking directory: {subdir.name}")
+            if expected_dir.lower() in subdir.name.lower():
+                # Find the actual genome directory (contains assembly files)
+                for assembly_dir in subdir.iterdir():
+                    if assembly_dir.is_dir():
+                        print(f"📁 Assembly directory: {assembly_dir.name}")
+                        fasta_files = list(assembly_dir.glob("*.fna.gz")) + list(assembly_dir.glob("*.fna"))
+                        gff_files = list(assembly_dir.glob("*.gff.gz")) + list(assembly_dir.glob("*.gff"))
+                        
+                        print(f"   FASTA files: {[f.name for f in fasta_files]}")
+                        print(f"   GFF files: {[f.name for f in gff_files]}")
+                        
+                        if fasta_files and gff_files:
+                            return assembly_dir
     
     raise FileNotFoundError(f"Could not find downloaded genome for {scientific_name}")
 
