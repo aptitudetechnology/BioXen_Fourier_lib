@@ -18,9 +18,10 @@ sys.path.insert(0, str(Path(__file__).parent / 'src'))
 try:
     import questionary
     from questionary import Choice
+    QUESTIONARY_AVAILABLE = True
 except ImportError:
-    print("❌ questionary not installed. Install with: pip install questionary")
-    sys.exit(1)
+    print("⚠️  questionary not available - using command line interface only")
+    QUESTIONARY_AVAILABLE = False
 
 try:
     from genome.converter import convert_ncbi_bacteria_download
@@ -263,6 +264,10 @@ def list_available_genomes():
 
 def interactive_genome_selection():
     """Interactive genome selection using questionary."""
+    if not QUESTIONARY_AVAILABLE:
+        print("❌ questionary not available - use command line arguments instead")
+        return
+        
     print("🧬 BioXen Interactive Genome Downloader")
     print("=" * 50)
     
