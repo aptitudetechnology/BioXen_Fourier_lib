@@ -21,667 +21,491 @@ try:
     from genome.parser import BioXenRealGenomeIntegrator
     from genome.schema import BioXenGenomeValidator
     from hypervisor.core import BioXenHypervisor, ResourceAllocation
-    from chassis import ChassisType
+    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Make sure you're running from the BioXen root directory")
     sys.exit(1)
 
 class InteractiveBioXen:
-    """Interactive BioXen interface using questionary."""
-    
     def __init__(self):
+        """Initialize the interactive BioXen interface."""
+        self.integrator = BioXenRealGenomeIntegrator()
+        self.validator = BioXenGenomeValidator()
         self.hypervisor = None
+        self.available_genomes = []
         self.chassis_type = ChassisType.ECOLI  # Default chassis
-        self.available_genomes = {}
-        self.loaded_genomes = {}
-        self.active_vms = {}
-        
-    def start(self):
-        """Start the interactive BioXen session."""
-        print("🧬 Welcome to BioXen Interactive Interface")
-        print("=" * 50)
-        
-        # Scan for available genomes
-        self.scan_available_genomes()
-        
-        # Main menu loop
+
+    def main_menu(self):
+        """Display and handle the main menu."""
         while True:
+            print("\n" + "="*60)
+            print("🧬 BioXen Hypervisor - Interactive Genome Management")
+            print("="*60)
+            
+            choices = [
+                Choice("🔍 Select chassis and initialize hypervisor", "init_hypervisor"),
+                Choice("📥 Download genomes", "download"),
+                Choice("🧬 Validate genomes", "validate"),
+                Choice("💾 Create VM", "create_vm"),
+                Choice("📊 Show status", "status"),
+                Choice("🗑️  Destroy VM", "destroy_vm"),
+                Choice("❌ Exit", "exit"),
+            ]
+            
             action = questionary.select(
                 "What would you like to do?",
-                choices=[
-                    Choice("🔍 Browse Available Genomes", "browse"),
-                    Choice("🧬 Load Genome for Analysis", "load"),
-                    Choice("🖥️  Initialize Hypervisor", "init_hypervisor"),
-                    Choice("⚙️  Select Chassis Type", "select_chassis"),
-                    Choice("⚡ Create Virtual Machine", "create_vm"),
-                    Choice("📊 Manage Running VMs", "manage_vms"),
-                    Choice("📈 View System Status", "status"),
-                    Choice("💾 Download New Genomes", "download"),
-                    Choice("❌ Exit", "exit")
-                ]
+                choices=choices,
+                use_shortcuts=True
             ).ask()
             
-            if action == "exit":
-                print("\n👋 Thanks for using BioXen!")
+            if action is None or action == "exit":
+                print("👋 Goodbye!")
                 break
-            elif action == "browse":
-                self.browse_genomes()
-            elif action == "load":
-                self.load_genome()
-            elif action == "init_hypervisor":
-                self.initialize_hypervisor()
-            elif action == "select_chassis":
-                self.select_chassis()
-            elif action == "create_vm":
-                self.create_virtual_machine()
-            elif action == "manage_vms":
-                self.manage_vms()
-            elif action == "status":
-                self.show_status()
-            elif action == "download":
-                self.download_genomes()
-    
-    def scan_available_genomes(self):
-        """Scan for available genome files."""
-        genomes_dir = Path("genomes")
-        if not genomes_dir.exists():
-            genomes_dir.mkdir()
-            return
-        
-        genome_files = list(genomes_dir.glob("*.genome"))
-        json_files = list(genomes_dir.glob("*.json"))
-        
-        for genome_file in genome_files:
+            
             try:
-                # Quick validation
-                is_valid, errors = BioXenGenomeValidator.validate_file(genome_file)
-                
-                # For real genomes, we'll be more permissive
-                # Consider a genome "usable" if it has structural validity even with warnings
-                has_critical_errors = any('invalid format' in str(error).lower() or 
-                                        'missing required' in str(error).lower() or
-                                        'cannot parse' in str(error).lower() 
-                                        for error in errors)
-                
-                is_usable = is_valid or not has_critical_errors
-                
-                # Try to get metadata from corresponding JSON file
-                json_file = genomes_dir / f"{genome_file.stem}.json"
-                metadata = {}
-                if json_file.exists():
-                    import json
-                    with open(json_file, 'r') as f:
-                        metadata = json.load(f)
-                
-                self.available_genomes[genome_file.stem] = {
-                    'file': genome_file,
-                    'valid': is_valid,
-                    'usable': is_usable,  # New field for real genome support
-                    'errors': errors,
-                    'metadata': metadata
-                }
-                
-                if not is_valid and is_usable:
-                    print(f"⚠️  {genome_file.stem}: {len(errors)} validation warnings (still usable)")
-                    
+                if action == "init_hypervisor":
+                    self.initialize_hypervisor()
+                elif action == "download":
+                    self.download_genomes()
+                elif action == "validate":
+                    self.validate_genomes()
+                elif action == "create_vm":
+                    self.create_vm()
+                elif action == "status":
+                    self.show_status()
+                elif action == "destroy_vm":
+                    self.destroy_vm()
+            except KeyboardInterrupt:
+                print("\n\n⚠️  Operation cancelled by user")
+                continue
             except Exception as e:
-                print(f"⚠️  Warning: Could not scan {genome_file.name}: {e}")
-    
-    def browse_genomes(self):
-        """Browse available genomes with details."""
-        if not self.available_genomes:
-            print("📁 No genome files found in 'genomes/' directory")
-            print("   Use 'Download New Genomes' to get some, or add .genome files manually")
-            return
-        
-        print("\n🧬 Available Genomes:")
-        print("=" * 60)
-        
-        for name, info in self.available_genomes.items():
-            if info['valid']:
-                status = "✅ Valid"
-            elif info['usable']:
-                status = "⚠️  Usable (with warnings)"
-            else:
-                status = "❌ Invalid"
-                
-            print(f"\n{status} - {name}")
-            
-            if info['metadata']:
-                meta = info['metadata']
-                print(f"   📋 Organism: {meta.get('organism', 'Unknown')}")
-                print(f"   📏 Size: {meta.get('genome_size', 0):,} bp")
-                print(f"   🧬 Genes: {meta.get('total_genes', 0)}")
-                print(f"   ⚡ Essential: {meta.get('essential_genes', 0)}")
-                print(f"   🔬 Minimal: {'Yes' if meta.get('minimal_genome', False) else 'No'}")
-            else:
-                print(f"   📁 File: {info['file'].name}")
-            
-            if not info['valid'] and info['errors']:
-                warning_count = len(info['errors'])
-                print(f"   ⚠️  {warning_count} validation warnings (mostly gene overlaps - normal for real genomes)")
-        
-        questionary.press_any_key_to_continue().ask()
-    
-    def load_genome(self):
-        """Load a genome for analysis."""
-        if not self.available_genomes:
-            print("❌ No genomes available. Use 'Download New Genomes' first.")
-            return
-        
-        # Filter to usable genomes (valid OR usable with warnings)
-        usable_genomes = {k: v for k, v in self.available_genomes.items() if v.get('usable', v['valid'])}
-        
-        if not usable_genomes:
-            print("❌ No usable genomes found. Check validation errors in 'Browse Genomes'.")
-            return
-        
-        choices = []
-        for name, info in usable_genomes.items():
-            meta = info['metadata']
-            organism = meta.get('organism', name) if meta else name
-            genes = f" ({meta.get('total_genes', '?')} genes)" if meta else ""
-            
-            # Add status indicator
-            if info['valid']:
-                status = "✅ "
-            elif info.get('usable', False):
-                status = "⚠️  "
-            else:
-                status = ""
-                
-            choices.append(Choice(f"{status}{organism}{genes}", name))
-        
-        selected = questionary.select(
-            "Which genome would you like to load?",
-            choices=choices
-        ).ask()
-        
-        if not selected:
-            return
-        
-        try:
-            print(f"\n📊 Loading {selected}...")
-            
-            genome_file = self.available_genomes[selected]['file']
-            integrator = BioXenRealGenomeIntegrator(genome_file)
-            real_genome = integrator.load_genome()
-            stats = integrator.get_genome_stats()
-            
-            self.loaded_genomes[selected] = {
-                'integrator': integrator,
-                'genome': real_genome,
-                'stats': stats
-            }
-            
-            print(f"✅ Successfully loaded {stats['organism']}")
-            print(f"   📏 Genome size: {stats['genome_length_bp']:,} bp")
-            print(f"   🧬 Total genes: {stats['total_genes']}")
-            print(f"   ⚡ Essential genes: {stats['essential_genes']} ({stats['essential_percentage']:.1f}%)")
-            print(f"   📦 Coding density: {stats['coding_density']:.1f}%")
-            
-            # Show gene categories
-            print(f"\n🔬 Gene categories:")
-            for category, count in stats['gene_categories'].items():
-                print(f"   {category.replace('_', ' ').title()}: {count}")
-            
-            # Show validation status
-            genome_info = self.available_genomes[selected]
-            if not genome_info['valid'] and genome_info.get('usable', False):
-                print(f"\n⚠️  Note: This genome has {len(genome_info['errors'])} validation warnings")
-                print(f"   (mostly gene overlaps - common in real bacterial genomes)")
-            
-            questionary.press_any_key_to_continue().ask()
-            
-        except Exception as e:
-            print(f"❌ Failed to load genome: {e}")
-            import traceback
-            traceback.print_exc()
-    
+                print(f"\n❌ Error: {e}")
+                questionary.press_any_key_to_continue().ask()
+
     def select_chassis(self):
-        """Select the cellular chassis for biological virtualization."""
-        print("\n⚙️  Select Chassis Type")
-        print("=" * 40)
+        """Let user select biological chassis type."""
+        print("\n🧬 Select Biological Chassis")
+        print("Choose the type of cell to use as your virtual machine chassis:")
         
         chassis_choice = questionary.select(
-            "Select the cellular chassis for virtualization:",
+            "Select chassis type:",
             choices=[
                 Choice("🦠 E. coli (Prokaryotic) - Stable, well-tested", ChassisType.ECOLI),
                 Choice("🍄 Yeast (Eukaryotic) - PLACEHOLDER - Advanced features", ChassisType.YEAST),
-                Choice("🧬 Mammalian (Future) - Not yet implemented", "mammalian_disabled"),
-                Choice("🌱 Plant (Future) - Not yet implemented", "plant_disabled")
             ]
         ).ask()
         
+        if chassis_choice is None:
+            return None
+            
         if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST]:
             self.chassis_type = chassis_choice
             
-            # Display chassis information
             if chassis_choice == ChassisType.ECOLI:
-                print("\n🦠 E. coli Chassis Selected")
-                print("✅ Features:")
-                print("   • Prokaryotic architecture")
-                print("   • 80 ribosomes (typical)")
-                print("   • Single cellular compartment")
-                print("   • Well-characterized resource model")
-                print("   • Production-ready")
-                print("   • Maximum 4 concurrent VMs")
+                print(f"\n✅ Selected E. coli chassis")
+                print(f"   • Prokaryotic architecture")
+                print(f"   • 80 ribosomes available")
+                print(f"   • Up to 4 VMs supported")
+                print(f"   • Production-ready implementation")
                 
             elif chassis_choice == ChassisType.YEAST:
-                print("\n🍄 Yeast Chassis Selected")
-                print("⚠️  PLACEHOLDER IMPLEMENTATION")
-                print("✅ Features:")
-                print("   • Eukaryotic architecture")
-                print("   • ~200,000 ribosomes")
-                print("   • Nuclear compartmentalization")
-                print("   • Mitochondrial support")
-                print("   • Endoplasmic reticulum")
-                print("   • Advanced protein processing")
-                print("   • Maximum 2 concurrent VMs")
-                print("   • ⚠️  Currently simulated - not fully functional")
+                print(f"\n⚠️  Selected Yeast chassis (PLACEHOLDER)")
+                print(f"   • Eukaryotic architecture")
+                print(f"   • 200,000 ribosomes available")
+                print(f"   • Organelle support (nucleus, mitochondria, ER)")
+                print(f"   • Up to 2 VMs supported")
+                print(f"   • ⚠️  PLACEHOLDER - Not fully implemented!")
                 
-            # Reset hypervisor if it was already initialized
-            if self.hypervisor:
-                print(f"\n🔄 Hypervisor will be reinitialized with {chassis_choice.value} chassis")
-                self.hypervisor = None
-                
-            questionary.press_any_key_to_continue().ask()
-            
-        else:
-            print("❌ Selected chassis type is not yet implemented")
-            questionary.press_any_key_to_continue().ask()
-    
+        return chassis_choice
+
     def initialize_hypervisor(self):
-        """Initialize the BioXen hypervisor with user configuration."""
-        print(f"\n🖥️  Initializing BioXen Hypervisor with {self.chassis_type.value.title()} Chassis")
-        print("=" * 60)
+        """Initialize the BioXen hypervisor with chassis selection."""
+        if self.hypervisor is not None:
+            print("⚠️  Hypervisor is already initialized")
+            reinit = questionary.confirm("Do you want to reinitialize with a different chassis?").ask()
+            if not reinit:
+                return
         
-        # Get hypervisor configuration
-        max_vms = questionary.text(
-            "Maximum number of VMs (default: 4):",
-            default="4"
-        ).ask()
+        print("\n🚀 Initializing BioXen Hypervisor")
         
-        # Show chassis-specific information
-        if self.chassis_type == ChassisType.ECOLI:
-            default_ribosomes = "80"
-            print("🦠 E. coli chassis: prokaryotic, single compartment")
-        elif self.chassis_type == ChassisType.YEAST:
-            default_ribosomes = "200000"
-            print("🍄 Yeast chassis: eukaryotic, nuclear + organelles (PLACEHOLDER)")
-        else:
-            default_ribosomes = "80"
-        
-        # For chassis-based hypervisor, we don't directly specify ribosomes
-        # as they're determined by the chassis capabilities
-        confirm_chassis = questionary.confirm(
-            f"Initialize hypervisor with {self.chassis_type.value} chassis?"
-        ).ask()
-        
-        if not confirm_chassis:
-            print("❌ Hypervisor initialization cancelled")
+        # Let user select chassis
+        selected_chassis = self.select_chassis()
+        if selected_chassis is None:
+            print("❌ Chassis selection cancelled")
             return
         
         try:
-            max_vms = int(max_vms)
+            print(f"\n🔄 Initializing hypervisor with {self.chassis_type.value} chassis...")
             
-            # Initialize hypervisor with chassis
-            self.hypervisor = BioXenHypervisor(
-                max_vms=max_vms,
-                chassis_type=self.chassis_type
-            )
+            if self.chassis_type == ChassisType.ECOLI:
+                print("   🦠 Loading E. coli cellular environment...")
+                print("   🧬 Configuring prokaryotic gene expression...")
+                print("   ⚙️  Setting up ribosome pools...")
+                
+            elif self.chassis_type == ChassisType.YEAST:
+                print("   🍄 Loading Saccharomyces cerevisiae environment...")
+                print("   🧬 Configuring eukaryotic gene expression...")
+                print("   🏭 Setting up organelle systems...")
+                print("   ⚠️  Note: Using PLACEHOLDER implementation")
             
-            # Get chassis info
-            chassis_info = self.hypervisor.get_chassis_info()
-            capabilities = self.hypervisor.chassis.get_capabilities()
+            self.hypervisor = BioXenHypervisor(chassis_type=self.chassis_type)
             
-            print(f"✅ Hypervisor initialized successfully!")
-            print(f"   🔧 Chassis: {self.chassis_type.value}")
-            print(f"   🖥️  Max VMs: {max_vms}")
-            print(f"   🧬 Ribosomes: {capabilities.max_ribosomes}")
-            print(f"   💾 Memory Architecture: {capabilities.memory_architecture}")
-            print(f"   🔬 Organelles: {'Yes' if capabilities.has_nucleus else 'No'}")
+            # Show warning for placeholder implementations
             if self.chassis_type == ChassisType.YEAST:
-                print("   ⚠️  Note: Yeast chassis is a PLACEHOLDER implementation")
-            print(f"   📊 Status: Ready")
+                print(f"\n⚠️  WARNING: Yeast chassis is currently a PLACEHOLDER implementation")
+                print(f"   This chassis provides basic functionality for testing but")
+                print(f"   does not include full eukaryotic cellular mechanisms.")
             
-            questionary.press_any_key_to_continue().ask()
+            print(f"\n✅ BioXen Hypervisor initialized successfully!")
+            print(f"   Chassis: {self.chassis_type.value}")
+            print(f"   Status: Ready for genome virtualization")
             
-        except ValueError as e:
-            print(f"❌ Invalid configuration: {e}")
-        except RuntimeError as e:
-            print(f"❌ Failed to initialize hypervisor: {e}")
-            if "yeast" in str(e).lower():
-                print("   💡 Yeast chassis is currently a placeholder implementation")
         except Exception as e:
-            print(f"❌ Unexpected error: {e}")
-    
-    def create_virtual_machine(self):
-        """Create a virtual machine with interactive configuration."""
-        if not self.hypervisor:
-            print("❌ Hypervisor not initialized. Use 'Initialize Hypervisor' first.")
+            print(f"❌ Failed to initialize hypervisor: {e}")
+        
+        questionary.press_any_key_to_continue().ask()
+
+    def download_genomes(self):
+        """Download genomes from NCBI with interactive selection."""
+        if not self._check_hypervisor():
+            return
+            
+        print("\n📥 Download Genomes from NCBI")
+        
+        # Predefined interesting genomes with emojis and descriptions
+        genome_options = [
+            {
+                "display": "🦠 E. coli K-12 MG1655 - Classic lab strain",
+                "accession": "NC_000913.3",
+                "name": "E_coli_K12_MG1655"
+            },
+            {
+                "display": "🍄 S. cerevisiae S288C - Baker's yeast reference",
+                "accession": "NC_001133.9", 
+                "name": "S_cerevisiae_S288C"
+            },
+            {
+                "display": "🔬 Mycoplasma genitalium - Minimal genome",
+                "accession": "NC_000908.2",
+                "name": "M_genitalium"
+            },
+            {
+                "display": "🌊 Prochlorococcus marinus - Tiny ocean bacteria",
+                "accession": "NC_009840.1",
+                "name": "P_marinus"
+            },
+            {
+                "display": "💀 Clostridium botulinum - Botox producer",
+                "accession": "NC_009495.1", 
+                "name": "C_botulinum"
+            },
+            {
+                "display": "🧪 Custom genome - Enter your own accession",
+                "accession": "custom",
+                "name": "custom"
+            }
+        ]
+        
+        choice = questionary.select(
+            "Select a genome to download:",
+            choices=[Choice(opt["display"], opt) for opt in genome_options]
+        ).ask()
+        
+        if choice is None:
+            return
+            
+        if choice["accession"] == "custom":
+            accession = questionary.text("Enter NCBI accession number (e.g., NC_000913.3):").ask()
+            if not accession:
+                return
+            name = questionary.text("Enter a name for this genome:").ask()
+            if not name:
+                name = accession.replace(".", "_")
+        else:
+            accession = choice["accession"]
+            name = choice["name"]
+        
+        print(f"\n🔄 Downloading {accession}...")
+        
+        try:
+            genome_data = self.integrator.download_genome(accession)
+            if genome_data:
+                # Add to available genomes
+                self.available_genomes.append({
+                    "accession": accession,
+                    "name": name,
+                    "data": genome_data
+                })
+                print(f"✅ Successfully downloaded {name}")
+                print(f"   Accession: {accession}")
+                print(f"   Size: {len(genome_data):,} base pairs")
+            else:
+                print(f"❌ Failed to download {accession}")
+        except Exception as e:
+            print(f"❌ Error downloading genome: {e}")
+        
+        questionary.press_any_key_to_continue().ask()
+
+    def validate_genomes(self):
+        """Validate downloaded genomes."""
+        if not self._check_hypervisor():
+            return
+            
+        if not self.available_genomes:
+            print("❌ No genomes available. Download some genomes first.")
+            questionary.press_any_key_to_continue().ask()
             return
         
-        if not self.loaded_genomes:
-            print("❌ No genomes loaded. Use 'Load Genome for Analysis' first.")
-            return
+        print("\n🧬 Validate Genomes")
         
-        print("\n⚡ Creating Virtual Machine")
-        print("=" * 35)
+        # Show available genomes
+        genome_choices = [
+            Choice(f"{g['name']} ({g['accession']})", g) 
+            for g in self.available_genomes
+        ]
+        genome_choices.append(Choice("🔍 Validate all genomes", "all"))
         
-        # Select genome
-        genome_choices = []
-        for name, info in self.loaded_genomes.items():
-            stats = info['stats']
-            organism = stats['organism']
-            essential = stats['essential_genes']
-            genome_choices.append(Choice(f"{organism} ({essential} essential genes)", name))
-        
-        selected_genome = questionary.select(
-            "Which genome should the VM use?",
+        choice = questionary.select(
+            "Select genome(s) to validate:",
             choices=genome_choices
         ).ask()
         
-        if not selected_genome:
+        if choice is None:
             return
         
-        # Get VM configuration
-        vm_id = questionary.text(
-            "VM ID (unique identifier):",
-            default=f"vm_{len(self.active_vms) + 1}"
-        ).ask()
+        genomes_to_validate = self.available_genomes if choice == "all" else [choice]
         
-        if vm_id in self.active_vms:
-            print(f"❌ VM '{vm_id}' already exists!")
-            return
+        print(f"\n🔄 Validating {len(genomes_to_validate)} genome(s)...")
         
-        # Get resource allocation based on genome requirements
-        genome_info = self.loaded_genomes[selected_genome]
-        template = genome_info['integrator'].create_vm_template()
-        
-        print(f"\n📊 Genome requirements:")
-        print(f"   💾 Min memory: {template['min_memory_kb']} KB")
-        print(f"   🔧 Min CPU: {template['min_cpu_percent']}%")
-        print(f"   ⏱️  Boot time: {template['boot_time_ms']} ms")
-        
-        # Resource allocation with smart defaults
-        memory_kb = questionary.text(
-            f"Memory allocation in KB (min: {template['min_memory_kb']}):",
-            default=str(template['min_memory_kb'] * 2)
-        ).ask()
-        
-        atp_percentage = questionary.text(
-            "ATP percentage (10-50%):",
-            default="25"
-        ).ask()
-        
-        ribosomes = questionary.text(
-            "Ribosome allocation (5-40):",
-            default="20"
-        ).ask()
-        
-        priority = questionary.select(
-            "VM Priority:",
-            choices=[
-                Choice("🔵 Low (1)", "1"),
-                Choice("🟡 Normal (2)", "2"),
-                Choice("🟠 High (3)", "3"),
-                Choice("🔴 Critical (4)", "4")
-            ]
-        ).ask()
-        
-        try:
-            # Create resource allocation
-            resources = ResourceAllocation(
-                memory_kb=int(memory_kb),
-                atp_percentage=float(atp_percentage),
-                ribosomes=int(ribosomes),
-                rna_polymerase=10,
-                priority=int(priority)
-            )
-            
-            # Validate resources meet minimum requirements
-            if resources.memory_kb < template['min_memory_kb']:
-                print(f"⚠️  Warning: Memory below minimum requirement ({template['min_memory_kb']} KB)")
-                proceed = questionary.confirm("Continue anyway?").ask()
-                if not proceed:
-                    return
-            
-            # Create VM
-            success = self.hypervisor.create_vm(
-                vm_id=vm_id,
-                genome_template=selected_genome,
-                resource_allocation=resources
-            )
-            
-            if success:
-                self.active_vms[vm_id] = {
-                    'genome': selected_genome,
-                    'resources': resources,
-                    'template': template
-                }
-                
-                print(f"\n✅ Virtual Machine '{vm_id}' created successfully!")
-                print(f"   🧬 Genome: {genome_info['stats']['organism']}")
-                print(f"   💾 Memory: {resources.memory_kb} KB")
-                print(f"   🧬 Ribosomes: {resources.ribosomes}")
-                print(f"   ⚡ ATP: {resources.atp_percentage}%")
-                print(f"   🎯 Priority: {resources.priority}")
-                
-                # Ask if user wants to start the VM
-                start_now = questionary.confirm("Start the VM now?").ask()
-                if start_now:
-                    self.hypervisor.start_vm(vm_id)
-                    print(f"🚀 VM '{vm_id}' started!")
-                
-            else:
-                print(f"❌ Failed to create VM '{vm_id}'")
-            
-            questionary.press_any_key_to_continue().ask()
-            
-        except ValueError as e:
-            print(f"❌ Invalid resource configuration: {e}")
-    
-    def manage_vms(self):
-        """Manage running virtual machines."""
-        if not self.hypervisor:
-            print("❌ Hypervisor not initialized.")
-            return
-        
-        if not self.hypervisor.vms:
-            print("📭 No VMs exist. Use 'Create Virtual Machine' first.")
-            return
-        
-        # Show current VMs
-        print("\n🖥️  Virtual Machine Management")
-        print("=" * 40)
-        
-        vm_list = self.hypervisor.list_vms()
-        
-        for vm in vm_list:
-            state_emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(vm['state'], "⚪")
-            print(f"{state_emoji} {vm['vm_id']} - {vm['state']}")
-            print(f"   💾 Memory: {vm['memory_kb']} KB")
-            print(f"   🧬 Ribosomes: {vm['ribosome_allocation']}")
-            print(f"   ⚡ ATP: {vm['atp_percentage']}%")
-            if vm['state'] == 'running':
-                print(f"   ⏱️  Uptime: {vm['uptime_seconds']:.1f}s")
-        
-        # VM action menu
-        vm_choices = [Choice(f"{vm['vm_id']} ({vm['state']})", vm['vm_id']) for vm in vm_list]
-        
-        selected_vm = questionary.select(
-            "Select a VM to manage:",
-            choices=vm_choices + [Choice("🔙 Back to main menu", "back")]
-        ).ask()
-        
-        if selected_vm == "back":
-            return
-        
-        # Action selection
-        vm_status = self.hypervisor.get_vm_status(selected_vm)
-        current_state = vm_status['state']
-        
-        available_actions = []
-        if current_state == 'created':
-            available_actions.append(Choice("🚀 Start VM", "start"))
-        elif current_state == 'running':
-            available_actions.extend([
-                Choice("⏸️  Pause VM", "pause"),
-                Choice("🔄 Restart VM", "restart")
-            ])
-        elif current_state == 'paused':
-            available_actions.append(Choice("▶️  Resume VM", "resume"))
-        
-        available_actions.extend([
-            Choice("📊 Show Detailed Status", "status"),
-            Choice("💥 Destroy VM", "destroy"),
-            Choice("🔙 Back", "back")
-        ])
-        
-        action = questionary.select(
-            f"Action for VM '{selected_vm}':",
-            choices=available_actions
-        ).ask()
-        
-        try:
-            if action == "start":
-                self.hypervisor.start_vm(selected_vm)
-                print(f"🚀 VM '{selected_vm}' started!")
-            elif action == "pause":
-                self.hypervisor.pause_vm(selected_vm)
-                print(f"⏸️  VM '{selected_vm}' paused!")
-            elif action == "resume":
-                self.hypervisor.resume_vm(selected_vm)
-                print(f"▶️  VM '{selected_vm}' resumed!")
-            elif action == "restart":
-                self.hypervisor.pause_vm(selected_vm)
-                self.hypervisor.start_vm(selected_vm)
-                print(f"🔄 VM '{selected_vm}' restarted!")
-            elif action == "status":
-                self.show_vm_details(selected_vm)
-            elif action == "destroy":
-                confirm = questionary.confirm(f"⚠️  Really destroy VM '{selected_vm}'? This cannot be undone.").ask()
-                if confirm:
-                    self.hypervisor.destroy_vm(selected_vm)
-                    if selected_vm in self.active_vms:
-                        del self.active_vms[selected_vm]
-                    print(f"💥 VM '{selected_vm}' destroyed!")
-            elif action == "back":
-                return
-            
-            if action != "status":
-                questionary.press_any_key_to_continue().ask()
-                
-        except Exception as e:
-            print(f"❌ Action failed: {e}")
-    
-    def show_vm_details(self, vm_id: str):
-        """Show detailed VM information."""
-        vm_status = self.hypervisor.get_vm_status(vm_id)
-        
-        print(f"\n📊 VM Details: {vm_id}")
-        print("=" * 30)
-        print(f"State: {vm_status['state']}")
-        print(f"Memory: {vm_status['memory_kb']} KB")
-        print(f"Ribosomes: {vm_status['ribosome_allocation']}")
-        print(f"ATP: {vm_status['atp_percentage']}%")
-        print(f"Priority: {vm_status['priority']}")
-        print(f"Health: {vm_status['health_status']}")
-        
-        if vm_status['state'] == 'running':
-            print(f"Uptime: {vm_status['uptime_seconds']:.1f} seconds")
-            print(f"CPU time used: {vm_status['cpu_time_used']:.2f}")
-        
-        if vm_id in self.active_vms:
-            genome_name = self.active_vms[vm_id]['genome']
-            if genome_name in self.loaded_genomes:
-                genome_stats = self.loaded_genomes[genome_name]['stats']
-                print(f"\nGenome: {genome_stats['organism']}")
-                print(f"Total genes: {genome_stats['total_genes']}")
-                print(f"Essential genes: {genome_stats['essential_genes']}")
+        for genome in genomes_to_validate:
+            print(f"\n📋 Validating {genome['name']}...")
+            try:
+                is_valid = self.validator.validate_genome(genome['data'])
+                if is_valid:
+                    print(f"   ✅ {genome['name']} - Valid genome structure")
+                else:
+                    print(f"   ❌ {genome['name']} - Invalid genome structure")
+            except Exception as e:
+                print(f"   ❌ {genome['name']} - Validation error: {e}")
         
         questionary.press_any_key_to_continue().ask()
-    
-    def show_status(self):
-        """Show overall system status."""
-        print("\n📈 BioXen System Status")
-        print("=" * 30)
+
+    def create_vm(self):
+        """Create a new VM with genome selection."""
+        if not self._check_hypervisor():
+            return
+            
+        if not self.available_genomes:
+            print("❌ No genomes available. Download some genomes first.")
+            questionary.press_any_key_to_continue().ask()
+            return
         
-        print(f"Available genomes: {len(self.available_genomes)}")
-        print(f"Loaded genomes: {len(self.loaded_genomes)}")
-        print(f"Selected chassis: {self.chassis_type.value}")
+        print("\n💾 Create Virtual Machine")
+        
+        # Select genome
+        genome_choices = [
+            Choice(f"{g['name']} ({g['accession']}) - {len(g['data']):,} bp", g) 
+            for g in self.available_genomes
+        ]
+        
+        selected_genome = questionary.select(
+            "Select genome for the VM:",
+            choices=genome_choices
+        ).ask()
+        
+        if selected_genome is None:
+            return
+        
+        # Get VM name
+        vm_name = questionary.text(
+            "Enter VM name:",
+            default=f"vm_{selected_genome['name']}"
+        ).ask()
+        
+        if not vm_name:
+            return
+        
+        # Resource allocation
+        print("\n⚙️  Resource Allocation")
+        memory_mb = questionary.text(
+            "Memory allocation (MB):",
+            default="512"
+        ).ask()
+        
+        if not memory_mb:
+            return
+        
+        try:
+            memory_mb = int(memory_mb)
+        except ValueError:
+            print("❌ Invalid memory value")
+            questionary.press_any_key_to_continue().ask()
+            return
+        
+        print(f"\n🔄 Creating VM '{vm_name}'...")
+        print(f"   Genome: {selected_genome['name']} ({selected_genome['accession']})")
+        print(f"   Memory: {memory_mb} MB")
+        print(f"   Chassis: {self.chassis_type.value}")
+        
+        try:
+            allocation = ResourceAllocation(
+                memory_mb=memory_mb,
+                ribosomes=20  # Default ribosome allocation
+            )
+            
+            vm_id = self.hypervisor.create_vm(vm_name, selected_genome['data'], allocation)
+            if vm_id:
+                print(f"✅ VM created successfully!")
+                print(f"   VM ID: {vm_id}")
+                print(f"   Name: {vm_name}")
+                print(f"   Status: Ready")
+            else:
+                print(f"❌ Failed to create VM")
+        except Exception as e:
+            print(f"❌ Error creating VM: {e}")
+        
+        questionary.press_any_key_to_continue().ask()
+
+    def show_status(self):
+        """Display hypervisor and VM status."""
+        print("\n📊 BioXen System Status")
+        print("="*50)
         
         if self.hypervisor:
-            chassis_info = self.hypervisor.get_chassis_info()
-            capabilities = self.hypervisor.chassis.get_capabilities()
-            resources = self.hypervisor.chassis.get_resource_status()
+            print(f"\nHypervisor Status: ✅ Running")
+            print(f"Chassis Type: {self.chassis_type.value}")
             
-            print(f"\nHypervisor Status: ✅ Active")
-            print(f"Chassis Type: {chassis_info['chassis_type']}")
-            print(f"Total VMs: {len(self.hypervisor.vms)}")
-            print(f"Max VMs supported: {capabilities.max_concurrent_vms}")
+            # Get chassis info
+            if self.chassis_type == ChassisType.ECOLI:
+                print(f"Architecture: Prokaryotic")
+                print(f"Available Ribosomes: 80")
+                print(f"Maximum VMs: 4")
+            elif self.chassis_type == ChassisType.YEAST:
+                print(f"Architecture: Eukaryotic")
+                print(f"Available Ribosomes: 200,000")
+                print(f"Maximum VMs: 2")
+                print(f"Organelles: Nucleus, Mitochondria, ER")
             
-            # Chassis-specific resource information
-            print(f"\nChassis Resources:")
-            print(f"  🧬 Total ribosomes: {capabilities.max_ribosomes}")
-            print(f"  🧬 Available ribosomes: {resources.available_ribosomes}")
-            print(f"  ⚡ Available ATP: {resources.available_atp:.1f}%")
-            print(f"  💾 Available memory: {resources.available_memory_kb} KB")
-            print(f"  🏗️  Architecture: {capabilities.memory_architecture}")
+            # VM information
+            vm_count = len(self.hypervisor.vms)
+            print(f"\nVirtual Machines: {vm_count}")
             
-            # Eukaryotic-specific organelle information
-            if capabilities.has_nucleus:
-                print(f"  🔬 Organelles:")
-                print(f"     • Nucleus: {'Yes' if capabilities.has_nucleus else 'No'}")
-                print(f"     • Mitochondria: {'Yes' if capabilities.has_mitochondria else 'No'}")
-                print(f"     • ER: {'Yes' if capabilities.has_endoplasmic_reticulum else 'No'}")
-                
-                if hasattr(self.hypervisor.chassis, 'get_organelle_status'):
-                    organelle_status = self.hypervisor.chassis.get_organelle_status()
-                    print(f"     • Available mitochondria: {organelle_status.get('mitochondria', {}).get('available', 'N/A')}")
-            
-            # VM breakdown by state
-            states = {}
-            for vm in self.hypervisor.vms.values():
-                state = vm.state.value
-                states[state] = states.get(state, 0) + 1
-            
-            if states:
-                print(f"\nVM States:")
-                for state, count in states.items():
-                    emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(state, "⚪")
-                    print(f"  {emoji} {state.title()}: {count}")
+            if vm_count > 0:
+                print(f"\nVM Details:")
+                for vm_id, vm in self.hypervisor.vms.items():
+                    status_emoji = "🟢" if hasattr(vm, 'status') and vm.status == "running" else "🔴"
+                    memory = vm.allocation.memory_mb if hasattr(vm, 'allocation') else "Unknown"
+                    ribosomes = vm.allocation.ribosomes if hasattr(vm, 'allocation') else "Unknown"
                     
+                    print(f"  {status_emoji} {vm.name} (ID: {vm_id})")
+                    print(f"    Memory: {memory} MB")
+                    print(f"    Ribosomes: {ribosomes}")
+                    print(f"    Genome size: {len(vm.genome_data):,} bp")
+            
+            # Resource utilization
+            total_memory = sum(vm.allocation.memory_mb for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            total_ribosomes = sum(vm.allocation.ribosomes for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            
+            print(f"\nResource Utilization:")
+            print(f"  Memory: {total_memory:,} MB")
+            print(f"  Ribosomes: {total_ribosomes}")
+            
+            # VM state breakdown
+            if vm_count > 0:
+                states = {}
+                for vm in self.hypervisor.vms.values():
+                    state = getattr(vm, 'status', 'unknown')
+                    states[state] = states.get(state, 0) + 1
+                
+                if states:
+                    print(f"\nVM States:")
+                    for state, count in states.items():
+                        emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(state, "⚪")
+                        print(f"  {emoji} {state.title()}: {count}")
+            
             # Show warning for placeholder implementations
             if self.chassis_type == ChassisType.YEAST:
                 print(f"\n⚠️  Note: Yeast chassis is currently a PLACEHOLDER implementation")
         else:
             print(f"\nHypervisor Status: ❌ Not initialized")
-            print(f"Use 'Initialize Hypervisor' to start with {self.chassis_type.value} chassis")
+            print(f"Use 'Select chassis and initialize hypervisor' to start")
+        
+        # Genome information
+        print(f"\nAvailable Genomes: {len(self.available_genomes)}")
+        if self.available_genomes:
+            for genome in self.available_genomes:
+                print(f"  📁 {genome['name']} ({genome['accession']}) - {len(genome['data']):,} bp")
         
         questionary.press_any_key_to_continue().ask()
-    
-    def download_genomes(self):
-        """Download new genomes using the download system."""
-        print("\n💾 Download New Genomes")
-        print("This feature requires ncbi-genome-download to be installed.")
-        print("Run: pip install -r requirements.txt")
-        print("\nThen use: python3 download_genomes.py list")
+
+    def destroy_vm(self):
+        """Destroy a VM."""
+        if not self._check_hypervisor():
+            return
+            
+        if not self.hypervisor.vms:
+            print("❌ No VMs available to destroy.")
+            questionary.press_any_key_to_continue().ask()
+            return
+        
+        print("\n🗑️  Destroy Virtual Machine")
+        
+        vm_choices = [
+            Choice(f"{vm.name} (ID: {vm_id})", vm_id) 
+            for vm_id, vm in self.hypervisor.vms.items()
+        ]
+        
+        vm_id = questionary.select(
+            "Select VM to destroy:",
+            choices=vm_choices
+        ).ask()
+        
+        if vm_id is None:
+            return
+        
+        vm_name = self.hypervisor.vms[vm_id].name
+        
+        confirm = questionary.confirm(
+            f"Are you sure you want to destroy VM '{vm_name}'? This cannot be undone."
+        ).ask()
+        
+        if not confirm:
+            print("❌ VM destruction cancelled")
+            questionary.press_any_key_to_continue().ask()
+            return
+        
+        print(f"\n🔄 Destroying VM '{vm_name}'...")
+        
+        try:
+            success = self.hypervisor.destroy_vm(vm_id)
+            if success:
+                print(f"✅ VM '{vm_name}' destroyed successfully")
+            else:
+                print(f"❌ Failed to destroy VM '{vm_name}'")
+        except Exception as e:
+            print(f"❌ Error destroying VM: {e}")
+        
         questionary.press_any_key_to_continue().ask()
 
+    def _check_hypervisor(self):
+        """Check if hypervisor is initialized."""
+        if self.hypervisor is None:
+            print("❌ Hypervisor not initialized. Please initialize it first.")
+            questionary.press_any_key_to_continue().ask()
+            return False
+        return True
+
 def main():
-    """Main entry point for interactive BioXen."""
+    """Main entry point."""
     try:
-        interactive = InteractiveBioXen()
-        interactive.start()
+        app = InteractiveBioXen()
+        app.main_menu()
     except KeyboardInterrupt:
         print("\n\n👋 Goodbye!")
     except Exception as e:
         print(f"\n❌ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
