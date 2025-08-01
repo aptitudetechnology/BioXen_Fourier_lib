@@ -14,10 +14,10 @@
 
 BioXen now supports **real bacterial genomes** downloaded directly from NCBI with **questionary-powered interactive interfaces**:
 
-- ✅ **4 Real Bacterial Genomes** - Mycoplasma genitalium, M. pneumoniae, Carsonella ruddii, JCVI-Syn3A
+- ✅ **1 Real Bacterial Genome** - JCVI-Syn3A with full analysis capabilities
 - ✅ **Interactive CLI** - User-friendly questionary menus for all operations  
-- ✅ **NCBI Integration** - Automated genome download and conversion
-- ✅ **Production Ready** - Complete VM lifecycle with real biological constraints
+- ✅ **Simulated Genome Generation** - Create placeholder genomes for testing
+- ✅ **Production Ready** - Complete VM lifecycle with biological constraints
 
 ![BioXen Interactive Interface](screenshots/Screenshot%20From%202025-08-01%2014-27-02.png)
 *BioXen's main interactive interface showing real genome detection and questionary menus*
@@ -35,21 +35,43 @@ python3 bioxen.py
 ```
 
 ## System Overview
-**Target Genomes:** Real bacterial genomes from NCBI (Mycoplasma, Carsonella, Syn3A)  
+**Target Genomes:** Real bacterial genomes from NCBI (JCVI-Syn3A available, others simulated)  
 **Host Hardware:** Simulated E. coli chassis (computational model)  
 **Hypervisor Model:** Type-1 (bare metal) - direct control of simulated cellular hardware  
 **Status:** ✅ **Production Ready** - Real genome support with interactive management
+
+## 🧬 **Multi-Chassis Platform Support**
+
+BioXen now supports multiple cellular chassis types for different virtualization needs:
+
+| Chassis Type | Architecture | Ribosomes | Max VMs | Organelles | Status |
+|--------------|--------------|-----------|----------|------------|---------|
+| **E. coli** | Prokaryotic | 80 | 4 | None | ✅ Production |
+| **Yeast** | Eukaryotic | 200,000 | 2 | Nucleus, Mitochondria, ER | ⚠️ Placeholder |
+| **Mammalian** | Eukaryotic | 10M+ | 1 | Full organelle set | 🚧 Future |
+| **Plant** | Eukaryotic | 5M+ | 1 | Chloroplasts, Vacuoles | 🚧 Future |
+
+### Chassis Selection Process
+```bash
+🧬 Select Biological Chassis
+Choose the type of cell to use as your virtual machine chassis:
+? Select chassis type:
+❯ 🦠 E. coli (Prokaryotic) - Stable, well-tested
+  🍄 Yeast (Eukaryotic) - PLACEHOLDER - Advanced features
+```
+
+*Interactive chassis selection with detailed capability descriptions*
 
 ## 🧬 **Supported Real Genomes**
 
 | Organism | Size | Genes | Essential | Status |
 |----------|------|-------|-----------|---------|
-| **Carsonella ruddii** | 174 KB | 473 | Auto-detected | ✅ Available |
-| **Mycoplasma genitalium** | 580 KB | 1,108 | 189 (17.1%) | ✅ Available |
-| **Mycoplasma pneumoniae** | 823 KB | 1,503 | 193 (12.8%) | ✅ Available |
 | **JCVI-Syn3A** | 538 KB | 187 | 68 (36.4%) | ✅ Available |
+| **Carsonella ruddii** | 174 KB | 473 | Auto-detected | 🚧 Future |
+| **Mycoplasma genitalium** | 580 KB | 1,108 | 189 (17.1%) | 🚧 Future |
+| **Mycoplasma pneumoniae** | 823 KB | 1,503 | 193 (12.8%) | 🚧 Future |
 
-*All genomes downloaded from NCBI with automated conversion to BioXen format*
+*Currently 1 real genome available, with placeholder simulation for additional genome types*
 
 ![Real Genome Browser](screenshots/Screenshot%20From%202025-08-01%2014-28-42.png)
 *Detailed genome browser showing real bacterial genome statistics and validation status*
@@ -92,12 +114,13 @@ python3 interactive_bioxen.py
 ```
 
 ### 🎮 **Interactive Workflow**
-1. **Browse/Download Genomes** - Use questionary menus to select and download bacterial genomes from NCBI
-2. **Load Genome** - Choose from available real genomes with detailed statistics
-3. **Initialize Hypervisor** - Configure maximum VMs and ribosome allocation
-4. **Create VMs** - Set up virtual machines with genome-specific constraints
-5. **Manage VMs** - Start, pause, resume, and monitor virtual machines
-6. **View System Status** - Real-time resource allocation and VM states
+1. **Select Chassis** - Choose between E. coli (prokaryotic) or Yeast (eukaryotic) platforms
+2. **Browse/Download Genomes** - Use questionary menus to select and download bacterial genomes from NCBI
+3. **Load Genome** - Choose from available real genomes with detailed statistics
+4. **Initialize Hypervisor** - Configure maximum VMs and ribosome allocation for chosen chassis
+5. **Create VMs** - Set up virtual machines with genome-specific constraints
+6. **Manage VMs** - Start, pause, resume, and monitor virtual machines
+7. **View System Status** - Real-time resource allocation and VM states
 
 ### 📥 **Download New Genomes**
 ```bash
@@ -112,19 +135,19 @@ python3 download_genomes.py
 ```
 
 ### Expected Results
-✅ Interactive interface with real genome support:
+✅ Interactive interface with chassis selection and genome simulation:
 ```
-🧬 Welcome to BioXen Interactive Interface
-⚠️  Carsonella_ruddii: 884 validation warnings (still usable)
-⚠️  Mycoplasma_genitalium: 1314 validation warnings (still usable)
-⚠️  Mycoplasma_pneumoniae: 1657 validation warnings (still usable)
-⚠️  syn3A: 187 validation warnings (still usable)
+============================================================
+🧬 BioXen Hypervisor - Interactive Genome Management
+============================================================
 ? What would you like to do? (Use arrow keys)
-❯ 🧬 Load Genome for Analysis
-  🖥️  Initialize Hypervisor
-  ⚡ Create Virtual Machine
-  📈 View System Status
-  💾 Download New Genomes
+❯ 🔍 Select chassis and initialize hypervisor
+  📥 Download genomes
+  🧬 Validate genomes
+  � Create VM
+  📊 Show status
+  �️ Destroy VM
+  ❌ Exit
 ```
 
 ## Core Architecture
@@ -241,11 +264,12 @@ VM3: Modified genetic code using synthetic amino acids
 python3 interactive_bioxen.py
 
 # Main menu options:
-# 🧬 Load Genome for Analysis    - Browse and load real bacterial genomes
-# 🖥️ Initialize Hypervisor      - Set up VM environment with resource limits
-# ⚡ Create Virtual Machine      - Create VMs with genome-specific constraints
-# 📈 View System Status          - Monitor resource allocation and VM states
-# 💾 Download New Genomes        - Access NCBI download interface
+# 🔍 Select chassis and initialize hypervisor - Choose E. coli or Yeast platform
+# 📥 Download genomes - Create simulated genome data for testing
+# 🧬 Validate genomes - Check genome data integrity  
+# 💾 Create VM - Set up virtual machines with selected chassis
+# � Show status - Monitor resource allocation and VM states
+# �️ Destroy VM - Clean up virtual machines
 ```
 
 ### Interactive Genome Downloads
@@ -263,9 +287,13 @@ python3 download_genomes.py
 ### Programmatic API Usage
 ```python
 from hypervisor.core import BioXenHypervisor, ResourceAllocation
+from chassis import ChassisType
 
-# Initialize hypervisor with real genome support
-hypervisor = BioXenHypervisor(max_vms=4, total_ribosomes=1000)
+# Initialize hypervisor with specific chassis
+hypervisor = BioXenHypervisor(chassis_type=ChassisType.ECOLI)
+
+# Or use Yeast chassis (placeholder)
+hypervisor_yeast = BioXenHypervisor(chassis_type=ChassisType.YEAST)
 
 # Create VM with Mycoplasma pneumoniae genome
 resources = ResourceAllocation(
@@ -282,6 +310,22 @@ status = hypervisor.get_vm_status("bacteria-vm")
 hypervisor.pause_vm("bacteria-vm")
 hypervisor.resume_vm("bacteria-vm")
 hypervisor.destroy_vm("bacteria-vm")
+```
+
+### Chassis Selection and Initialization
+```python
+from chassis import ChassisType, EcoliChassis, YeastChassis
+
+# Create E. coli chassis
+ecoli_chassis = EcoliChassis()
+print(f"E. coli ribosomes: {ecoli_chassis.available_ribosomes}")
+print(f"Max VMs: {ecoli_chassis.max_vms}")
+
+# Create Yeast chassis (placeholder)
+yeast_chassis = YeastChassis()
+print(f"Yeast ribosomes: {yeast_chassis.available_ribosomes}")
+print(f"Organelles: {yeast_chassis.organelles}")
+print(f"Warning: {yeast_chassis.validate_resources()}")
 ```
 
 ### Real Genome Loading and Analysis
@@ -552,12 +596,12 @@ python3 test_genome_scanning.py
 ## 🔬 Key Innovations & Achievements
 
 ### ✅ **Real Bacterial Genome Integration**
-1. **NCBI Integration** - Automated download using `ncbi-genome-download`
-2. **Multi-genome Support** - 4 real bacterial genomes (Mycoplasma, Carsonella, Syn3A)
-3. **Genome Conversion Pipeline** - GFF3/FASTA → BioXen format with validation
-4. **Essential Gene Detection** - Automatic identification of critical vs. optional genes
-5. **Resource Modeling** - VM requirements calculated from real gene complexity
-6. **Biological Constraint Validation** - Ensures VMs respect real cellular limits
+1. **Real Syn3A genome** - JCVI synthetic minimal genome with complete analysis
+2. **Simulated genome generation** - Create placeholder genomes for testing different species
+3. **Genome validation pipeline** - Verify genome data integrity and structure
+4. **Multi-chassis compatibility** - Genomes work with different cellular platforms
+5. **Resource modeling** - VM requirements calculated from genome complexity
+6. **Interactive genome management** - User-friendly interfaces for genome operations
 
 ### 🎮 **Interactive User Experience**
 1. **Questionary-powered Interfaces** - User-friendly CLI menus for all operations
@@ -574,6 +618,8 @@ python3 test_genome_scanning.py
 4. **ATP-sensitive scheduling** with energy monitoring simulation
 5. **Genetic circuit-based hypervisor control** (4 circuit types modeled)
 6. **Real-time resource tracking** with 1000+ simulated ribosome pools
+7. **Multi-chassis support** - E. coli (prokaryotic) and Yeast (eukaryotic) platforms
+8. **Chassis-specific resource management** - Adapted ribosome pools and organelle systems
 
 ### 🧬 **Biological Computing Breakthroughs**
 - **First computational genome hypervisor** - Works with actual NCBI bacterial genomes
@@ -586,14 +632,15 @@ python3 test_genome_scanning.py
 
 ### ✅ **Recently Completed**
 - [x] **Interactive questionary interfaces** - Complete user-friendly CLI system
-- [x] **Real genome data integration** - 4 bacterial genomes from NCBI  
-- [x] **NCBI download automation** - Automated genome acquisition and conversion
-- [x] **Essential gene detection** - Automatic identification in real genomes
-- [x] **Multi-genome VM support** - VMs with different bacterial genome types
-- [x] **Production-ready system** - Complete workflow from download to virtualization
+- [x] **Multi-chassis support** - E. coli (prokaryotic) and Yeast (eukaryotic) chassis selection
+- [x] **Chassis-aware hypervisor** - Resource allocation adapted to cellular chassis type
+- [x] **Simulated genome generation** - Create placeholder genomes for testing and development
+- [x] **Real genome integration** - JCVI-Syn3A genome with full analysis capabilities
+- [x] **Production-ready system** - Complete workflow from chassis selection to VM management
 
 ### 🎯 **Immediate Enhancements** 
-- [ ] **Additional genome support** - Expand to more minimal bacterial genomes
+- [ ] **Additional real genomes** - Download and integrate Mycoplasma, Carsonella genomes from NCBI
+- [ ] **NCBI download automation** - Automated genome acquisition and conversion tools
 - [ ] **Advanced scheduling algorithms** - Priority-based, deadline-aware VM scheduling
 - [ ] **Enhanced resource modeling** - More detailed ATP/ribosome simulation accuracy
 - [ ] **Batch VM operations** - Create/manage multiple VMs simultaneously
@@ -601,6 +648,7 @@ python3 test_genome_scanning.py
 - [ ] **Performance optimization** - Faster genome loading and VM operations
 
 ### 🔬 **Research Directions**
+- [ ] **Additional real genomes** - Download and integrate more bacterial genomes from NCBI
 - [ ] **Computational scaling** - Larger bacterial genomes and more complex organisms
 - [ ] **VM migration** - Move VMs between different simulated cellular hosts
 - [ ] **Network communication** - Inter-VM molecular messaging simulation
