@@ -528,11 +528,23 @@ class InteractiveBioXen:
             resources = self.hypervisor.get_system_resources()
             print(f"\nHypervisor Status: ✅ Active")
             print(f"Total VMs: {len(self.hypervisor.vms)}")
+            print(f"Active VMs: {resources['active_vms']}")
+            print(f"Total ribosomes: {resources['total_ribosomes']}")
             print(f"Available ribosomes: {resources['available_ribosomes']}")
-            print(f"Max VMs: {resources['max_vms']}")
+            print(f"Allocated ribosomes: {resources['allocated_ribosomes']}")
+            print(f"Max VMs supported: {self.hypervisor.max_vms}")
             
-            running_vms = [vm for vm in self.hypervisor.vms.values() if vm.state.value == 'running']
-            print(f"Running VMs: {len(running_vms)}")
+            # VM breakdown by state
+            states = {}
+            for vm in self.hypervisor.vms.values():
+                state = vm.state.value
+                states[state] = states.get(state, 0) + 1
+            
+            if states:
+                print(f"\nVM States:")
+                for state, count in states.items():
+                    emoji = {"running": "🟢", "paused": "🟡", "stopped": "🔴", "created": "🔵"}.get(state, "⚪")
+                    print(f"  {emoji} {state.title()}: {count}")
         else:
             print(f"\nHypervisor Status: ❌ Not initialized")
         
