@@ -232,7 +232,20 @@ def download_and_convert_genome(genome_key: str, output_dir: Path, keep_download
         if keep_downloads:
             download_backup = output_dir / 'downloads' / genome_key
             download_backup.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(temp_path / 'bacteria', download_backup / 'bacteria')
+            
+            # Copy the actual downloaded structure (which might be refseq/bacteria)
+            if (temp_path / 'bacteria').exists():
+                shutil.copytree(temp_path / 'bacteria', download_backup / 'bacteria')
+            elif (temp_path / 'refseq' / 'bacteria').exists():
+                shutil.copytree(temp_path / 'refseq' / 'bacteria', download_backup / 'bacteria')
+            else:
+                # Copy everything
+                for item in temp_path.iterdir():
+                    if item.is_dir():
+                        shutil.copytree(item, download_backup / item.name)
+                    else:
+                        shutil.copy2(item, download_backup / item.name)
+            
             print(f"📁 Downloads saved to: {download_backup}")
     
     return True
