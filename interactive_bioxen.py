@@ -365,8 +365,11 @@ class InteractiveBioXen:
         print(f"   Chassis: {self.chassis_type.value}")
         
         try:
+            # Convert MB to KB for ResourceAllocation
+            memory_kb = memory_mb * 1024  # 1 MB = 1024 KB
+            
             allocation = ResourceAllocation(
-                memory_mb=memory_mb,
+                memory_kb=memory_kb,
                 ribosomes=20  # Default ribosome allocation
             )
             
@@ -411,20 +414,23 @@ class InteractiveBioXen:
                 print(f"\nVM Details:")
                 for vm_id, vm in self.hypervisor.vms.items():
                     status_emoji = "🟢" if hasattr(vm, 'status') and vm.status == "running" else "🔴"
-                    memory = vm.allocation.memory_mb if hasattr(vm, 'allocation') else "Unknown"
+                    # Convert memory_kb back to MB for display
+                    memory_kb = vm.allocation.memory_kb if hasattr(vm, 'allocation') else 0
+                    memory_mb = memory_kb / 1024 if memory_kb > 0 else 0
                     ribosomes = vm.allocation.ribosomes if hasattr(vm, 'allocation') else "Unknown"
                     
                     print(f"  {status_emoji} {vm.name} (ID: {vm_id})")
-                    print(f"    Memory: {memory} MB")
+                    print(f"    Memory: {memory_mb:.1f} MB")
                     print(f"    Ribosomes: {ribosomes}")
                     print(f"    Genome size: {len(vm.genome_data):,} bp")
             
-            # Resource utilization
-            total_memory = sum(vm.allocation.memory_mb for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            # Resource utilization  
+            total_memory_kb = sum(vm.allocation.memory_kb for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
+            total_memory_mb = total_memory_kb / 1024 if total_memory_kb > 0 else 0
             total_ribosomes = sum(vm.allocation.ribosomes for vm in self.hypervisor.vms.values() if hasattr(vm, 'allocation'))
             
             print(f"\nResource Utilization:")
-            print(f"  Memory: {total_memory:,} MB")
+            print(f"  Memory: {total_memory_mb:.1f} MB")
             print(f"  Ribosomes: {total_ribosomes}")
             
             # VM state breakdown
