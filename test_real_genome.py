@@ -138,7 +138,7 @@ def test_real_genome_integration():
                 # Start VM
                 hypervisor.start_vm(vm_id)
                 vm_status = hypervisor.get_vm_status(vm_id)
-                print(f"   Started VM - Status: {vm_status['status']}")
+                print(f"   Started VM - Status: {vm_status['state']}")
                 
                 # Test some operations
                 performance = hypervisor.get_performance_metrics()
