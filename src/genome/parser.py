@@ -8,6 +8,12 @@ from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import re
 
+try:
+    from .schema import BioXenGenomeSchema, BioXenGeneRecord
+except ImportError:
+    # Fallback for direct execution
+    from schema import BioXenGenomeSchema, BioXenGeneRecord
+
 @dataclass
 class Gene:
     """Represents a gene from real genome data."""

@@ -9,6 +9,15 @@ pytest-cov>=2.0
 black>=21.0
 flake8>=3.8
 mypy>=0.800
+questionary == 2.1.0
+
+
+## Download genomes
+# This section is for downloading genome data, if applicable.
+# Ensure you have the necessary permissions and data sources configured.
+
+ncbi-genome-download>=0.3.3
+# This tool is used to download genome data from NCBI.
 
 ## Optional Dependencies for Enhanced Features
 # numpy>=1.20.0        # For advanced numerical computations
