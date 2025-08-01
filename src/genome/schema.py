@@ -311,6 +311,35 @@ class BioXenGenomeSchema:
 class BioXenGenomeValidator:
     """Validates BioXen genome files and schemas."""
     
+    def validate_genome(self, genome_data: str) -> bool:
+        """
+        Validate genome data (string format).
+        
+        Args:
+            genome_data: String containing genome sequence data
+            
+        Returns:
+            bool: True if genome data appears valid, False otherwise
+        """
+        if not genome_data:
+            return False
+            
+        # Basic validation - check if it looks like DNA sequence
+        valid_bases = set('ATGC')
+        if isinstance(genome_data, str):
+            # Check if it's a DNA sequence (allowing for some non-standard characters)
+            base_count = sum(1 for char in genome_data.upper() if char in valid_bases)
+            total_chars = len(genome_data)
+            
+            if total_chars == 0:
+                return False
+                
+            # If at least 80% of characters are valid DNA bases, consider it valid
+            validity_ratio = base_count / total_chars
+            return validity_ratio >= 0.8
+            
+        return False
+    
     @staticmethod
     def validate_file(genome_path: Path) -> tuple[bool, List[str]]:
         """Validate a BioXen genome file."""
