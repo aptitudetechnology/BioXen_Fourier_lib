@@ -344,9 +344,6 @@ class InteractiveBioXen:
                 return
                 
             try:
-                import subprocess
-                import sys
-                
                 print("\n🔄 Starting real genome download process...")
                 
                 # Run the download_genomes.py script with 'all' command
