@@ -6,6 +6,7 @@ Interactive BioXen CLI using questionary for user-friendly genome selection and 
 import sys
 import time
 import shutil
+import subprocess  # Add subprocess import here
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -392,7 +393,6 @@ class InteractiveBioXen:
                 return
             
             try:
-                import subprocess  # Import subprocess for exception handling
                 print(f"\n🔄 Downloading {name} from NCBI...")
                 
                 # Use the new robust genome download helper
