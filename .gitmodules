@@ -1,0 +1,3 @@
+[submodule "libs/biolib2d"]
+	path = libs/biolib2d
+	url = https://github.com/aptitudetechnology/BioLib2D

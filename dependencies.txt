@@ -1,0 +1,7 @@
+# BioXen Dependencies
+biolib2d >= 1.0
+luasocket
+luajson
+luafilesystem
+lpeg
+lfs

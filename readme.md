@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Real Genomes](https://img.shields.io/badge/real_genomes-5-success.svg)](genomes/)
 [![Interactive](https://img.shields.io/badge/interface-questionary-blue.svg)](interactive_bioxen.py)
+[![Visualization](https://img.shields.io/badge/visualization-Love2D-ff69b4.svg)](https://github.com/aptitudetechnology/BioLib2D)
 
 **The world's first interactive biological hypervisor for virtualizing real bacterial genomes**
 
@@ -33,6 +34,29 @@ python3 download_genomes.py
 # Or use the simple launcher
 python3 bioxen.py
 ```
+
+## 🔬 **Real-Time Cellular Visualization**
+
+BioXen now includes stunning real-time visualization of cellular processes using Love2D and the **BioLib2D** library:
+
+### ✨ **Visualization Features**
+- **Live VM Cells**: Watch individual bacterial VMs with animated ribosomes, gene expression, and protein synthesis
+- **ATP Energy Flow**: Real-time particle system showing energy distribution across cellular compartments  
+- **Gene Expression**: DNA transcription visualization with active/inactive regions based on actual VM state
+- **Resource Monitoring**: Visual representation of ribosome allocation, ATP levels, and cellular activity
+- **Interactive Controls**: Toggle different visualization layers and adjust animation speed
+
+### 🚀 **Launch Visualization**
+```bash
+# Start BioXen with visualization
+love2d . --visualization
+
+# Or use the Love2D visualization directly
+love2d /path/to/biolib2d/
+```
+
+![BioXen Cellular Visualization](screenshots/cellular_visualization.png)
+*Real-time visualization of bacterial VMs showing gene expression, protein synthesis, and ATP flow*
 
 ## System Overview
 **Target Genomes:** Real bacterial genomes from NCBI (5 genomes available: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola)  
@@ -85,6 +109,8 @@ Choose the type of cell to use as your virtual machine chassis:
 - Internet connection for genome downloads
 
 ### 📦 **Dependencies**
+
+#### Python Dependencies (requirements.txt)
 ```bash
 # Core dependencies (requirements.txt)
 questionary==2.1.0           # Interactive CLI interfaces
@@ -97,7 +123,22 @@ flake8>=3.8                  # Code linting
 mypy>=0.800                  # Type checking
 ```
 
+#### Love2D Visualization Dependencies (dependencies.txt)
+```bash
+# Love2D Visualization Library
+biolib2d >= 1.0              # Real-time biological visualization library
+luasocket                    # Network communication with BioXen
+luajson                      # JSON data parsing from BioXen
+luafilesystem                # File system operations
+lpeg                         # Pattern matching library
+lfs                          # Lua file system library
+```
+
+> **🎮 Visualization**: BioXen now includes real-time cellular visualization using Love2D and the [BioLib2D library](https://github.com/aptitudetechnology/BioLib2D). Watch gene expression, protein synthesis, and ATP flow in real-time across your virtual bacterial cells!
+
 ### Interactive Installation & Setup
+
+#### Python Backend Setup
 ```bash
 # Clone the repository
 git clone https://github.com/aptitudetechnology/BioXen.git
@@ -107,11 +148,32 @@ cd BioXen
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
 # Launch interactive interface
 python3 interactive_bioxen.py
+```
+
+#### Love2D Visualization Setup (Optional)
+```bash
+# Install Love2D game engine
+# Ubuntu/Debian:
+sudo apt install love2d
+
+# macOS (with Homebrew):
+brew install love2d
+
+# Windows: Download from https://love2d.org/
+
+# Clone BioLib2D visualization library
+git clone https://github.com/aptitudetechnology/BioLib2D.git
+
+# Install Lua dependencies (automatically handled by Love2D)
+# Dependencies listed in dependencies.txt will be loaded by BioLib2D
+
+# Launch visualization (after starting BioXen)
+love2d BioLib2D/
 ```
 
 ### 🎮 **Interactive Workflow**
@@ -482,11 +544,16 @@ BioXen/
 │   ├── test_real_genome.py        # Real genome integration tests
 │   └── simple_demo.py             # Interactive demonstration
 ├── 📋 Documentation & Setup
-│   ├── requirements.txt           # Dependencies (questionary, ncbi-genome-download)
+│   ├── requirements.txt           # Python dependencies (questionary, ncbi-genome-download)
+│   ├── dependencies.txt           # Love2D/Lua dependencies (biolib2d, luasocket, etc.)
 │   ├── quickstart.sh             # Automated setup and testing
 │   ├── TESTING.md                # Testing guide
 │   ├── Makefile                  # Build and development commands
 │   └── readme.md                 # This file
+├── 🎮 Visualization Components
+│   ├── love2d-bio-lib.md          # BioLib2D library specification
+│   ├── visuals.md                # BioXen visualization analysis
+│   └── claude.md                 # Conversation history and technical notes
 ```
 
 ## 🧪 Testing & Validation
