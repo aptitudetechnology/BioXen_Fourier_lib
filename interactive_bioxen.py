@@ -37,6 +37,29 @@ class InteractiveBioXen:
         self.chassis_type = ChassisType.ECOLI  # Default chassis
         # Note: integrator will be created dynamically when needed for downloads
 
+    def _suggest_unique_vm_id(self, base_name: str) -> str:
+        """Suggest a unique VM ID based on existing VMs."""
+        if not self.hypervisor or not self.hypervisor.vms:
+            return f"vm_{base_name}"
+        
+        existing_ids = set(self.hypervisor.vms.keys())
+        
+        # Try base name first
+        candidate = f"vm_{base_name}"
+        if candidate not in existing_ids:
+            return candidate
+        
+        # Try with numbers
+        for i in range(1, 100):
+            candidate = f"vm_{base_name}_{i}"
+            if candidate not in existing_ids:
+                return candidate
+        
+        # Fallback with timestamp
+        import time
+        timestamp = int(time.time() % 10000)
+        return f"vm_{base_name}_{timestamp}"
+
     def main_menu(self):
         """Display and handle the main menu."""
         while True:
@@ -585,16 +608,80 @@ class InteractiveBioXen:
         if selected_genome is None:
             return
         
-            return
+        # Show existing VMs first to help user choose unique ID
+        if self.hypervisor and self.hypervisor.vms:
+            print(f"\n📋 Existing VMs ({len(self.hypervisor.vms)}):")
+            for existing_vm_id, vm in self.hypervisor.vms.items():
+                status_emoji = "🟢" if vm.state == VMState.RUNNING else "🔴" if vm.state == VMState.ERROR else "🟡"
+                print(f"   {status_emoji} {existing_vm_id}")
         
-        # Get VM ID
-        vm_id = questionary.text(
-            "VM ID (unique identifier):",
-            default=f"vm_{selected_genome['name']}"
-        ).ask()
+        # Get VM ID with improved handling
+        suggested_id = self._suggest_unique_vm_id(selected_genome['name'])
         
-        if not vm_id:
-            return
+        while True:
+            vm_id = questionary.text(
+                "VM ID (unique identifier):",
+                default=suggested_id
+            ).ask()
+            
+            if not vm_id:
+                return
+            
+            # Check if VM ID already exists
+            if self.hypervisor and vm_id in self.hypervisor.vms:
+                print(f"\n⚠️  VM '{vm_id}' already exists!")
+                
+                # Suggest alternative IDs
+                alternative_suggestions = [
+                    self._suggest_unique_vm_id(selected_genome['name']),
+                    self._suggest_unique_vm_id(f"{selected_genome['name']}_new"),
+                    self._suggest_unique_vm_id(f"{selected_genome['name']}_test")
+                ]
+                
+                print(f"💡 Suggested alternatives:")
+                for i, suggestion in enumerate(alternative_suggestions[:3], 1):
+                    print(f"   {i}. {suggestion}")
+                
+                action = questionary.select(
+                    "What would you like to do?",
+                    choices=[
+                        Choice("🔄 Try a different VM ID", "retry"),
+                        Choice(f"✨ Use suggestion: {alternative_suggestions[0]}", "use_suggestion"),
+                        Choice("🗑️  Delete existing VM and create new one", "replace"),
+                        Choice("📊 View existing VM details", "view"),
+                        Choice("❌ Cancel VM creation", "cancel")
+                    ]
+                ).ask()
+                
+                if action == "retry":
+                    continue  # Ask for VM ID again
+                elif action == "use_suggestion":
+                    vm_id = alternative_suggestions[0]
+                    print(f"✅ Using suggested ID: {vm_id}")
+                    break  # Proceed with creation
+                elif action == "replace":
+                    # Delete existing VM first
+                    if self.hypervisor.destroy_vm(vm_id):
+                        print(f"✅ Deleted existing VM '{vm_id}'")
+                        break  # Proceed with creation
+                    else:
+                        print(f"❌ Failed to delete existing VM '{vm_id}'")
+                        continue
+                elif action == "view":
+                    # Show VM details
+                    existing_vm = self.hypervisor.vms[vm_id]
+                    print(f"\n📊 VM '{vm_id}' Details:")
+                    print(f"   State: {existing_vm.state.value}")
+                    if existing_vm.resources:
+                        print(f"   Memory: {existing_vm.resources.memory_kb} KB")
+                        print(f"   Ribosomes: {existing_vm.resources.ribosomes}")
+                        print(f"   ATP: {existing_vm.resources.atp_percentage}%")
+                        print(f"   Priority: {existing_vm.resources.priority}")
+                    continue  # Ask for VM ID again
+                elif action == "cancel":
+                    return
+            else:
+                break  # VM ID is unique, proceed
         
         # Show genome requirements if available
         if selected_genome['template']:
@@ -708,10 +795,58 @@ class InteractiveBioXen:
                 print(f"   ⚡ ATP: {atp_percentage}%")
                 print(f"   🎯 Priority: {priority}")
                 print(f"   📊 Status: Ready for startup")
+                
+                # Suggest next actions
+                print(f"\n💡 Next steps:")
+                print(f"   • Use 'Start Virtual Machine' to boot the VM")
+                print(f"   • Use 'Show System Status' to monitor resources")
+                print(f"   • Use 'Launch Visualization' to see cellular activity")
             else:
-                print(f"❌ Failed to create VM")
+                print(f"\n❌ Failed to create VM '{vm_id}'")
+                
+                # Provide helpful diagnostics
+                print(f"\n🔍 Possible reasons:")
+                
+                # Check maximum VMs
+                vm_count = len(self.hypervisor.vms)
+                max_vms = self.hypervisor.max_vms
+                if vm_count >= max_vms:
+                    print(f"   • Maximum VMs reached ({vm_count}/{max_vms})")
+                    print(f"     → Delete existing VMs or increase chassis capacity")
+                
+                # Check resource availability  
+                available_ribosomes = self.hypervisor.available_ribosomes
+                allocated_ribosomes = sum(vm.resources.ribosomes for vm in self.hypervisor.vms.values() if vm.resources)
+                remaining_ribosomes = available_ribosomes - allocated_ribosomes
+                
+                if ribosomes > remaining_ribosomes:
+                    print(f"   • Insufficient ribosomes (requested: {ribosomes}, available: {remaining_ribosomes})")
+                    print(f"     → Reduce ribosome allocation or free up resources")
+                
+                # Check ATP allocation
+                allocated_atp = sum(vm.resources.atp_percentage for vm in self.hypervisor.vms.values() if vm.resources)
+                remaining_atp = 100 - allocated_atp
+                
+                if atp_percentage > remaining_atp:
+                    print(f"   • Insufficient ATP (requested: {atp_percentage}%, available: {remaining_atp:.1f}%)")
+                    print(f"     → Reduce ATP percentage or pause other VMs")
+                
+                # Check if VM ID still exists (edge case)
+                if vm_id in self.hypervisor.vms:
+                    print(f"   • VM ID '{vm_id}' already exists")
+                    print(f"     → Choose a different VM ID")
+                
+                print(f"\n💡 Try:")
+                print(f"   • Check 'Show System Status' for resource usage")
+                print(f"   • Use 'Manage Virtual Machines' to free up resources")
+                print(f"   • Reduce resource allocation requirements")
+                
         except Exception as e:
-            print(f"❌ Error creating VM: {e}")
+            print(f"\n❌ Error creating VM: {e}")
+            print(f"\n🔍 Troubleshooting:")
+            print(f"   • Verify genome file is valid: {selected_genome['file_path']}")
+            print(f"   • Check hypervisor status")
+            print(f"   • Ensure resource values are within valid ranges")
         
         questionary.press_any_key_to_continue().ask()
 
