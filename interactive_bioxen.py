@@ -392,6 +392,7 @@ class InteractiveBioXen:
                 return
             
             try:
+                import subprocess  # Import subprocess for exception handling
                 print(f"\n🔄 Downloading {name} from NCBI...")
                 
                 # Use the new robust genome download helper
