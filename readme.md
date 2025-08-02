@@ -725,7 +725,7 @@ python3 test_genome_scanning.py
 - [ ] **Network communication** - Inter-VM molecular messaging simulation
 - [ ] **Multi-cell distributed modeling** - Scale across multiple simulated E. coli instances
 - [ ] **Cross-species virtualization** - E. coli → Yeast, Bacteria → Archaea models
-- [ ] **Biological container orchestration** - Bio-Kubernetes for computational cellular modeling
+- [ ] **Biological resource orchestration** - Bio-Kubernetes for computational cellular modeling
 
 ### 📋 **Additional Genome Formats**
 - [ ] **GenBank format support** - Parse .gb/.gbk genome files
