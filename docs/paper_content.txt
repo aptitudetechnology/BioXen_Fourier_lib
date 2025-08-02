@@ -1,0 +1,2817 @@
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+1
+
+GENETIC ENGINEERING THROUGH QUANTUM CIRCUITS: CONSTRUCTION OF
+
+2
+
+CODES AND ANALYSIS OF GENETIC ELEMENTS BIOBLOQU
+
+3
+4
+5
+6
+7
+8
+9
+10
+11
+
+Patrícia Verdugo Pascoal¹, Deborah Bambil¹, Luisa Mayumi Arake de Tacca¹, Rayane Nunes
+Lima¹, Marco Antônio de Oliveira¹, Mendeli Henning Vainstein², Elibio Rech¹
+
+¹Embrapa Genetic Resources and Biotechnology/National Institute of Science and Technology in
+Engineering Biological Systems, ZIP 70770-917, Brasília, Distrito Federal, Brazil.
+²Institute of Physics, Federal University of Rio Grande do Sul, ZIP 91501-970, Porto Alegre, Rio
+Grande do Sul, Brazil.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+12
+
+Abstract
+
+13
+
+The accelerated exploration and engineering of nucleotide sequences are directed towards quantum
+
+14
+
+mechanics and their intrinsic entanglements, implementing the qubits states, including the
+
+15
+
+development of algorithms. The production rate of biological sequencing data has increased to
+
+16
+
+approximately 1 Gb/h, but the ability to analyse these data has not kept pace due to complexity
+
+17
+
+issues and the limitations of classic computing. Despite its own challenges, quantum computing
+
+18
+
+offers a potential solution for analysing biological data and extracting relevant information. Here,
+
+19
+
+we developed and implemented a quantum algorithm that drives searches for genetic information.
+
+20
+
+Our results demonstrated that two codes written based on quantum computing language could
+
+21
+
+precisely search for a target sequence with 50 nucleotides in a DNA sequence database with up to
+
+22
+
+3022 nucleotides, building a synthetic structure called Quantum Biological Blocks (BioBloQu)
+
+23
+
+inside a minimal JCVI-syn3.0 cells. Our algorithm constitutes a unique starting point for
+
+24
+
+developing a more sophisticated model for the manipulation of data. This tool could be exploited
+
+25
+
+for quantum-enhanced design, building synthetic genomes with desirable traits from the bottom
+
+26
+
+up and exploiting genetic big data. Enhancing the algorithm and expanding device availability are
+
+27
+
+significant targets for accelerating searches and gathering specific biodiversity features for
+
+28
+
+research and applications.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+29
+
+Introduction
+
+30
+
+The intersection of quantum theory and biology has intrigued researchers for over a century,
+
+31
+
+suggesting a fundamental limit to our understanding of life through the lens of atomic structures. 1
+
+32
+
+The advent of quantum mechanical computers in the early 1980s 2 set the stage for ground-breaking
+
+33
+
+advances, culminating in the late 1980s and early 1990s with pioneering descriptions 3-7 that were
+
+34
+
+aimed at solving problems that had previously been considered intractable with classic algorithms.
+
+35
+
+In 1996, Grover introduced a quantum algorithm that revolutionized database searches, resulting
+
+36
+
+in a remarkable reduction in complexity from O(N) to O(√N); however, the practical applications
+
+37
+
+of this algorithm remain limited by the operational demands of large databases.
+
+38
+
+In the coming years, quantum simulations are expected to make significant advances in areas
+
+39
+
+such as quantum chemistry and high-temperature superconductivity. The community is making
+
+40
+
+progress, but the creation of noise-resistant quantum computers that can handle a variety of
+
+41
+
+problems will likely take another 10 to 15 years. The current challenges include protecting the
+
+42
+
+delicate states of quantum bits (qubits) from errors and unwanted environmental disturbances. This
+
+43
+
+gap between the theoretical potential and the current technological capabilities underscores the
+
+44
+
+transformative promise of quantum computing, particularly in biological research 8. According to
+
+45
+
+Pan8, realistic expectations regarding advances in quantum computing are needed since large
+
+46
+
+companies are claiming to offer quantum computing services when they are limited to small-scale
+
+47
+
+algorithms.
+
+48
+
+Quantum computers operate using quantum bits (qubits), which, unlike classic bits, can exist in
+
+49
+
+multiple states simultaneously because of superposition. The phenomenon of entanglement
+
+50
+
+enables interdependencies between qubit states, facilitating faster computations 9-11. Importantly,
+
+51
+
+quantum computers should not be seen solely as an evolutionary successor of classic systems 12;
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+52
+
+instead, they excel at solving specific, complex problems, whereas classic systems remain optimal
+
+53
+
+for other tasks13.
+
+54
+
+Quantum computing opens new avenues for biological research that could lead to breakthroughs
+
+55
+
+in medicine14, biotechnology15,16, and our understanding of life itself17 and evolution18. Currently,
+
+56
+
+quantum computing approaches, with their intrinsic and unique capabilities, offer promising
+
+57
+
+solutions for the acceleration, prospection and manipulation of nucleotide sequences with the aim
+
+58
+
+of discovering specific and innovative traits in genomics 19-23. For a broader perspective on
+
+59
+
+quantum computing in biology, several articles have been published 15,24-33. However, the lack of
+
+60
+
+sufficient quantum algorithms that are tailored to computational biology challenges hinders the
+
+61
+
+potential of quantum computing to accelerate genetic data processing and manipulation processes
+
+62
+
+in this field9,10,12,13,34-44.
+
+63
+
+A quantum search conducted using Grover's algorithm showed the explicit process of
+
+64
+
+constructing a gate, which was programmed using Qibo for N = 8 and M = 2. While the classic
+
+65
+
+algorithm required N + M queries in the worst case, the quantum algorithm found the solution with
+
+66
+
+only one or two queries, demonstrating an improvement in execution time. However, a limitation
+
+67
+
+of the algorithm is that N must be significantly greater than M. In addition, studies have included
+
+68
+
+generalized the algorithm to the fourth dimension to search for codons in DNA sequences using
+
+69
+
+quarts (4-dimensional qudits) and modified the alphabet to include A, C, G, and U 37. In this
+
+70
+
+context, efforts to develop new quantum algorithms form a key challenge in quantum information
+
+71
+
+technology, which, in turn, demands the combined expertise of the quantum physics and
+
+72
+
+computational biology communities26.
+
+73
+
+Owing to hardware requirements, our study was performed on a 5-qubit IBM cloud machine and
+
+74
+
+was limited to a subset of a gene sequence containing four nucleotides 12. We developed and
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+75
+
+implemented two codes that apply quantum algorithms to optimize large-scale genetic sequence
+
+76
+
+analyses using 127 qubits derived from the IBM simulator. The present code contributes to the
+
+77
+
+implementation of a novel quantum computing algorithm for a specific DNA sequence (the "target
+
+78
+
+sequence") in a genetic sequence database and builds a functional “bioblock” that we call
+
+79
+
+BioBloQu in a region of the minimal cell genome (JCVI-syn3). In this work, we extended the
+
+80
+
+applicability of the Grover algorithm by developing and implementing an algorithm that is capable
+
+81
+
+of handling more complex problems, such as searching DNA nucleotide sequences (A, T, G, and
+
+82
+
+C), instead of binary symbols. The diffusion operator remained unchanged, but the oracle was
+
+83
+
+modified to adapt to and operate on ququarts, enabling the algorithm to be efficiently implemented
+
+84
+
+and conduct searches within a larger and more complex dataset of synthetic structures.
+
+85
+
+Results
+
+86
+
+Searching for the sequence of interest using QuBio.py code
+
+87
+
+The primary objective of the quantum simulation conducted using Qubio.py was to evaluate the
+
+88
+
+effectiveness of Grover's algorithm in terms of identifying specific DNA sequences with 50
+
+89
+
+nucleotides (target sequences) within a genetic database (3022 nucleotides). The target DNA
+
+90
+
+sequence was selected based on its relevance to ongoing gene identification research; in this case,
+
+91
+
+a conserved functional domain of the Cas9-like nucleotide sequence found in Brazilian biomes
+
+92
+
+was employed.
+
+93
+
+This quantum code performs nucleotide sequence comparisons, allowing a mismatch rate of up
+
+94
+
+to 30%. This approach differs from BLAST45, which is a widely utilized tool for sequence
+
+95
+
+alignment that, although efficient, is predominantly classical. It allows up to 30% differences
+
+96
+
+between the compared sequences, which can be useful in contexts where sequence variations are
+
+97
+
+expected, such as in evolution studies or analyses of homologous genes. Although BLASTN also
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+98
+
+identifies similar sequences, the way it calculates similarity values and addresses mismatches is
+
+99
+
+more complex, considering factors such as gap penalties and different forms of similarity.
+
+100
+
+Focused on applications where speed and tolerance to variations are paramount, the utilized
+
+101
+
+method can be particularly useful in projects that require rapid sequence analyses with a focus on
+
+102
+
+general similarities.
+
+103
+
+Our code represents an interesting advance regarding the application of quantum computing to
+
+104
+
+sequence comparisons, allowing for fast and flexible analyses in contexts where tolerance to
+
+105
+
+mismatches is desirable. This innovative approach can complement the classic tools, offering new
+
+106
+
+perspectives for genomic research.
+
+107
+
+The simulation and implementation stages were performed on the IBM Quantum Experience
+
+108
+
+platform, which used a quantum processor with 127 qubits. The Grover's algorithm-based code
+
+109
+
+was configured with a search space corresponding to a genetic database sequence consisting of
+
+110
+
+3022 nucleotides from a Brazilian metagenome sequence database. On the IBM simulator, the
+
+111
+
+algorithm completed in 1 second, whereas on the real IBM quantum computer, it took slightly
+
+112
+
+longer, at 6 seconds with 1 iteration. This difference was expected because of the additional
+
+113
+
+overhead and complexity involved in executing the algorithm on physical quantum hardware
+
+114
+
+relative to a simulated environment. In the IBM simulator, the numbers of tested iterations were
+
+115
+
+1, 10, 20, 50 and 100, which ensured that the probability of observing the correct result was
+
+116
+
+maximized and provided a robust comparison. Overall, the real quantum computer was slightly
+
+117
+
+slower but still efficiently handled the same sequence size and number of shots as the simulator
+
+118
+
+did, indicating its practical applicability for use in such bioinformatics tasks. The results of the
+
+119
+
+tests are summarized in Table 1.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+120
+
+Additionally, by performing tests with different numbers of iterations (Fig. 1), it was possible to
+
+121
+
+verify an oscillation pattern in the final probability of the sequence being found in the database.
+
+122
+
+With one, 10, 20, 50 and 100 iterations, the oscillation in the probability continued in the pattern
+
+123
+
+between 0.26 and 0.28 (26-28%) probabilities of the sequence being found by the code based on
+
+124
+
+Grover's algorithm.
+
+125
+
+We also tested how the code behaved by changing only 15 nucleotides in the target sequence
+
+126
+
+(30% mismatch rate) and not modifying them in the database. The results indicate that the
+
+127
+
+algorithm was sensitive to this specific change. When we changed more than 15 nucleotides, we
+
+128
+
+observed a sequence finding probability equal to zero (Fig. 2).
+
+129
+
+Additionally, we performed a simulation to compare the predicted processing times using a
+
+130
+
+quantum computer with various qubit counts (150, 200, 250, and 300 qubits) and a traditional
+
+131
+
+server with 100 threads. These predictions were made for target sequences consisting of 100, 200,
+
+132
+
+and 300 base pairs via the real processing times obtained from a 100-qubit quantum computer and
+
+133
+
+a 100-thread server with 50 base pairs as references. The search was conducted on a 1-petabyte
+
+134
+
+database with a reference sequence of 3 kb. The results indicate that, as expected, increasing the
+
+135
+
+number of qubits significantly reduced the processing time. For example, processing a sequence
+
+136
+
+of 100 base pairs required 0.68 hours with 100 qubits, whereas the same task was completed in
+
+137
+
+only 0.17 hours with 300 qubits. Similarly, for a 300-bp sequence, the time requirement decreased
+
+138
+
+from 2.04 hours with 100 qubits to 0.51 hours with 300 qubits. In comparison, the server with 100
+
+139
+
+threads required 0.448, 1.024, and 1.6 hours to process 100, 200, and 300 base pairs, respectively
+
+140
+
+(Fig. 3).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+141
+
+These results suggest that quantum computing offers substantial processing efficiency
+
+142
+
+improvements, particularly as the sequence length increases, making it a promising solution for
+
+143
+
+handling large-scale metagenomic data.
+
+144
+
+Finding a scar in the minimal M. mycoides JCVI-Syn3 cell and building functional biological
+
+145
+
+blocks
+
+146
+
+New genes identified in metagenome studies, as exemplified above with Cas9 from Brazilian
+
+147
+
+biomes, can be sources of new functions and attributes for genetically modified or even synthetic
+
+148
+
+organisms. Therefore, quantum computing-based tools that assemble genes and detect optimal
+
+149
+
+insertion sites will be valuable techniques for guiding rational genome editing processes or even
+
+150
+
+the de novo design of completely synthetic genomes. In that context, we developed a second code
+
+151
+
+based on Grover’s algorithm to execute these tasks.
+
+152
+
+We worked with sequences acquired from the minimized M. mycoides JCVI-Syn3 genome given
+
+153
+
+its importance as one of the main landmarks in synthetic biology. The first breakthrough regarding
+
+154
+
+the development of this minimal cell was the creation of M. mycoides JCVI-Syn1.0, which was
+
+155
+
+the first cell to be controlled by a genome that was completely chemically synthesized in the
+
+156
+
+laboratory46. This strain then served as a chassis for studies in the identification of essential genes
+
+157
+
+and the removal of nonessential genes to generate a minimized version of the original genome,
+
+158
+
+resulting in M. mycoides JCVI-Syn3, which included less than 50% of its parental genome 17.
+
+159
+
+Our second code was first used to identify the unique sequence present in Syn-3B and resulting
+
+160
+
+from the deletion of the nonessential gene mmsyn1_0531, which was originally present between
+
+161
+
+the essential genes mmsyn1_0530 and rrl in Syn-1.0. This new gene organization scheme
+
+162
+
+generated a new sequence that can be seen as a scar marking the deletion site of a nonessential
+
+163
+
+gene (Fig. 4). This region could be an interesting insertion site for an exogenous gene, since there
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+164
+
+was no risk of disrupting an existing transcriptional unit. Additionally, given their originally distant
+
+165
+
+positions, suggesting independent regulation for each gene, a reduced degree of structural
+
+166
+
+interference with gene expression was expected.
+
+167
+
+Following the identification of a good insertion site, the code then assembled a genetic structure
+
+168
+
+with important components to create a transcriptional unit (with a promoter, an RBS, a protein
+
+169
+
+sequence and a terminator). The assembled structure was named a BioBloQu, with each individual
+
+170
+
+part described as geneQuantum (Fig. 5).
+
+171
+
+The generation of biological blocks for the construction process, which we denote as the
+
+172
+
+BioBloQu of a synthetic sequence of interest using the search performed in step 1 with QuBio.py,
+
+173
+
+included the addition of a promoter sequence, an RBS, the sequence of the enzyme of interest and
+
+174
+
+a terminator (which was able to add repressor and enhancer sequences).
+
+175
+
+This is a visual representation of the power of quantum computing for constructing genetic blocks
+
+176
+
+inspired by BioBricksTM. This approach not only streamlines the design process but also enhances
+
+177
+
+the potential for creating innovative biological systems. As quantum technologies continue to
+
+178
+
+advance, their applications in synthetic biology promise to revolutionize our ability to engineer
+
+179
+
+life and tackle complex biological challenges.
+
+180
+
+This new genetic structure replaced the scar that was initially identified by the code, generating
+
+181
+
+a modified minimal cell with the capacity to possibly secrete the protein that was present in the
+
+182
+
+designed BioBloQu (Fig. 6).
+
+183
+
+The addition of these components suggests an effort to modify or improve the functionality of
+
+184
+
+the genome, possibly aimed at engineering new phenotypic traits or optimizing metabolic
+
+185
+
+processes. In this way, quantum computing and the construction and optimization of genetic
+
+186
+
+sequences are possible. This approach enables the exploration of genetic combinations that are
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+187
+
+computationally infeasible with the traditional techniques, highlighting the intersection of
+
+188
+
+biotechnology with quantum computing. This fact illustrates a transformation in the genome of
+
+189
+
+Mycoplasma mycoides and emphasizes the potential of methods based on quantum computing for
+
+190
+
+use in genetic engineering scenarios. It serves as an example of how synthetic biology can be
+
+191
+
+enhanced by emerging technologies, offering new possibilities for research and applications in
+
+192
+
+diverse fields, such as agriculture and biofuels.
+
+193
+
+Discussion
+
+194
+
+Some biomedical scientists are exploring how quantum computing can enhance algorithms and
+
+195
+
+machine learning methods in various biological fields, such as protein design. As biologists adopt
+
+196
+
+this technology, they seek to understand its underlying mechanisms and determine when classic
+
+197
+
+computers are sufficient22.
+
+198
+
+Several approaches have been proposed to optimize DNA sequence searches, from classic
+
+199
+
+algorithms based on string comparisons to preliminary quantum implementations that seek to
+
+200
+
+exploit quantum superposition and interference. However, gaps remain regarding the practical
+
+201
+
+applications of these methods in large genomic databases.
+
+202
+
+Estimating the universal prior distribution is essential for inferring the algorithmic structure of
+
+203
+
+data and discovering causal generative models. Although these metrics are not computable, they
+
+204
+
+can be approximated by limiting the time and memory resources consumed by the utilized
+
+205
+
+computational model. However, the exponential scaling of potential automata makes them
+
+206
+
+intractable on classic computers, particularly for complex cases. Owing to their unstructured
+
+207
+
+outputs and computational irreducibility, traditional heuristics cannot approximate these
+
+208
+
+computations. A quantum circuit framework was proposed in this study to estimate the universal
+
+209
+
+distribution by simulating the superposition of programs for resource-bounded automata. This
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+210
+
+approach offers a quantum resource complexity level with linear complexity concerning the data
+
+211
+
+size, achieving a polynomial speedup over the classic exhaustive methods. Thus, the exploration
+
+212
+
+of program-output relationships represents a promising avenue for accelerating quantum searches,
+
+213
+
+with specific data properties inferred from the universal distribution in the quantum superposition
+
+214
+
+task28.
+
+215
+
+De39 introduced new formulations for RNA structures by utilizing quantum pattern recognition
+
+216
+
+and the quantum Hamming distance within Grover’s framework, extracting linear regions from
+
+217
+
+these complex forms. To maximize the achievable quantum speedup, methods have been
+
+218
+
+developed for concatenating different linearized segments of RNA structures into longer
+
+219
+
+sequences. The mechanism was simulated using IBM’s Qiskit quantum simulator by employing
+
+220
+
+RNA examples acquired from GenBank and mirBase. Iteration complexity comparisons
+
+221
+
+demonstrated the potential for quadratic speedups in quantum computing over the classic methods,
+
+222
+
+and simulation results indicated high search accuracy. These results suggest that future quantum
+
+223
+
+search methods could significantly accelerate the genome sequencing process as quantum
+
+224
+
+computers become more widely adopted. Further research should investigate the effects of
+
+225
+
+decoherence on detection accuracy and assess the computational demands of each iteration on
+
+226
+
+actual quantum hardware.
+
+227
+
+Kösoglu-Kind et al.12 examined how genetic information is encoded in nucleotide sequences and
+
+228
+
+identified it through comparative analyses. Variations can occur at the nucleotide level or
+
+229
+
+collectively due to recombination or deletion. Detecting these differences is essential for biology
+
+230
+
+and medicine but requires significant classical computing power due to genomic complexity. To
+
+231
+
+address this issue, the authors proposed the use of flexible representations of quantum images
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+232
+
+(FRQIs) for sequence analysis purposes, enabling detailed comparisons and improving the
+
+233
+
+detection accuracy achieved for subtle genetic variations.
+
+234
+
+The potential of quantum computing to speed up the discovery of specific and innovative traits
+
+235
+
+from big nucleotide sequence data is immense. By providing unparalleled processing power,
+
+236
+
+enhancing the precision of trait discovery, optimizing genetic algorithms, integrating with AI, and
+
+237
+
+enabling real-time analyses, quantum computing could revolutionize how we approach genomics
+
+238
+
+and trait development47. As this technology matures, it promises to unlock new possibilities in
+
+239
+
+biotechnology, agriculture, and medicine, paving the way for ground-breaking innovations that
+
+240
+
+could reshape our understanding of life48,49.
+
+241
+
+After analysing the comparative simulation of the predicted processing times using a quantum
+
+242
+
+computer and our robust classic computer server with 100 threads (Fig. 3), the results suggested
+
+243
+
+that quantum computing offers substantial improvements in processing efficiency, particularly as
+
+244
+
+the sequence length increases, making it a promising solution for handling large-scale
+
+245
+
+metagenomic data. Therefore, to match our server with 100 processing threads, the quantum
+
+246
+
+computer needed approximately 150 available qubits. IBM's quantum computer currently has 400
+
+247
+
+qubits, but less than 200 of them are available for use in either simulations or as real quantum
+
+248
+
+units50. Even at a smaller scale, quantum computing can provide efficiency advantages as the
+
+249
+
+number of base pairs contained in the target sequence increases. The use of a greater number of
+
+250
+
+qubits (such as 250 or 300) resulted in processing times that were significantly lower than those
+
+251
+
+of classic computing, suggesting that quantum computing may be more suitable for problems
+
+252
+
+requiring high computational power. The representation of classic computing exhibits a linear
+
+253
+
+increase in processing time, indicating that as the volume of data increases, classic computing may
+
+254
+
+become impractical for tasks that demand intensive processing steps. These observations highlight
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+255
+
+the potential of quantum computing to transform fields that require the analysis of large amounts
+
+256
+
+of data, such as bioinformatics, molecular modelling, and other scientific applications. Challenges
+
+257
+
+remain, and there is a long way to go before quantum computing becomes established, and we are
+
+258
+
+working in parallel with this progress to maximize its capabilities and expand its achievements
+
+259
+
+within biology and biotechnology.
+
+260
+
+Here, the use of one iteration is sufficient for the objective and demands less time and
+
+261
+
+computational power, as it takes approximately one second for one iteration and 49 seconds for
+
+262
+
+100 iterations. Increasing the number of iterations in a quantum search algorithm can lead to a
+
+263
+
+decrease in the probability of finding the target, which can be attributed to several factors that are
+
+264
+
+related to the nature of quantum algorithms.
+
+265
+
+According to Batra et al.14, algorithms can potentially process large datasets more efficiently,
+
+266
+
+reducing the time required for drug discovery processes. The use of quantum computing can lead
+
+267
+
+to more accurate molecular property predictions, facilitating the identification of promising drug
+
+268
+
+candidates. However, their paper also had several limitations. The current state of quantum
+
+269
+
+computing hardware is still in its infancy, which limits the practical implementations of quantum
+
+270
+
+machine learning algorithms in real-world drug discovery scenarios.
+
+271
+
+The study published by Rodríguez37, which also used the approach employed in our code,
+
+272
+
+exemplified the trade-offs between computational complexity and algorithmic effectiveness, since
+
+273
+
+the practical results obtained here (100 iterations, 0.28 probability, and 48 seconds) demonstrate
+
+274
+
+such complexity. This analysis can be useful for future optimizations, enabling the exploration of
+
+275
+
+different configurations of quantum circuits to improve the efficiency of the algorithm in similar
+
+276
+
+contexts31,51.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+277
+
+Studies attempting to generate biological blocks using quantum computing have not yet been
+
+278
+
+reported, and the present study aimed to explore this possibility because quantum computing and
+
+279
+
+synthetic biology are on the rise. Furthermore, the need to quickly and effectively explore large
+
+280
+
+datasets to accelerate and sensitize the construction of biological building blocks is of great interest
+
+281
+
+in the context of biotechnology, especially genetic and biological systems engineering.
+
+282
+
+The discussion presented here encapsulates a promising and innovative frontier at the intersection
+
+283
+
+of quantum computing and biological sciences, particularly in the domains of genomics and
+
+284
+
+genetic engineering. As researchers increasingly explore the applications of quantum algorithms
+
+285
+
+for solving complex biological problems, it becomes clear that significant advances can be
+
+286
+
+achieved, thereby addressing long-standing challenges in these fields. First, the potential of
+
+287
+
+quantum computing to improve DNA sequence analysis and protein design algorithms cannot be
+
+288
+
+overstated. The ability to leverage quantum superposition and interference offers a paradigm shift
+
+289
+
+in terms of how we process biological data. The traditional computational methods often struggle
+
+290
+
+with the exponential complexity of genomic information, making them unsuitable for large-scale
+
+291
+
+analyses. Owing to its inherent ability to simultaneously process vast datasets, quantum computing
+
+292
+
+presents a viable solution to these challenges. The existing frameworks, such as the quantum
+
+293
+
+circuit approach for estimating universal distributions and the use of quantum pattern recognition
+
+294
+
+in RNA structure analyses, exemplify the innovative strategies that are being developed to
+
+295
+
+effectively harness this technology.
+
+296
+
+Furthermore, the findings derived from recent studies, including those published by De 39 and
+
+297
+
+Kösoglu-Kind et al.12, highlight the feasibility of achieving substantial speedups in genetic
+
+298
+
+analyses through quantum computing. The potential for attaining quadratic and polynomial
+
+299
+
+speedups relative to the classic methods suggests that quantum technologies could significantly
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+300
+
+reduce the time required for genome sequencing and variant detection. This speedup is particularly
+
+301
+
+crucial as the volume of genomic data continues to grow exponentially, driven by advances in
+
+302
+
+sequencing technologies and the growing interest in personalized medicine.
+
+303
+
+Here, our study contributes to the small-scale assessment of the possibility of accelerating applied
+
+304
+
+analyses with real genomic data and the perspective of advancing quantum computing in the
+
+305
+
+biological sciences. It is a way to not only keep up with the current hype but also to follow the
+
+306
+
+evolution of a science that, despite being an emerging field, is extremely important for the large
+
+307
+
+volume of biological data that will need to be processed in the future.
+
+308
+
+In addition, the integration of quantum computing with artificial intelligence represents an
+
+309
+
+attractive avenue for future research. By optimizing genetic algorithms and facilitating real-time
+
+310
+
+data analyses, quantum computing can revolutionize trait discovery processes in agriculture and
+
+311
+
+biotechnology. The potential to accelerate the identification of beneficial traits and increase crop
+
+312
+
+resilience can generate significant benefits in terms of food security and sustainability. As the
+
+313
+
+world faces urgent challenges such as climate change and population growth, the ability to
+
+314
+
+innovate agricultural practices through quantum-enabled solutions has become increasingly vital.
+
+315
+
+Despite these promising advances, it is essential to recognize the challenges that remain regarding
+
+316
+
+the practical implementation of quantum computing in real-world biological applications. The
+
+317
+
+current state of quantum hardware is still evolving, and qubit availability and coherence time
+
+318
+
+limitations represent significant obstacles. As researchers work to develop more robust and
+
+319
+
+scalable quantum systems, the path to practical applications in biology and genetic engineering
+
+320
+
+will become clearer.
+
+321
+
+In conclusion, this research represents a significant contribution to the field of applying quantum
+
+322
+
+computing to biology and genetic engineering. The innovative approaches discussed herein
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+323
+
+provide a foundation for further exploration and experimentation, illuminating the potential of
+
+324
+
+quantum technologies to transform our understanding of complex biological systems. As we
+
+325
+
+advance in this exciting domain, it is imperative that we continue to foster interdisciplinary
+
+326
+
+collaboration, bridging the gap between quantum computing and the biological sciences. Such
+
+327
+
+synergy will undoubtedly lead to ground-breaking discoveries and innovations, reshaping the
+
+328
+
+biotechnology landscape and offering new solutions to some of the most pressing challenges in
+
+329
+
+healthcare, agriculture and beyond. The future of quantum computing in biology is immensely
+
+330
+
+promising, and continued explorations of its capabilities will be the key to unlocking new frontiers
+
+331
+
+in science and technology.
+
+332
+
+References
+
+333
+
+1.
+
+Bohr, N. Biology and quantum theory. Nature 129, 343–343 (1931).
+
+334
+
+2.
+
+Benioff, P. The computer as a physical system: a microscopic quantum mechanical
+
+335
+
+Hamiltonian model of computers as represented by Turing machines. J. Stat. Phys. 22,
+
+336
+
+563–591 (1980).
+
+337
+
+3.
+
+338
+339
+
+Deutsch, D. Quantum theory, the Church–Turing principle and the universal quantum
+computer. Proc. R. Soc. Lond. A. Math. Phys. Sci. 400, 97–117 (1985).
+
+4.
+
+Bernstein, E. & Vazirani, U. Quantum complexity theory in Proceedings of the Twenty-
+
+340
+
+Fifth Annual ACM Symposium on Theory of Computing - STOC '93 11–20 (ACM Press,
+
+341
+
+New York, NY, USA, 1993).
+
+342
+
+5.
+
+343
+344
+345
+
+Yao, A. C. C. Quantum circuit complexity in Proceedings of 1993 IEEE 34th Annual
+Foundations of Computer Science 352–361 (IEEE, Palo Alto, CA, USA, 1993).
+
+6.
+
+Berthiaume, A. & Brassard, G. Oracle quantum computing. J. Mod. Opt. 41, 2521–2535
+(1994).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+346
+
+7.
+
+Shor, P. W. Algorithms for quantum computation: discrete logarithms and factoring in
+
+347
+
+Proceedings 35th Annual Symposium on Foundations of Computer Science 124–134
+
+348
+
+(IEEE, Santa Fe, NM, USA, 1994).
+
+349
+
+8.
+
+350
+351
+
+Nature 638, 862 (2025).
+9.
+
+352
+353
+
+Gill, S. S. et al. Quantum computing: a taxonomy, systematic review and future
+directions. Softw. Pract. Exp. 52, 66–114 (2021).
+
+10.
+
+354
+355
+
+Pan, J. W. Quantum technologies need big investments to deliver on their big promises.
+
+Graham, T. M. et al. Multi-qubit entanglement and algorithms on a neutral-atom quantum
+computer. Nature 604, 457–462 (2022).
+
+11.
+
+Shrivastava, P., Soni, K. K. & Rasool, A. Evolution of quantum computing based on
+
+356
+
+Grover's search algorithm in 2019 10th International Conference on Computing,
+
+357
+
+Communication and Networking Technologies (ICCCNT) 1–6 (IEEE, Kanpur, India,
+
+358
+
+2019).
+
+359
+
+12.
+
+360
+361
+
+computers. Sci. Rep. 13, 14552 (2023).
+13.
+
+362
+363
+
+Nandhini, S., Singh, H. & Akash, U. N. An extensive review on quantum computers.
+Adv. Eng. Softw. 174, 103337 (2022).
+
+14.
+
+364
+365
+
+Kösoglu-Kind, B. et al. A biological sequence comparison algorithm using quantum
+
+Batra, K. et al. Quantum machine learning algorithms for drug discovery applications. J.
+Chem. Inf. Model. 61, 2641–2647 (2021).
+
+15.
+
+Andersson, M. P., Jones, M. N., Mikkelsen, K. V., You, F. & Mansouri, S. S. Quantum
+
+366
+
+computing for chemical and biomolecular product design. Curr. Opin. Chem. Eng. 36,
+
+367
+
+100754 (2022).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+368
+
+16.
+
+Molinari, M. D. C. et al. Navigating the path from lab to market: regulatory challenges
+
+369
+
+and opportunities for genome editing technologies for agriculture in Plant Genome
+
+370
+
+Editing Technologies. Interdisciplinary Biotechnological Advances (eds Chen, J. T. &
+
+371
+
+Ahmar, S.) 25–63 (Springer, Singapore, 2024).
+
+372
+
+17.
+
+373
+
+Hutchison, C. A. et al. Design and synthesis of a minimal bacterial genome. Science 351,
+aad6253 (2016).
+
+374
+
+18.
+
+Arber, W. Elements for a theory of molecular evolution. Gene 317, 3–11 (2003).
+
+375
+
+19.
+
+Outeiral, C. et al. The prospects of quantum computing in computational molecular
+
+376
+377
+
+biology. WIREs Comput. Mol. Sci. 11, e1481 (2021).
+20.
+
+378
+379
+
+3190–3205 (2023).
+21.
+
+380
+381
+
+Nofer, M., Bauer, K., Hinz, O., van der Aalst, W. & Weinhardt, C. Quantum computing.
+Bus. Inf. Syst. Eng. 65, 361–367 (2023).
+
+22.
+
+382
+383
+
+Ma, H. et al. Multiscale quantum algorithms for quantum chemistry. Chem. Sci. 14,
+
+Marx, V. Biology begins to tangle with quantum computing. Nat. Methods 18, 715–719
+(2021).
+
+23.
+
+384
+
+Marchetti, L. et al. Correction to: quantum computing algorithms: getting closer to
+critical problems in computational biology. Brief. Bioinform. 24, bbad134 (2022).
+
+385
+
+24.
+
+Lambert, N. et al. Quantum biology. Nat. Phys. 9, 10–18 (2013).
+
+386
+
+25.
+
+Hollenberg, L. C. L. Fast quantum search algorithms in protein sequence comparisons:
+
+387
+388
+389
+
+Quantum bioinformatics. Phys. Rev. E 62, 7532–7535 (2000).
+26.
+
+Fedorov, A. K. & Gelfand, M. S. Towards practical applications in quantum
+computational biology. Nat. Comput. Sci. 1, 114–119 (2021).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+390
+
+27.
+
+391
+392
+
+review. Quantum Inf. Process. 20, 80 (2021).
+28.
+
+393
+394
+
+Sarkar, A., Al-Ars, Z. & Bertels, K. Estimating algorithmic information using quantum
+computing for genomics applications. Appl. Sci. 11, 2696 (2021).
+
+29.
+
+395
+396
+
+Nimbe, P., Weyori, B. A. & Adekoya, A. F. Models in quantum computing: a systematic
+
+Roman-Vicharra, C. & Cai, J. J. Quantum gene regulatory networks. NPJ Quantum Inf.
+9, 67 (2023).
+
+30.
+
+Pal, S., Bhattacharya, M., Lee, S. S. & Chakraborty, C. Quantum computing in the next-
+
+397
+
+generation computational biology landscape: from protein folding to molecular dynamics.
+
+398
+
+Mol. Biotechnol. 66, 163–178 (2024).
+
+399
+
+31.
+
+Pal, S., Bhattacharya, M., Dash, S., Lee, S. S. & Chakraborty, C. Future potential of
+
+400
+
+quantum computing and simulations in biological science. Mol. Biotechnol. 66, 2201–
+
+401
+
+2218 (2024).
+
+402
+
+32.
+
+Aroche, R. R., García, Y. M. O., Arellano, M. A. M. & Leal, A. R. DNA as a perfect
+
+403
+
+quantum computer based on the quantum physics principles. Scientific reports 14, 11636
+
+404
+
+(2024).
+
+405
+
+33.
+
+Yang, X., Huang, K., Yang, D., Zhao, W. & Zhou, X. Biomedical big data technologies,
+
+406
+
+applications, and challenges for precision medicine: a review. Glob. Chall. 8, 2300163
+
+407
+
+(2024).
+
+408
+
+34.
+
+409
+410
+411
+
+Khan, T. M. & Robles-Kelly, A. Machine learning: quantum vs classical. IEEE Access 8,
+219275–219294 (2020).
+
+35.
+
+Robert, A., Barkoutsos, P. K., Woerner, S. & Tavernelli, I. Resource-efficient quantum
+algorithm for protein folding. NPJ Quantum Inf. 7, 38 (2021).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+412
+
+36.
+
+413
+414
+
+acceleration. Quantum Sci. Technol. 7, 015018 (2021).
+37.
+
+415
+416
+
+Efthymiou, S. et al. Qibo: a framework for quantum simulation with hardware
+
+Rodríguez, J. B. Application of Grover’s Quantum Algorithm for String Matching
+(Treballs Finals de Grau de Física. Facultat de Fisica, Universitat de Barcelona, 2022).
+
+38.
+
+Cordier, B. A., Sawaya, N. P. D., Guerreschi, G. G. & McWeeney, S. K. Biology and
+
+417
+
+medicine in the landscape of quantum advantages. J. R. Soc. Interface 19, 20220541
+
+418
+
+(2022).
+
+419
+
+39.
+
+De, R. Quantum accelerated pattern matching for genome sequencing in complex RNA
+
+420
+
+secondary structures in 2022 IEEE International Conference on Quantum Computing and
+
+421
+
+Engineering (QCE) 842–843 (IEEE, Broomfield, CO, USA, 2022).
+
+422
+
+40.
+
+423
+424
+
+quantum annealing. BMC Bioinform. 23, 122 (2022).
+41.
+
+Khanal, B., Orduz, J., Rivas, P. & Baker, E. Supercomputing leverages quantum machine
+learning and Grover’s algorithm. J. Supercomput. 79, 6918–6940 (2023).
+
+425
+426
+
+Nałęcz-Charkiewicz, K. & Nowak, R. M. Algorithm for DNA sequence assembly by
+
+42.
+
+Bhuvaneswari, S., Deepakraj, R., Urooj, S., Sharma, N. & Pathak, N. Computational
+
+427
+
+analysis: unveiling the quantum algorithms for protein analysis and predictions. IEEE
+
+428
+
+Access 11, 94023–94033 (2023).
+
+429
+
+43.
+
+430
+431
+
+dawn of the quantum computing era. Businesses 3, 585–605 (2023).
+44.
+
+432
+433
+434
+
+How, M. L. & Cheah, S. M. Business renaissance: opportunities and challenges at the
+
+Schmidt, B. & Hildebrandt, A. From GPUs to AI and quantum: three waves of
+acceleration in bioinformatics. Drug Discov. Today 29, 103990 (2024).
+
+45.
+
+Altschul, S. F., Gish, W., Miller, W., Myers, E. W. & Lipman, D. J. Basic local
+alignment search tool. J. Mol. Biol. 215, 403–410 (1990).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+435
+
+46.
+
+436
+437
+
+Gibson, D. G. et al. Creation of a bacterial cell controlled by a chemically synthesized
+genome. Science 329, 52–56 (2010).
+
+47.
+
+Goswami, S. & Sharma, S. Artificial intelligence, quantum computing and cloud
+
+438
+
+computing enabled personalized medicine in next generation sequencing bioinformatics
+
+439
+
+in 2024 IEEE International Conference on Interdisciplinary Approaches in Technology
+
+440
+
+and Management for Social Innovation (IATMSI) 1–5 (IEEE, Gwalior, India, 2024).
+
+441
+
+48.
+
+442
+443
+
+Quantum Technol. 5, 2100139 (2022).
+49.
+
+444
+445
+
+50.
+
+51.
+
+Pyrkov, A. et al. Complexity of life sciences in quantum and AI era. WIREs Comput.
+Mol. Sci. 14, e1701 (2024).
+
+52.
+
+Allu, S. N., Naidu, T. A. & Rao, K. G. Optimized quantum circuit implementation of
+SATURNIN for Grover’s algorithm. Int. J. Inf. Technol. 16, 2955–2964 (2024).
+
+450
+451
+
+Abughanem, M. IBM quantum computers: evolution, performance, and future directions.
+J. Supercomput. 81, 687 (2025).
+
+448
+449
+
+Souza, K. X. S. D. et al. Quantum computing: current and potential applications in digital
+agriculture. Pesqui. Agropecu. Bras. 59, e03753 (2024).
+
+446
+447
+
+Mauranyapin, N. P., Terrasson, A. & Bowen, W. P. Quantum biotechnology. Adv.
+
+53.
+
+Zhang, M. L., Li, H. B. & Jin, Y. Application and perspective of CRISPR/Cas9 genome
+
+452
+
+editing technology in human diseases modeling and gene therapy. Front. Genet. 15,
+
+453
+
+1364742 (2024).
+
+454
+
+54.
+
+Grover, L. K. A fast quantum mechanical algorithm for database search in Proceedings of
+
+455
+
+the Twenty-Eighth Annual ACM Symposium on Theory of Computing - STOC '96 212–
+
+456
+
+219 (ACM Press, New York, NY, USA, 1996).
+
+457
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+458
+
+Tables
+
+459
+
+Table 1. Comparative performance of different computers in terms of executing nucleic acid
+
+460
+
+sequence search algorithms.
+Classical
+computer/BLASTN*
+0.342
+
+IBM Simulator
+
+IBM Quantum Computer
+
+4
+
+6
+
+Iterations
+
+N/A
+
+1
+
+1
+
+Target_sequence size (nt)
+
+50
+
+50
+
+50
+
+Database_sequence (nt)
+
+3022
+
+3022
+
+3022
+
+Time of running (seconds)
+
+461
+
+*128 CPU Processor.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+462
+
+Figure legends
+
+463
+464
+
+Fig. 1. Probability of finding the target sequence in the database of Brazilian metagenome
+
+465
+
+sequences according to the QuBio.py code. Running time: 100 iterations ran in 49 seconds using
+
+466
+
+127 qubits of the IBM simulator.
+
+467
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+468
+
+Fig. 2. The final probability of finding a sequence with more than a 30% mismatch rate in the
+
+469
+
+database. The process took 0 seconds on the IBM simulator using 1 iteration.
+
+470
+471
+
+Fig. 3. Comparison among the processing times required for sequence analysis using quantum
+
+472
+
+computers and traditional servers. Processing times needed for target sequences of 100, 200, and
+
+473
+
+300 base pairs using a quantum computer with various qubit counts (100, 150, 200, 250, and 300
+
+474
+
+qubits) and a traditional server with 100 threads.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+475
+476
+
+Fig. 4. Results of the search for two sequences for identifying the scar produced by the removal
+
+477
+
+of an essential gene from the minimized genome of Mycoplasma mycoides (JCVI-Syn3B) using
+
+478
+
+code developed in-house via quantum computing.
+
+479
+480
+
+Fig. 5. Representation of the structures of the components contained in a BioBloQu.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+481
+482
+
+Fig. 6. Representation of the region with the presence of the scar in the genome of Mycoplasma
+
+483
+
+mycoides (JCVI-Syn3B, left) and the subsequent addition of genetic building blocks (called
+
+484
+
+BioBloQu) created via quantum computing (with a promoter, an RBS, a protein/enzyme-
+
+485
+
+encoding gene sequence and a terminator).
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+486
+487
+
+Fig. 7. Flowchart of the Qubio.py program. The Qubio.py program accepts input sequences of
+
+488
+
+both omics data (<3000-bp DNA target) and protein blocks/parts (12 to 50 bp) and initializes a
+
+489
+
+quantum circuit. The processing phase occurs using a Qiskit-based simulator (100 qubits) and
+
+490
+
+real quantum units (IBM Cloud). The core algorithm leverages Grover's algorithm, beginning
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+491
+
+with the use of the Hadamard transformation to create a superposition of the states, followed by
+
+492
+
+amplitude amplification via the Oracle function. After the qubit states are measured, the results
+
+493
+
+are analysed to identify the target sequence.
+
+494
+
+495
+496
+
+Fig. 8. The definition of a target sequence based on highlighting the short sequence of the
+
+497
+
+conserved functional domain of a protein.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+498
+
+Methods
+
+499
+
+The diagram below (Fig. 7) provides a high-level overview of the quantum Qubio.py code
+
+500
+
+developed in-house and designed for genetic sequence analyses using Grover's algorithm on a
+
+501
+
+quantum computing cloud platform. This algorithm is well suited for bioinformatics applications,
+
+502
+
+specifically in the context of sequence searches within large databases, because it provides a
+
+503
+
+quadratic speedup over the classic search algorithms, allowing for the handling of genomic data
+
+504
+
+with an immense scale. While the classic search methods require O(N) comparisons, where N is
+
+505
+
+the size of the database, Grover's algorithm reduces this number to O(√N)52. The process begins
+
+506
+
+with two main inputs, the target DNA sequence and the database sequence, where the
+
+507
+
+superposition of quantum states allows multiple comparisons to occur simultaneously. The target
+
+508
+
+DNA sequence is the specific genetic sequence of interest that needs to be analysed. This could be
+
+509
+
+a particular gene or segment related to a specific trait. On the other hand, the database sequence
+
+510
+
+represents a collection of genetic sequences stored in a database. These sequences may come from
+
+511
+
+various sources, such as whole genomes, gene libraries, or databases of genetic variations 12.
+
+512
+
+Once the data are prepared, the core of the process involves applying Grover's algorithm, which
+
+513
+
+is a quantum algorithm that was designed for efficiently searching unsorted databases. By
+
+514
+
+leveraging quantum computing, Grover's algorithm significantly speeds up the process of
+
+515
+
+searching for the target sequence within the database relative to the classic methods, reducing the
+
+516
+
+number of required comparisons. The execution of Qubio.py takes place on a quantum computing
+
+517
+
+cloud platform.
+
+518
+
+After the algorithm runs, the results of the analysis are obtained. These results indicate the
+
+519
+
+presence or location of the target sequence within the database, which is then processed to extract
+
+520
+
+meaningful insights. In scientific research, understanding and analysing genetic sequences can
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+521
+
+lead to insights into biological mechanisms, the study of genetic diseases, and the development of
+
+522
+
+new therapies and bioactive molecules. In agriculture, genetic analyses can help identify the genes
+
+523
+
+that are responsible for desirable plant traits, such as disease resistance, productivity, and product
+
+524
+
+quality. Additionally, genetic analyses can be used in environmental monitoring cases to track
+
+525
+
+biodiversity and assess the health of ecosystems by detecting and monitoring species and genetic
+
+526
+
+variations.
+
+527
+
+This code implements Grover's algorithm to efficiently search for a specific target sequence
+
+528
+
+within a database of DNA sequences. By leveraging Grover's transformation, which is represented
+
+529
+
+mathematically by matrices, the algorithm amplifies the probability of locating the desired
+
+530
+
+sequence.
+
+531
+
+Sequence definition
+
+532
+
+To define the short-length target sequence (50 bp), a protein sequence isolated from the
+
+533
+
+Brazilian biomes metagenome project was explored and analysed in terms of its functional domain.
+
+534
+
+Its most genetically conserved portion was highlighted and filtered to serve as a search target (Fig.
+
+535
+
+8). The chosen protein, Cas9-like nuclease, is involved in the CRISPR/Cas9 system, which has
+
+536
+
+several advantages, such as its high editing efficiency, its ease of operation, its cost-effectiveness,
+
+537
+
+and the diversity of its recognition sites. It can be used to edit the human genome for treating
+
+538
+
+genetic defects or illnesses caused by gene mutations. It can also edit plant genes to create more
+
+539
+
+resilient plants. Furthermore, the CRISPR/Cas9 editing technology offers the possibility of
+
+540
+
+eliminating pathogens such as bacteria and viruses, which could completely cure infectious
+
+541
+
+diseases53.
+
+542
+
+Qubio.py code and quantum circuit
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+543
+
+According to the reported data, Grover's algorithm 54 is the most appropriate algorithm for
+
+544
+
+performing searches in a quantum environment. In the circuit of this algorithm, each qubit is input,
+
+545
+
+|0> and |1> possess equal superposition probabilities, and this qubit passes, or each element is
+
+546
+
+searched. The output generates the results. This superposition is achieved via the Hadamard
+
+547
+
+transformation, enabling the qubit to explore multiple states simultaneously, which is a key feature
+
+548
+
+for exploiting quantum parallelism. Each pass through the algorithm incrementally increases the
+
+549
+
+probability of finding the correct result, enhancing the efficiency beyond that of the classic search
+
+550
+
+methods. The representation of the quantum circuit for the target sequence of 50 nucleotides can
+
+551
+
+be observed in Fig. S1, as along with the code used to generate it. Our code allows the search to
+
+552
+
+be performed with up to a 30% mismatch rate, meaning that the similarity between the target
+
+553
+
+sequence and the database sequence is 70%. In practical terms, if the query sequence and the
+
+554
+
+database sequence have 100 nucleotides, a similarity of 70% indicates that 70 nucleotides are
+
+555
+
+identical or very similar, whereas 30 nucleotides differ. Depending on the context of the search, a
+
+556
+
+similarity of 70% may be sufficient for inferring homologies but may require an additional
+
+557
+
+analysis.
+
+558
+
+Grover algorithm
+
+559
+
+The oracle implementation uses a series of control-X gates (CX gates) to label qubits by
+
+560
+
+comparing the input and target sequences. The Grover diffusion operator, (U_G), amplifies the
+
+561
+
+probability of obtaining the correct answer by reflecting the quantum state about the average of all
+
+562
+
+the superposed states. Mathematically, the Grover transformation is represented as follows:
+
+563
+
+U_G = (2|s⟩⟨s|) - I
+
+564
+
+where (s) represents the initial state of the uniform superposition process and (I) is the identity
+
+565
+
+matrix. This transformation iterates multiple times to maximize the amplitude of the desired
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+566
+
+quantum state. The probability (P_n) of finding the target sequence after (n) iterations of Grover’s
+
+567
+
+transformation is given by
+
+568
+
+P_n = sin²((2n+1)θ)
+
+569
+
+where θ is the angle between the initial state |s⟩ and the target state |w⟩, which encodes the
+
+570
+
+solution in the Hilbert space. After a sufficient number of iterations, the superposition collapses
+
+571
+
+into the target state, and the binary result is decoded to retrieve the target sequence. The binary
+
+572
+
+result is then converted back to the corresponding nucleotide sequence, and the result
+
+573
+
+corresponding to the target sequence is checked.
+
+574
+
+Hadamard transformation
+
+575
+
+This function implements the core logic of Grover’s algorithm. It begins by initializing a
+
+576
+
+quantum circuit with numerous qubits (double the length of the target sequence to be searched).
+
+577
+
+Hadamard gates are applied to create an initial superposition across all possible states. The oracle
+
+578
+
+function is then executed to mark the target sequence. The Grover transformation is repeatedly
+
+579
+
+applied to amplify the probability of measuring the correct target sequence. The final step involves
+
+580
+
+measuring the quantum state and analysing the results to determine the probability of successfully
+
+581
+
+identifying the target sequence.
+
+582
+583
+
+The Grover transformation can be mathematically represented by the transformation matrix
+U_G, which is defined as shown below:
+
+584
+
+UG=2∣ψ⟩⟨ψ∣−I
+
+585
+
+The Grover transformation, UG=2∣ψ⟩⟨ψ∣−I, operates by reflecting the current quantum state
+
+586
+
+over the average of all possible states, where ∣ψ⟩ is the initial state of the uniform superposition
+
+587
+
+process, ⟨ψ∣ is its conjugate transpose, and I is the identity matrix.
+
+588
+
+Oracle function
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+589
+
+The oracle function applies the oracle operation to the quantum circuit and checks whether the
+
+590
+
+current measurement matches the target sequence. The operation is mathematically represented by
+
+591
+
+the transformation matrix U_f, which is defined as follows:
+
+592
+
+U_f |x⟩ |y⟩ = |x⟩ |y ⊕ f(x)⟩
+
+593
+
+In this equation, (x) represents the qubits encoding the input (e.g., the DNA sequence in a
+
+594
+
+bioinformatics application), whereas (y) denotes the label qubit. The function f(x) returns a value
+
+595
+
+of 1 if the input state (x) matches the target sequence and 0 otherwise. The oracle is implemented
+
+596
+
+using CX gates, which apply the appropriate transformation by evaluating the input and target
+
+597
+
+sequences. This process flags the matching state without collapsing the quantum superposition.
+
+598
+
+Measuring qubits
+
+599
+
+We implemented Grover’s algorithm on real quantum hardware and compared the results with
+
+600
+
+those of classic simulation schemes. The quantum simulations were performed using the Qiskit
+
+601
+
+framework, leveraging the Qiskit Aer simulator for up to 100 qubits. Real quantum hardware tests
+
+602
+
+were conducted on IBM Cloud’s quantum systems, where access was constrained by both time
+
+603
+
+(ten-minute sessions) and the number of qubits required just for the first code, Qubio.py.
+
+604
+
+Despite these constraints, the quantum implementation demonstrated the ability of the
+
+605
+
+algorithm to efficiently identify target sequences with far fewer comparisons than that required by
+
+606
+
+the classic algorithms. By running the simulations via Google Colab, which hosts the Qubio.py
+
+607
+
+code, we highlighted the potential advantages of quantum-based algorithms in scaling up
+
+608
+
+computational tasks, even in bioinformatics applications.
+
+609
+
+Scars and the BioBloQu code
+
+610
+611
+
+To search for scar sequences and insert genetic blocks using quantum computing, the target
+sequences and the database sequence were defined as follows.
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+612
+
+Two predefined sequences (left end: AAAATCTGTCATAAATTATC; right end:
+
+613
+
+ATTATTCTCCTTTCTTTAGT) from a specific essential gene in a determined region of the
+
+614
+
+minimal genome of M. mycoides JCVI-Syn3 (3906 nucleotides) were analysed. Part of the minimal
+
+615
+
+cell genome was used as a database for the search. The target sequences were represented as binary
+
+616
+
+vectors, where each nucleotide was mapped to a quantum state: adenine (A) corresponded to state
+
+617
+
+|1⟩, cytosine (C) corresponded to a superposition state, guanine (G) corresponded to a combination
+
+618
+
+of |1⟩ and |0⟩, and thymine (T) corresponded to |0⟩. The quantum circuit was constructed using the
+
+619
+
+QuantumCircuit class, where Hadamard operations and controlled gates were applied to prepare
+
+620
+
+the superposition and perform the search.
+
+621
+
+The insertion of the genetic block was accomplished by identifying the position of the scar in
+
+622
+
+the database sequence and replacing it with the BioBloQu block. The circuit was then simulated
+
+623
+
+using the Qiskit backend, where measuring the qubits resulted in counts that represented the
+
+624
+
+probabilities of finding the target sequences.
+
+625
+
+All the codes were run in the IBM simulation environment via Jupyter notebooks and Google
+
+626
+
+Colab.
+
+627
+
+Analysis of the results
+
+628
+
+The raw data and code generated and analysed in this study are available from the corresponding
+
+629
+
+author upon request.
+
+630
+
+Additional applications
+
+631
+
+While Grover’s algorithm was applied to the field of bioinformatics in our study, the quantum
+
+632
+
+search algorithm can be adapted for solving broader scientific challenges. For example, it could
+
+633
+
+be used to identify patterns in astrobiology datasets or search for signals in massive astronomical
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+634
+
+data. As quantum computing technology matures, Grover’s algorithm has the potential to
+
+635
+
+overcome the computational limitations that were previously faced by classic systems.
+
+636
+
+Quantum searches can also enable the identification of novel traits within genetic sequences
+
+637
+
+that were previously inaccessible due to computational resource constraints. This could
+
+638
+
+revolutionize fields such as genomics, pharmaceuticals, agriculture, and environmental science,
+
+639
+
+driving innovation forwards across a variety of disciplines. Grover’s algorithm offers a
+
+640
+
+transformative approach for solving computational search problems, providing a quadratic
+
+641
+
+speedup over the classic methods. Quantum computing promises to revolutionize domains such as
+
+642
+
+computational biology, but significant challenges remain in terms of hardware scalability and the
+
+643
+
+development of domain-specific quantum algorithms. Collaborative efforts between quantum
+
+644
+
+physicists and computational scientists will be essential for overcoming these challenges, pushing
+
+645
+
+quantum technology beyond the constraints of classic systems.
+
+646
+
+Data availability
+
+647
+
+All the data presented in this paper resulted from numerical simulations generated by computer
+
+648
+
+programming codes. Correspondence and requests for materials should be addressed to Elibio
+
+649
+
+Rech (e-mail address: elibio.rech@embrapa.br).
+
+650
+
+Code availability
+
+651
+
+The code underlying this study is not publicly available but may be made available to qualified
+
+652
+
+researchers upon reasonable request from the corresponding author.
+
+653
+
+Acknowledgements
+
+654
+
+We acknowledge the National Institute of Science and Technology in Synthetic Biology, National
+
+655
+
+Institute of Science and Technology in Engineering Biological Systems and the Ministry of
+
+656
+
+Agriculture and Livestock. Funding from the National Council for Scientific and Technological
+
+bioRxiv preprint doi: https://doi.org/10.1101/2025.05.02.651535; this version posted May 7, 2025. The copyright holder for this preprint (which
+was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made
+available under aCC-BY-ND 4.0 International license.
+
+657
+
+Development (465603/2014-9; 400145/2023-5), Research Support Foundation of the Federal
+
+658
+
+District (0193.001.262/2017), and the Coordination for the Improvement of Higher Education
+
+659
+
+Personnel.
+
+660
+
+Competing interests
+
+661
+
+The authors have no conflicts of interest to declare.
+
+

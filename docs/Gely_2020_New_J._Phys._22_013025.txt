@@ -1,0 +1,1729 @@
+You may also like
+
+PAPER • OPEN ACCESS
+
+QuCAT: quantum circuit analyzer tool in Python
+To cite this article: Mario F Gely and Gary A Steele 2020 New J. Phys. 22 013025
+
+View the article online for updates and enhancements.
+
+- Main-group test set for materials science
+and engineering with user-friendly
+graphical tools for error analysis:
+systematic benchmark of the numerical
+and intrinsic errors in state-of-the-art
+electronic-structure approximations
+Igor Ying Zhang, Andrew J Logsdail,
+Xinguo Ren et al.
+- Catch and release of propagating bosonic
+field with non-Markovian giant atom
+Luting Xu and Lingzhen Guo
+- Corrigendum: QuCAT: quantum circuit
+analyzer tool in Python (2020 New J.
+Phys. 22 013025)
+Mario F Gely and Gary A Steele
+
+This content was downloaded from IP address 106.69.188.215 on 02/08/2025 at 16:29
+
+New J. Phys. 22 (2020) 013025
+
+https://doi.org/10.1088/1367-2630/ab60f6
+
+PAPER
+
+OPEN ACCESS
+
+QuCAT: quantum circuit analyzer tool in Python
+Mario F Gely
+
+RECEIVED
+
+26 September 2019
+REVISED
+
+3 December 2019
+ACCEPTED FOR PUBLICATION
+
+and Gary A Steele
+
+Kavli Institute of NanoScience, Delft University of Technology, P O Box 5046, 2600 GA, Delft, The Netherlands
+E-mail: mario.f.gely@gmail.com
+Keywords: quantum, Josephson junction, superconducting circuits, normal mode analysis, Python software
+
+11 December 2019
+PUBLISHED
+
+Abstract
+Quantum circuits constructed from Josephson junctions and superconducting electronics are key to
+Original content from this many quantum computing and quantum optics applications. Designing these circuits involves
+work may be used under
+the terms of the Creative
+calculating the Hamiltonian describing their quantum behavior. Here we present QuCAT, or
+Commons Attribution 3.0
+‘Quantum Circuit Analyzer Tool’, an open-source framework to help in this task. This open-source
+licence.
+Any further distribution of Python library features an intuitive graphical or programmatical interface to create circuits, the ability
+this work must maintain
+to compute their Hamiltonian, and a set of complimentary functionalities such as calculating
+attribution to the
+author(s) and the title of
+dissipation rates or visualizing current ﬂow in the circuit.
+the work, journal citation
+20 January 2020
+
+and DOI.
+
+1. Introduction
+Quantum circuits, constructed from superconducting electronics and involving one or more Josephson
+junctions, have steadily gained prominence in experimental and theoretical physics over the past twenty years.
+Foremost, they are one of the most successful platforms in the quest to build a quantum computer (Devoret and
+Schoelkopf 2013). The control that can be gained over their quantum state, and the ﬂexibility in their design have
+also made these circuits an excellent test-bed to probe fundamental quantum effects (Gu et al 2017). They can
+also be coupled to other systems, such as atoms, spins, acoustic vibrations or mechanical oscillators, acting as a
+tool to measure and manipulate these systems at a quantum level (Xiang et al 2013).
+Any application mentioned above generally translates to a desired Hamiltonian, which governs the physics
+of the circuit. The task of the quantum circuit designer is to determine which circuit components to use, how to
+inter-connect them, and calculate the corresponding Hamiltonian (Nigg et al 2012, Vool and Devoret 2017).
+Performing this task analytically can be time consuming or even challenging.
+Here we present QuCAT, which stands for ‘Quantum Circuit Analyzer Tool’, an open-source Python
+framework to help in analyzing and understanding quantum circuits. We provide an easy interface to create and
+visualize circuits, either programmatically or through a graphical user interface (GUI). A Hamiltonian can then
+be generated for further analysis in QuTiP (Johansson et al 2012, 2013). The current version of QuCAT supports
+quantization in the basis of normal modes of the linear circuit (Nigg et al 2012), making it suited for the analysis
+of weakly anharmonic circuits with small losses. The properties of these modes: their frequency, dissipation
+rates, anharmonicity and cross-Kerr couplings can be directly calculated. The user can also visualize the current
+ﬂows in the circuit associated with each normal mode. The library covers lumped element circuits featuring an
+arbitrary number of Josephson junctions, inductors, capacitors and resistors. Through equivalent lumped
+element circuits, certain distributed elements such as waveguide resonators can also be analyzed (see
+section B.3). The software relies on the symbolic manipulation of the circuits equations, making it reliable even
+for vastly different circuits and parameters. It also results in efﬁcient parameter sweeps, as analytical
+manipulations need not be repeated for different circuit parameters. In a few seconds, circuits featuring 10 nodes
+(or degrees of freedom), corresponding to between 10 and 30 circuit elements can be simulated.
+In the main section of this article, we cover the functionalities of the software. We start by showing how to
+create circuits, ﬁrst using the GUI, then programmatically. We then demonstrate how to generate the
+corresponding Hamiltonian. Lastly, we show how to extract the characteristics of the circuit modes: frequencies,
+dissipation, anharmonicity and cross-Kerr coupling and present a tool to visualize these modes. This main
+© 2020 The Author(s). Published by IOP Publishing Ltd on behalf of the Institute of Physics and Deutsche Physikalische Gesellschaft
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure 1. Construction of a circuit: code and output. The circuit used as an example in this section comprises of a transmon qubit on
+the left, coupled through a 1 fF capacitor to an LC-oscillator. Dissipation arises from the capacitive coupling of the LC-oscillator to a
+50 Ω resistor on the right. After importing the qucat package, the circuit object is created manually through a graphical user
+interface (GUI) opened after calling qucat.GUI(‘netlist.txt’). All information necessary to construct the circuit is stored
+in the text ﬁle netlist.txt. After closing the GUI, this information is also stored in the variable circuit. The show method
+ﬁnally displays the circuit.
+
+section will feature as an example the standard circuit of a transmon qubit coupled to a resonator (Koch et al
+2007). In the appendices, we will ﬁrst use QuCAT to analyze some recent experiments: a tuneable coupler
+(Kounalakis et al 2018), a multi-mode ultra-strong coupling circuit (Bosman et al 2017), a microwave
+optomechanics circuit (Ockeloen-Korppi et al 2016) and a Josephson-ring based qubit (Roy et al 2017). We then
+provide an overview of the circuit quantization method used and the algorithmic methods which implement it.
+The limitations of these methods regarding weak anharmonicity and circuit size will then be presented. Finally
+we will explain how to install QuCAT and we provide a summary of all its functions. More tutorials and
+examples are available on the QuCAT website https://qucat.org/.
+
+2. Circuit construction
+Any use of QuCAT will start with importing the qucatlibrary
+import qucat
+One should then create a circuit. These are named Qcircuit, short for ‘quantum circuit’ in QuCAT. There are
+two ways of creating a Qcircuit: using the GUI, or programmatically.
+2.1. Creating a circuit with the GUI
+We ﬁrst cover how to create a circuit with the GUI. This is done through this command
+circuit=qucat.GUI(‘netlist.txt’)
+which opens the GUI. The GUI will appear as a separate window, which will block the execution of the rest of the
+Python script until the window is closed. The user can drag-in and drop capacitors, inductors, resistors or
+Josephson junctions, or grounds. These components can then be inter-connected with wires. Each change made
+to the circuit will be automatically be saved in the ‘netlist.txt’ ﬁle. After closing the GUI, the Qcircuit
+object will be stored in the variable named circuit which we will use for further analysis.
+2.2. Creating a circuit programmatically
+Alternatively, one can create a circuit with only Python code. This is done by creating a list of circuit components
+with the functions J, L, Cand Rfor junctions, inductors, capacitors and resistors respectively. For the circuit of
+ﬁgure 1:
+circuit_components=[
+qucat.C(0,1,100e-15), # transmon
+qucat.J(0,1,’Lj’),
+qucat.C(0,2,100e-15), # resonator
+qucat.L(0,2,10e-9),
+qucat.C(1,2,1e-15), # coupling capacitor
+2
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+qucat.C(2,3,0.5e-15), # ext. coupl. cap.
+qucat.R(3,0,50) # 50 Ohm load
+]
+All circuit components take as ﬁrst two argument integers referring to the negative and positive node of the
+circuit components. Here 0 corresponds to the ground node for example. The third argument is either a ﬂoat
+giving the component a value, or a string which labels the component parameter to be speciﬁed later. Doing the
+latter avoids performing the computationally expensive initialization of the Qcircuit object multiple times
+when sweeping a parameter. By default, junctions are parametrized by their Josephson inductance L j = f20 Ej
+where f0=ÿ/2e is the reduced ﬂux quantum, and Ej (in Joules) is the Josephson energy.
+Once the list of components is built, we can create a Qcircuitobject via the Networkfunction
+circuit=Network(circuit_components)
+as with a construction via the GUI, the Qcircuit object will be stored in the variable named circuit which
+we will use for further analysis.
+
+3. Generating a Hamiltonian
+The Hamiltonian of a Josephson circuit is given by
+n+ 1
+
+( - 1)
+Hˆ = å wm aˆm† aˆ m + å å E j
+jˆ j2n.
+(
+)!
+2
+n
+m
+j n 2
+
+(1)
+
+It is written in the basis of its normal modes. These have an angular frequency ωm and we write the operator
+which creates (annihilates) photons in the mode aˆm† (âm ). The cosine potential of each Josephson junction j with
+Josephson energy Ej has been Taylor expanded to order n for small values of its phase ﬂuctuations ĵj across it.
+The phase ﬂuctuations are a function of the annihilation and creation operators of the modes
+jˆ j = åm jzpf, m, j (aˆm† + aˆm). For a detailed derivation of this Hamiltonian, and the method used to obtain its
+parameters, see section B.
+There are three different parameters that the user should ﬁx
+1. The set of modes to include.
+2. For each of these modes, the number of excitations to consider.
+3. The order of the Taylor expansion.
+The more modes and excitations are included, and the higher Taylor expansion order, the more faithful the
+Hamiltonian will be to physical reality. The resulting increase in Hilbert space size will however make it more
+computationally expensive to perform further calculations. Typically, larger degrees of anharmonicity require a
+larger Hilbert space, with a fundamental limitation on the maximum anharmonicity due to the choice of basis.
+We expand on these topics in section E.2.
+Such a Hamiltonian is generated through the method hamiltonian. More speciﬁcally, this function
+returns a QuTiP object (Johansson et al 2012, 2013), enabling an easy treatment of the Hamiltonian. All QuCAT
+functions use units of Hertz, so the function is actually returning Ĥ h.
+As an example, we generate a Hamiltonian for the circuit of ﬁgure 1 at different values of the Josephson
+inductance and use QuTiP to diagonalize it and obtain the eigen-frequencies of the system. For a Josephson
+inductance of 8 nH this is achieved through the commands
+H=circuit.hamiltonian(
+modes=[0,1],
+excitations=[10,12],
+taylor=4,
+Lj=8e-9)
+E=H.eigenenergies() # Eigenenergies
+3
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure 2. Hamiltonian generation is done by applying the hamiltonian method to the circuit variable deﬁned in ﬁgure 1. The
+Hamiltonian is expressed in the basis of circuit normal modes m with frequencies fm=ωm/2π, annihilation operators â m , and zeropoint phase ﬂuctuations jzpf, m, j across junction j with Josephson energy Ej. The junction nonlinearities are expressed through a Taylor
+expansion of the cosine potentials, where the user chooses the degree of Taylor expansion. The other arguments are the list of modes
+to include, the number of excitations to consider for each of these modes, and any unspeciﬁed component value, here Lj. The
+returned Hamiltonian is a QuTiP object, giving the user access to an extensive set of tools for further analysis (Johansson
+et al 2012, 2013). As an example, we compute the eigenenergies of the Hamiltonian, and plot the two ﬁrst transition frequencies, as a
+function of Lj.
+
+(here in units of frequency) using the
+QuTiP function eigenenergies
+With modes=[0,1], we are specifying that we wish to consider the ﬁrst and second modes of the circuit.
+Modes are numbered with increasing frequency, so here we are selecting the two lowest frequency modes of the
+circuit. With excitations=[10,12], we specify that for mode 0 (1) we wish to consider 10 (12)
+excitations. With taylor=4, we are specifying that we wish to expand the cosine potential to fourth order,
+this is the lowest order which will give an anharmonic behavior. The unspeciﬁed Josephson inductance must
+now be ﬁxed through a keyword argument Lj=8e-9. Doing so avoids initializing the Qcircuit objects
+multiple times during parameter sweeps, as initialization is the most computationally expensive task. We
+calculate these energies with different values of the Josephson inductance, and the ﬁrst two transition frequencies
+are plotted in ﬁgure 2, showing the typical avoided crossing seen in a coupled qubit-resonator system.
+
+4. Mode frequencies, dissipation rates, anharmonicities and cross-Kerr couplings
+QuCAT can also return the parameters of the (already diagonal) Hamiltonian in ﬁrst-order perturbation theory
+⎛
+c ⎞
+A
+Hˆ = å å ⎜wm - Am - mn ⎟ aˆm† aˆ m - m aˆm† aˆm† aˆ m aˆ m - cmn aˆm† aˆ m aˆn† aˆ n
+⎝
+⎠
+2
+2
+m n¹m
+
+(2)
+
+valid for weak anharmonicity cmn, Am  wm . The physics of this Hamiltonian can be understood by
+considering that an excitation of one of the circuit modes may lead to current traversing a Josephson junction.
+This will change the effective inductance of the junction, hence changing its own mode frequency, as well as the
+mode frequencies of all other modes. This is quantiﬁed through the anharmonicity or self-Kerr Am and crossKerr χmn respectively. When no mode is excited, vacuum-ﬂuctuations in current through the junction give rise
+to shifted mode energies wm - Am - ån cmn 2.
+In a circuit featuring resistors, these anharmonic modes will be dissipative. A mode m will lose energy at a
+rate κm. If these rates are speciﬁed in angular frequencies, the relaxation time T1,m of mode m is given by
+T1, m = 1 km. A standard method to include the loss rates in a mathematical description of the circuit is through
+the Lindblad equation (Johansson et al 2012), where the losses would be included as collapse operators km aˆm .
+The frequencies, dissipation rates, and Kerr parameters can all be obtained via methods of the Qcircuit
+object. These methods will return numerical values, and we should always specify the values of symbolically
+deﬁned circuit parameters as keyword arguments. Lists, or Numpy arrays, can be provided here making it easy to
+perform parameter sweeps. Additionally, initializing the circuit is the most computationally expensive
+operation, so this will be by far the fastest method to perform parameter sweeps.
+We will assume that we want to determine the parameters of the Hamiltonian(2) for the circuit of ﬁgure 1 at
+different values of Lj. The values for Lj are stored as a Numpy array
+Lj_list=numpy.linspace(11e-9,9e-9,101)
+4
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure 3. Extracting eigenfrequencies, loss-rates, anharmonicities, and cross-Kerr couplings. We apply the f_k_A_chi method to
+circuit deﬁned in ﬁgure 1 to obtain a list of eigenfrequencies (f), loss-rates (k), anharmonicities (A), and cross-Kerr couplings
+(chi), for all the normal modes of the circuit. There is one unspeciﬁed variable in the circuit, the Josephson inductance Lj, which is
+here speciﬁed with a list of values. In (a), we plot the eigenfrequencies of the two ﬁrst modes f[0] and f[1]. In (b), we plot the lossrates of the same modes k[0] and k[1], and in (c) their anharmonicities A[0] and A[1]. In (d), we plot the cross-Kerr coupling
+between modes 0 and 1: chi[0,1].
+
+We can assign the frequency, dissipation rates, self-Kerr, and cross-Kerr parameters to the variables f, k, Aand
+chirespectively, by calling
+f=circuit.eigenfrequencies(Lj=Lj_list)
+k=circuit.loss_rates(Lj=Lj_list)
+A=circuit.anharmonicities(Lj=Lj_list)
+chi=circuit.kerr(Lj=Lj_list)
+or alternatively through a single function call:
+f,k,A,chi=circuit.f_k_A_chi(Lj=Lj_list)
+All values returned by these methods are given in Hertz, not in angular frequency. With respect to the
+conventional way of writing the Hamiltonian, which we have also adopted in(2), we thus return the frequencies
+as ωm/2π, the loss rates as κm/2π and the Kerr parameters as Am/h and χmn/h. Note that f, k, A, are arrays,
+where the index m corresponds to mode m, and modes are ordered with increasing frequencies. For example, f
+[0] will be an array of length 101, which stores the frequencies of the lowest frequency mode as Lj is swept
+from 11 to 9 nH. The variable chi has an extra dimension, such that chi[m,n] corresponds to the cross-Kerr
+between modes m and n, and chi[m,m] is the self-Kerr of mode m, which has the same value as A[m]. These
+generated values are plotted in ﬁgure 3.
+We can also print these parameters in a visually pleasing way to get an overview of the circuit characteristics
+for a given set of circuit parameters. For a Josephson inductance of 9 nH, this is done through the command
+circuit.f_k_A_chi(Lj=10e-9, pretty_print
+=True)
+which will print
+mode|freq. |diss.|anha.|
+0 |4.99 GHz |9.56 kHz |10.5 kHz|
+1 |5.28 GHz |94.3 Hz |189 MHz |
+
+5
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure 4. Visualizing normal modes. The show_normal_mode method overlays the circuit with arrows representing the voltage
+across components when the circuit is populated with a single-photon amplitude coherent state. The arrows are annotated with the
+value of the complex voltage oscillating across a component, where the direction of the arrow indicates the direction of a phase 0 for
+that component. The absolute value of this annotation corresponds to the zero-point ﬂuctuations of the given quantity across the
+component. The length and thickness of the arrows scale with the magnitude of the voltage. show_normal_mode takes as argument
+any unspeciﬁed circuit parameter, here we specify Lj=10e-9 where the two modes undergo an avoided crossing. We plot each
+mode by specifying mode=0 or mode=1 and see that for mode 0, the anti-symmetric mode, the voltage has opposite signs on each
+side of the coupling capacitor, leading to a larger voltage across the coupler (and hence a larger effective capacitance and lower
+frequency) than the symmetric mode.
+
+Kerr coefﬁcients
+diagonal=Kerr
+off-diagonal=cross-Kerr
+mode|0|1|
+0 |10.5 kHz | |
+1 |2.82 MHz |189 MHz|
+We see that mode 1 is signiﬁcantly more anharmonic than mode 0, whereas mode 0 has however a higher
+dissipation. We would expect that mode 1 is thus the resonance which has current ﬂuctuations mostly located in
+the junction, whilst mode 0 is located on the other side to the coupling capacitor, where it can couple more
+strongly to the resistor.
+Such interpretations can be veriﬁed by plotting a visual representation of the normal modes on top
+of the circuit as explained below. This can be done by plotting either the current, voltage, charge or ﬂux
+distribution, overlaid on top of the circuit schematic. As shown in ﬁgure 4, this is done by adding arrows,
+representing one of these quantities at each circuit component and annotating it with the value of that
+component. The annotation corresponds to the complex amplitude, or phasor, of a quantity across the
+component, if the mode was populated with a single photon amplitude coherent state. The absolute
+value of this annotation corresponds to the contribution of a mode to the zero-point ﬂuctuations of the
+given quantity across the component. The direction of the arrows indicates what direction we take for
+0 phase for that component.
+We note that an independantly developped Julia platform also allows the calculation of normal mode
+frequencies and dissipation rates for circuits (Scheer and Block 2018).
+
+5. Outlook
+We have presented QuCAT, a Python library to automatize and speed up the design process and analysis of
+superconducting circuits. By facilitating quick tests of different circuit designs, and helping develop an intuition
+
+6
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+for the physics of quantum circuits, we also hope that QuCAT will enable users to develop even more innovative
+circuits.
+Possible extensions of the QuCAT features could include black-box impedance components to model
+distributed components (Nigg et al 2012), more precisely modeling lossy circuits (Solgun et al 2014, Solgun and
+DiVincenzo 2015), handling static offsets in ﬂux or charge through DC sources, additional elements such as
+coupled inductors or superconducting quantum interference devices (SQUIDS) and different quantization
+methods, enabling for example quantization in the charge or ﬂux basis. The latter would extend QuCAT beyond
+the scope of weakly-anharmonic circuits.
+In terms of performance, QuCAT would beneﬁt from delegating analytical calculations to a more efﬁcient,
+compiled language, with the exciting prospect of simulating large scale circuits (Kelly et al 2019). Note however
+that there is a strong limitation on the maximum Hilbert space size that one can simulate after extracting the
+Hamiltonian.
+
+Acknowledgments
+We acknowledge Marios Kounalakis for useful discussions and for reading the manuscript. This work was
+supported by the European Research Council under the European Union’s H2020 program [grant numbers
+681476-QOM3D, 732894-HOT, 828826-Quromorphic].
+
+Author contributions
+MFG developed QuCAT and the underlying theory and methods. MFG wrote this manuscript with input from
+GAS. GAS supervised the project.
+Declarations of interest: none.
+
+Appendix A. Applications
+A.1. Designing a microwave ﬁlter
+In this application we show how QuCAT can be used to design classical microwave components.
+We study here a band pass ﬁlter made from two LC oscillators with the inductor inline and a capacitive shunt
+to ground. Such a ﬁlter can be used to stop a DC bias line from inducing losses, whilst being galvanically
+connected to a resonator, see for example (Viennot et al 2018). In this case we are interested in the loss rate κ of
+a LC resonator connected through this ﬁlter to a 50 Ω load, which could emulate a typical microwave
+transmission line. We want to study how κ varies as a function of the inductance L and capacitance C of its
+components.
+The QuCAT GUIfunction can be used to open the GUI, the user will manually create the circuit, and upon
+closing the GUI a Qcircuit object is stored in the variable ﬁltered_cavity. By calling the method show, we
+display the circuit as shown in ﬁgure A1(a). These steps are accomplished with the code
+# Open the GUI and manually build the
+circuit
+ﬁltered_cavity=qucat.GUI(‘netlist.txt’)
+# Display the circuit
+ﬁltered_cavity.show()
+We can then access the loss rates of the different circuit modes through the method loss_rates. Since the
+values of C and L were not speciﬁed in the construction of the circuit, their values have to be passed as keyword
+arguments upon calling loss_rates. For example, the loss rate for a 1 pF capacitor and 100 nH inductor is
+obtained through
+# Loss rates of all modes
+k_all=ﬁltered_cavity.loss_rates(C=1e-12, L=100e-9)
+
+7
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A1. Design of a microwave ﬁlter. (a) Using the QuCAT GUI, we build then plot a model of a ﬁltered cavity. A 50 Ω load,
+representing a cable, is connected to an LC resonator through two LC band pass ﬁlters. (b) The dissipation rate of the resonator is
+plotted as a function of inductance and capacitance of the ﬁlter using the loss_rates method.
+
+# Resonator loss rate
+k=k_all[−1]
+Since the ﬁlter capacitance and inductance is large relative to the capacitance and inductance of the resonator,
+the modes associated with the ﬁlter will have a much lower frequency. We can thus access the loss rate of the
+resonator by always selecting the last element of the array of loss rates with the command k_all[−1]. The
+dissipation rates for different values of the capacitance and inductance are plotted in ﬁgure A1(b).
+A.2. Computing optomechanical coupling
+In this application, we show how QuCAT can be used for analyzing another classical system, that of
+microwave optomechanics. One common implementation of microwave optomechanics involves a
+mechanically compliant capacitor, or drum, embedded in one or many microwave resonators (Teufel
+et al 2011). One quantity of interest is the single-photon optomechanical coupling. This quantity is the
+change in mode frequency ωm that occurs for a displacement xzpf of the drum (the zero-point ﬂuctuations
+in displacement)
+g0 = x zpf
+
+¶wm
+.
+¶x
+
+(A1)
+
+The change in mode frequency as the drum head moves ¶wm ¶x is not straightforward to compute
+for complicated circuits. One such example is that of (Ockeloen-Korppi et al 2016), where two microwave
+resonators are coupled to a drum via a network of capacitances as shown in ﬁgure A2(a). Here, we
+will use QuCAT to calculate the optomechanical coupling of the drums to both resonator modes of the
+circuit.
+We start by reproducing the circuit of ﬁgure A2(a), excluding the capacitive connections on the far left and
+right. This is done via the GUI opened with the qucat.GUIfunction. Upon closing the GUI, the resulting
+Qcircuit is stored in the variable OM, and the showmethod is used to display the schematic of ﬁgure A2(a). These
+steps are accomplished with the code below
+# Open the GUI and manually build the
+circuit
+OM=qucat.GUI(‘netlist.txt’)
+# Display the circuit
+OM.show()
+
+8
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A2. Example of an optomechanical system. (a) Schematic of the device, adapted from (Ockeloen-Korppi et al 2016) under a
+CC BY 3.0 license. Two resonators are connected through a network of capacitances and a mechanically compliant capacitor (drum).
+(b) QuCAT reconstruction of the circuit. By specifying a label for the mechanically compliant capacitances, we have the possibility to
+compute the eigenfrequencies ωm with the method eigenfrequencies for small variation in Cd(x). This enables an easy
+computation of the optomechanical coupling µdwm dx .
+
+We use realistic values for the circuit components without trying to be faithful to (Ockeloen-Korppi
+et al 2016), the aim of this section is to illustrate a method to obtain g0. Crucially, the mechanically
+compliant capacitors have been parametrized by the symbolic variable Cd. We can now calculate the
+resonance frequencies of the circuit with the method eigenfrequencies as a function of a keyword
+argument Cd.
+The next step is to deﬁne an expression for Cd as a function of the mechanical displacement x of the drum
+head with respect to the immobile capacitive plate below it.
+def Cd(x):
+# Radius of the drumhead
+radius=10e-6
+# Formula for half a circular parallel
+plate capacitor
+return eps∗pi∗radius∗∗2/x/2
+where piand epshave been set to the values of π and the vacuum permittivity respectively. We have divided
+the usual formula for parallel plate capacitance by 2 since, as shown in ﬁgure A2(a), the capacitive plate below the
+drum head is split in two electrodes. We are now ready to compute g0. Following (Teufel et al 2011), we assume
+the rest position of the drum to be D=50 nm above the capacitive plate below. And we assume the zero-point
+ﬂuctuations in displacement to be xzpf=4 fm. We start by differentiating the mode frequencies with respect to
+drum displacement using a ﬁnite differences formula
+# drum-capacitor gap
+D=50e-9
+# difference quotient
+h=1e-18
+# derivative of eigenfrequencies
+G=(OM.eigenfrequencies(Cd=
+Cd(D+h))-OM.eigenfrequencies(Cd=
+Cd(D)))/h
+9
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+G is an array with values 2.3×1016 Hz m−1 and 3.6×1016 Hz m−1 corresponding to the lowest and higher
+frequency modes respectively. Multiplying these values with the zero-point ﬂuctuations
+# zero-point ﬂuctuations
+x_zpf=4e-15
+g_0=G∗x_zpf
+yields couplings of 96 and 147 Hz. The lowest frequency mode thus has a 96 Hz coupling to the drum.
+If we want to know to which part of the circuit (resonator 1 or 2 in ﬁgure A2) this mode pertains, we can
+visualize it by calling
+OM.show_normal_mode(
+mode=0,
+quantity=‘current’,
+Cd=Cd(D))
+and we ﬁnd that the current is majoritarily located in the inductor of resonator 1.
+A.3. Convergence in multi-mode cQED
+In this section we use QuCAT to study the convergence of parameters in the ﬁrst order Hamiltonian
+(equation (2)) of an ultra-strongly coupled multi-mode circuit QED system.
+Using a length of coplanar waveguide terminated with engineered boundary conditions is a common
+way of building a high quality factor microwave resonator. One implementation is a λ/4 resonator
+terminated on one end by a large shunt capacitor, acting as a near-perfect short circuit for microwaves
+such that only a small amount of radiation may enter or leave the resonator. On the other end one places
+a small capacitance to ground: an open circuit. The shunt capacitor creates a voltage node, and at the open
+end the voltage is free to oscillate. This resonator hosts a number of normal modes, justifying its lumped
+element equivalent circuit: a series of LC oscillators with increasing resonance frequency (Gely et al 2017).
+Here, we study such a resonator with a transmon circuit capacitively coupled to the open end. In particular
+we consider this coupling to be strong enough for the circuit to be in the multi-mode ultra-strong
+coupling regime as studied experimentally in (Bosman et al 2017) and theoretically in (Gely et al 2017).
+The particularity of this regime is that the transmon has a considerable coupling to multiple modes of the
+resonator. It then becomes unclear how many of these modes to consider for a realistic modeling of the
+system. This regime is reached by maximizing the coupling capacitance of the transmon to the resonator
+and minimizing the capacitance of the transmon to ground. The experimental device accomplishing this is
+shown in ﬁgure A3(a), with its schematic equivalent in ﬁgure A3(b), and the lumped-element model in
+ﬁgure A3(c).
+We will use QuCAT to track the evolution of different characteristics of the system as the number of
+considered modes N increases. For this application, programmatically building the circuit is more appropriate
+than using the GUI. We start by deﬁning some constants
+# fundamental mode frequency of the
+resonator
+f0=4.603e9
+w0=f0∗2.∗numpy.pi
+# characteristic impedance of the resonator
+Z0=50
+# Josephson energy (in Hertz)
+Ej=18.15e9
+# Coupling capacitance
+Cc=40.3e-15
+10
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A3. Convergence in multi-mode cQED. (a) Optical micrograph of the device studied in this example, adapted from (Bosman
+et al 2017) under a CC BY 4.0 license. Light-blue corresponds to superconductor, dark blue to an insulating substrate. On the left we
+see a vacuum-gap transmon: a capacitor plate suspended over the end of a coplanar-waveguide (CPW) resonator shorted to ground
+through two Josephson junctions. The scale bar corresponds to 30 μm. On the right a CPW λ/4 resonator, capacitively coupled to the
+transmon on one side and shorted to ground through a large shunt capacitor on the other. The scale bar corresponds to 100 μm. (b)
+Circuit schematic of the device. The CPW resonator hosts a number of modes, and is equivalent to a series assembly of LC oscillators
+shown in (c). This circuit is built programmatically in QuCAT, and the qubit parameters are extracted for different total numbers of
+modes. In (d) and (e) we plot the transmon mode frequency ωt/2π and anharmonicity At/h, where t refers to the transmon-like mode,
+using the methods eigenfrequencies and anharmonicities respectively. In (f) we plot the shift deﬁned in (Gely et al 2018)
+as the Lamb shift: the shift in transmon frequency (following equation (2)) due solely to the vacuum-ﬂuctuations in the other modes
+1
+å c , obtained with the kerr method. These calculations allow the user to gauge how many modes are relevant to the physics
+2 m¹t t,m
+of the circuit.
+
+# Capacitance to ground
+Cj=5.13e-15
+
+# Capacitance of all resonator modes
+C0=numpy.pi/4/w0/Z0
+# Inductance of ﬁrst resonator mode
+L0=4∗Z0/numpy.pi/w0
+we can then generate a Qcircuit we name mmusc, as an example here with N=10 modes.
+# Initialize list of components for
+Transmon and coupling capacitor
+netlist=[
+qucat.J(12,1,Ej,use_E=True),
+qucat.C(12,1,Cj),
+qucat.C(1,2,Cc)]
+
+# Add 10 oscillators
+for m in range(10):
+
+11
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+# Nodes of mth oscillator
+node_minus=2+m
+node_plus=(2+m+1)
+# Inductance of mth oscillator
+Lm=L0/(2∗m+1)∗∗2
+# Add oscillator to netlist
+netlist=netlist+[
+qucat.L(node_minus,node_plus,Lm),
+qucat.C(node_minus,node_plus,C0)]
+
+# Create Qcircuit
+mmusc=qucat.Network(netlist)
+Note that 12 is the index of the ground node.
+We can now access some parameters of the system. Only the ﬁrst mode of the resonator has a lower
+frequency than the transmon. The transmon-like mode is thus indexed as mode 1. Its frequency is given by
+mmusc.eigenfrequencies()[1]
+and the anharmonicity of the transmon, computed from ﬁrst order perturbation theory (see equation (2)) with
+mmusc.anharmonicities()[1]
+Finally the Lamb shift, or shift in the transmon frequency resulting from the zero-point ﬂuctuations of the
+resonator modes, is given following equation (2) by the sum of half the cross-Kerr couplings between the
+transmon mode and the others
+lamb_shift=0
+K=mmusc.kerr()
+for m in range(10):
+if m!=1:
+lamb_shift=lamb_shift+K[1][m]/2
+These parameters for different total number of modes are plotted in ﬁgures A3(d)–(f).
+From this analysis, we ﬁnd that as we reach 10, the plotted parameters are converging. Surprisingly, adding
+even the highest modes signiﬁcantly modiﬁes the total Lamb shift of the Transmon despite large frequency
+detunings.
+
+A.4. Modeling a tuneable coupler
+In this section, we study the circuit of (Kounalakis et al 2018) where two transmon qubits are coupled through a
+tuneable coupler. This tuneable coupler is built from a capacitor and a SQUID. By ﬂux biasing the SQUID, we
+change the effective Josephson energy of the coupler, which modiﬁes the coupling between the two transmons.
+We will present how the normal mode visualization tool helps in understanding the physics of the device.
+Secondly, we will show how a Hamiltonian generated with QuCAT accurately reproduces experimental
+measurements of the device.
+We start by building the device shown in ﬁgure A4(a). More speciﬁcally, we are interested in the part of the
+device in the dashed box, consisting of the two transmons and the tuneable coupler. The other circuitry, the ﬂux
+line, drive line and readout resonator could be included to determine external losses, or the dispersive coupling
+of the transmons to their readout resonator. We will omit these features for simplicity here. After opening the
+12
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A4. Tuneable coupler circuit analysis. (a) Optical micrograph of the device studied in this example, adapted from (Kounalakis
+et al 2018) under a CC BY 4.0 license. We will omit the ﬂux lines, drive lines and readout resonators for simplicity in this example, and
+concentrate on the part of the device in the dashed box. The circuit consists of two near-identical transmon qubits coupled through a
+third ‘coupler’ transmon. Scale bar corresponds to 200 μm. (b) Equivalent lumped-element circuit constructed with the QuCAT GUI
+and displayed using the show_normal_mode method. This method has overlaid the circuit with the currents ﬂowing through the
+components when the highest frequency mode is populated with a single-photon-amplitude coherent state. Most of the current is
+located in the resonantly coupled transmons rather than the coupler, and the fact that the coupled transmons are identical leads to the
+symmetry on each side of the coupler. This mode is called symmetric since the current in both coupled transmons ﬂows in the same
+direction. The net current through the coupling junction makes the mode frequency sensitive to changes in the coupling junction
+inductance tuned with a SQUID. The change in symmetric mode frequency is shown in the experimental measure of the response
+frequencies in (c) (adapted from (Kounalakis et al 2018) under a CC BY 4.0 license), and in the diagonalization of the Hamiltonian
+generated from QuCAT in (d).
+
+GUI with the qucat.GUIfunction, manually constructing the circuit, then closing the GUI, the resulting
+Qcircuitis stored in a variable TC.
+TC=qucat.GUI(‘netlist.txt’)
+The inductance Lj of the junction which models the SQUID is given symbolically, and will have to be speciﬁed
+when calling Qcircuitfunctions. Since Lj is controlled through ﬂux f in the experiment, we deﬁne a function
+which translates f (in units of the ﬂux quantum) to Lj
+def Lj(phi):
+# maximum Josephson energy
+Ejmax=6.5e9
+# junction asymmetry
+d=0.076 9
+# ﬂux to Josephson energy
+Ej=Ejmax∗numpy.cos(pi∗phi)
+∗numpy.sqrt(1+d∗∗2
+∗numpy.tan(pi∗phi)∗∗2)
+# Josephson energy to inductance
+return (hbar/2/e)∗∗2/(Ej∗h)
+
+13
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+where pi, h, hbar, e were assigned the value of π, Plancks constant, Plancks reduced constant and the electron
+charge respectively.
+By visualizing the normal modes of the circuit, we can understand the mechanism behind the tuneable
+coupler. We plot the highest frequency mode at f=0, as shown in ﬁgure A4(b)
+TC.show_normal_mode(mode=2,
+quantity=‘current’,
+Lj=Lj(0))
+This mode is called symmetric since the currents ﬂow in the same direction on each side of the coupler. This
+leads to a net current through the coupler junction, such that the value of Lj inﬂuences the oscillation frequency
+of the mode. Conversely, if we plot the anti-symmetric mode instead, where currents are ﬂowing away from the
+coupler in each transmon, we ﬁnd a current through the coupler junction and capacitor on the order of 10−21 A.
+This mode frequency should not vary as a function of Lj. When the bare frequency of the coupler matches the
+coupled transmon frequencies, the coupler acts as a band-stop ﬁlter, and lets no current traverse. At this point,
+both symmetric and anti-symmetric modes should have identical frequencies.
+In ﬁgure A4(c) this effect is shown experimentally through a measure of the ﬁrst transitions of the two
+nonlinear modes. One is tuned with ﬂux (symmetric mode), the other barely changes (anti-symmetric mode).
+We can reproduce this experiment by generating a Hamiltonian with QuCAT and diagonalizing it with QuTiP
+for different values of the ﬂux. For example, at 0 ﬂux, the two ﬁrst two transition frequencies f1and f2can be
+generated from
+# generate a Hamiltonian
+H=TC.hamiltonian(Lj=Lj(phi=0),
+excitations=[7, 7],
+taylor=4,
+modes=[1, 2])
+# diagonalize the Hamiltonian
+ee=H.eigenenergies()
+f1=ee[1]-ee[0]
+f2=ee[2]-ee[0]
+f1 and f2 is plotted in ﬁgure A4(d) for different vales of ﬂux and closely matches the experimental data. Note
+that we have constructed a Hamiltonian with modes 1 and 2, excluding mode 0, which corresponds to
+oscillations of current majoritarily located in the tuneable coupler. One can verify this fact by plotting the
+distribution of currents for mode 0 using the show_normal_mode method.
+This experiment can be viewed as two ‘bare’ transmon qubits coupled by the interaction
+Hˆ int = gs Lx s Rx ,
+
+(A2)
+
+where left and right transmons are labeled L and R and σx is the x Pauli operator. The coupling strength g reﬂects
+the rate at which the two transmons can exchange quanta of energy. If the transmons are resonant a spectroscopy
+experiment reveals a hybridization of the two qubits, which manifests as two spectroscopic absorption peaks
+separated in frequency by 2g. From this point of view, this experiment thus implements a coupling which is
+tuneable from an appreciable value to near 0 coupling.
+A.5. Studying a Josephson-ring-based qubit
+In this section, we demonstrate the ability for QuCAT to analyze more complex circuits. The experiment of (Roy
+et al 2017) features a Josephson ring geometry, which is a Wheatstone-bridge-like circuit, typically difﬁcult to
+analyze as it cannot be decomposed in series and parallel connections. We consider the coupling of this ring to
+two lossy modes of a cavity, bringing the total number of modes in the circuit to 5. We aim to understand the key
+feature of this circuit: that one qubit-like mode acts as a quadrupole with little coupling to the resonator modes.
+The studied device consists of a 3D cavity (ﬁgure A5(a)) hosting a number of microwave modes, in which is
+positioned a chip patterned with the trimon circuit. The trimon circuit has four capacitive pads in a cross shape
+(ﬁgure A5(b)) which have an appreciable coupling between each other making up the capacitance of the trimon
+14
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A5. Trimon device and Purcell-decay-protected mode visualization. (a) Schematic of the cross-cut of a 3D microwave cavity.
+Dark gray shows metal whilst light gray show the hollowed out section forming the cavity. Arrows represent the electric ﬁeld of the
+TE101, or ‘vertical’ cavity mode. In the cavity is placed a chip hosting the trimon circuit shown in the optical micrograph (b). The
+circuit has 4 capacitive pads labeled from 1 to 4. These pads are connected by the Josephson junction ring shown in the scanning
+electron microscope image (c). Scale bars correspond 200 and 2 μm for panels (b) and (c) respectively. (d) Lumped-element equivalent
+circuit of the device constructed using the QuCAT GUI and displayed with show_normal_mode. The four pads of the trimon are
+color-coded to match (b). The capacitor Ca formed by pads 1 and 3 forms an electrical dipole which couples to a vertical cavity mode,
+and the capacitor Cb formed by pads 2 and 4 forms an electrical dipole which couples to modes with horizontal electric ﬁelds. The
+show_normal_mode overlays the voltage across different components if a single-photon amplitude coherent state was populating
+mode 2. This mode has a particularity that the voltage is concentrated across the junctions and their parallel capacitors without leading
+to a buildup of voltage across the capacitors Ca or Cb. This decouples mode 2 from the cavity mode decay (no Purcell effect) whilst the
+presence of voltage ﬂuctuations across the junctions will ensure cross-Kerr coupling to the other modes of the system. Concerning
+panels (a)–(c): reprinted ﬁgures with permission from Roy et al (2017). Copyright 2017 by the American Physical Society.
+
+qubit modes. The two vertically (horizontally) positioned pads will couple to modes of the 3D cavity featuring
+vertical (horizontal) electric ﬁelds. We will consider both a vertical and a horizontal cavity mode in our model.
+We number these pads from 1 to 4 as displayed in ﬁgure A5(b). Each pad is connected to its two nearest
+neighbors by a Josephson junction (ﬁgure A5(c)), forming a Josephson ring.
+Using the QuCAT GUI, we build a lumped element model of this device, generating a Qcircuit object we
+store in the variable trimon.
+trimon=qucat.GUI(‘netlist.txt’)
+The cavity modes are modeled as RLC oscillators with each plate of their capacitors capacitively coupled to a pad
+of the trimon circuit. The junction inductances are assigned different values, ﬁrst to reﬂect experimental reality,
+but also to avoid inﬁnities arising in the QuCAT analysis. Indeed, the voltage transfer function of this Josephson
+ring between nodes 1, 3 and nodes 2, 4 will be exactly 0, which will cause errors when initializing the Qcircuit
+object. Component parameters are chosen to only approximatively match the experimental results of (Roy et al
+2017), the objective here is to demonstrate QuCAT features rather than accurately model the experiment.
+The particularity of this circuit is that it hosts a quadrupole mode. It corresponds here to the second highest
+frequency mode and can be visualized by calling
+trimon.show_normal_mode(
+mode=2,
+quantity=‘voltage’)
+the result of which is displayed in ﬁgure A5(d). The voltage oscillations are majoritarily located in the junctions,
+indicating this is not a cavity mode, but a mode of the trimon circuit. Crucially, the polarity of voltages across the
+junctions is such that the total voltage between pads 1 and 3 and the total voltage across pads 2 and 4 is 0,
+15
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure A6. Other modes of the Trimon. Using the f_k_A_chi method together with the pretty_print option gives the user an
+overview of the different modes frequencies, dissipations rates and levels of anharmonicity. Here we have overlaid the output of the
+method with schematics of the corresponding trimon and cavity modes adapted from (Roy et al 2017). One can identify a mode to the
+schematic by observing where the currents or voltages are mostly located in the circuit using the show_normal_mode method as in
+ﬁgure A5(d). Since the only resistors of the circuit are located in the cavity modes, all dissipation in transmon modes 0 through 2are
+due to the Purcell effect. Mode 2 is better protected from this effect by 3 orders of magnitude with respect to the two other transmon
+modes. Concerning schematics: reprinted ﬁgures with permission from Roy et al (2017). Copyright 2017 by the American Physical
+Society.
+
+warranting the name of ‘quadrupole mode’. Due to the orientation of the chip in the cavity, the vertically and
+horizontally orientated cavity modes will only be sensitive to voltage oscillations across pads 1 and 3 or 2 and 4.
+This ensures that the mode displayed here is decoupled from the cavity modes, and from any loss channels they
+may incur. We can verify this fact by computing the losses of the different modes, and comparing the losses of
+mode 2 to the other qubit-like modes of the circuit. We perform this calculation by calling
+trimon.f_k_A_chi(pretty_print=True)
+which will calculate and return the loss rates of the modes, along with their eigenfrequencies, anharmonicities
+and Kerr parameters. Setting the keyword argument pretty_print to True prints a table containing all this
+information, which is shown in ﬁgure A6. To be succinct, we have not shown the table providing the cross-Kerr
+couplings. By using the show_normal_mode method to plot all the other modes of the circuit, and noting
+where currents or voltages are majoritarily located, we can identify each mode with the schematics provided in
+ﬁgure A6. The three lowest frequency modes are located in the trimon chip, and we notice that as expected the
+quadrupole mode 2 has a loss rate (due to resistive losses in the cavity modes) which is three orders of magnitude
+below the other two. Despite this apparent decoupling, the quadrupole mode will still be coupled to both cavity
+mode through the cross-Kerr coupling, given by twice the square-root of the product of the quadrupole and
+cavity mode anharmonicities.
+
+Appendix B. Circuit quantization overview
+In this section we summarize the quantization method used in QuCAT, which is an expansion on the work of
+(Nigg et al 2012). This approach is only valid in the weak anharmonic limit, where charge dispersion is negligible.
+See Nigg et al (2012) or section E.2 for a detailed discussion of this condition.
+The idea behind the quantization method is as follows. We ﬁrst consider the ‘linearized’ circuit. This is a
+circuit where the junctions are replaced by their Josephson inductances L j = f20 Ej . Where Ej is the Josephson
+energy and the reduced ﬂux quantum is given by f0=ÿ/2e. We determine the oscillation frequencies and
+dissipation rates of the different normal modes of this linearized circuit. Then, we calculate the amplitude of
+phase oscillations across each junction when a given mode is excited. This will determine how nonlinear each
+mode is. All this information will ﬁnally allow us to build a Hamiltonian for the circuit.
+B.1. Circuit simpliﬁcation to series of RLC resonators (Foster circuit)
+The eigenfrequencies and nonlinearity of each mode is obtained by transforming the linearized circuit to a
+geometry we can easily analyze. We will ﬁrst describe this process assuming there is only a single junction in the
+circuit, the case of multiple junctions will follow. We consider the example circuit of ﬁgure 1. After replacing the
+junction with its Josephson inductance, we determine the admittance Yj(ω)=Ij(ω)/Vj(ω) evaluated at the nodes
+of the junction. This admittance is the inverse of the impedance measured at the nodes of the junction. It relates
+the amplitude ∣Vj∣ and phase θ(Vj) of the voltage oscillating at frequency ω that would build up across the
+16
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure B1. Example of equivalent circuit construction to prepare for quantization. We use the same example as used in ﬁgures 1–4. (a)
+The circuit is linearized by replacing the junction with an inductance Lj. The circuit is characterized at the nodes of the junction by its
+admittance Yj. (b) In the limit of small dissipation, this circuit is equivalent to a series combination of RLC resonators.
+
+junction if one would feed a current oscillating at ω with amplitude ∣Ij∣ and phase θ(Ij) to one of its nodes through
+a inﬁnite impedance current source. In ﬁgure B1(a) we show a schematic describing this quantity. In the case
+where all normal modes of the circuit have small dissipation rates, this circuit has an approximate equivalent
+shown in ﬁgure B1(b), consisting of a series of RLC resonators (Solgun et al 2014). By equivalent, we mean that
+the admittance Yj of the circuit is approximatively equal to that of a series combination of RLC resonators
+Y j (w ) 
+
+1
+å 1 Ym (w)
+
+(B1)
+
+m
+
+which each have an admittance
+Ym (w ) =
+
+1
+iL m w
+
++ iC m w +
+
+1
+.
+Rm
+
+(B2)
+
+Each RLC resonator represents a normal mode of the circuit, with resonance frequency wm = 1 Lm Cm , and
+dissipation rate km = 1 Rm Cm. Since this equivalent circuit comes from an extension of Foster’s reactance
+theorem (Foster 1924) to lossy circuits, we call this the Foster circuit.
+B.2. Hamiltonian of the Foster circuit
+The advantage of this circuit form, is that it is easy to write its corresponding Hamiltonian following standard
+quantization methods (see Vool and Devoret 2017). In the absence of junction nonlinearity, it is given by the
+sum of the Hamiltonians of the independent harmonic RLC oscillators:
+
+å wm aˆm† aˆ m.
+
+(B3)
+
+m
+
+The annihilation operator âm for photons in mode m is related to the expression of the phase difference between
+the two nodes of the oscillator
+jˆ m, j = jzpf, m, j (aˆ m + aˆm† ) ,
+jzpf, m, j =
+
+1
+f0
+
+
+,
+2wm C m
+
+(B4)
+
+where jzpf,m are the zero-point ﬂuctuations in phase of mode m. The total phase difference across the Josephson
+junction ĵj is then the sum of these phase differences jˆ j = åm jˆm, j , and we can add the Junction nonlinearity to
+the Hamiltonian
+⎡
+jˆ j2 ⎤
+⎥.
+Hˆ = å wm aˆm† aˆ m + E j ⎢1 - cos jˆ j ⎢
+⎥⎦
+2
+m
+⎣
+
+(B5)
+
+Since the linear part of the Hamiltonian corresponds to the circuit with junctions replaced by inductors, the
+linear part already contains the quadratic contribution of the junction potential µĵj2, and it is subtracted from
+the cosine junction potential.
+17
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+B.3. Calculating Foster circuit parameters
+Both ωm and κm can be determined from Y(ω) since we have Y(ωm+iκm/2)=0 for low loss circuits. This can
+be proven by noticing that the admittance Ym of mode m has two zeros at
+zm =
+
+1
+
+1-
+
+Lm Cm
+ wm + ikm 2
+
+1
+1
++i
+2
+4Q
+2Rm C m
+(B6)
+
+and z *m . The approximate equality holds in the limit of large quality factor Qm = Rm Lm Cm  1. From
+equation (B1) we see that the zeros of Y are exactly the zeros of the admittances Yk. The solutions of Y(ω)=0,
+which come in conjugate pairs ζm and z *m , thus provide us with both resonance frequencies ωm=Re[ζm] and
+dissipation rates κm=2Im[ζm].
+Additionally, we need to determine the effective capacitances Cm in order to obtain the zero-point
+ﬂuctuations in phase of each mode. We focus on one mode k, and start by rewriting the admittance in
+equation (B1) as
+Yj (w ) = Yk (w )
+
+1
+.
+1 + å Yk (w ) Ym (w )
+
+(B7)
+
+m¹k
+
+Its derivative with respect to ω is
+⎡
+⎤
+⎥
+1
+1
+¶ ⎢
+Y ¢j (w ) = Y k¢ (w )
++ Yk (w )
+⎢
+⎥.
+1 + å Yk (w ) Ym (w )
+¶w ⎢ 1 + å Yk (w ) Ym (w ) ⎥
+⎣
+⎦
+m¹k
+m¹k
+
+(B8)
+
+Evaluating the derivative at ω=ζk, where Yk(ζk)=0 yields
+⎛
+Y ¢j (z k) = Y k¢ (z k) = iC m ⎜⎜1 +
+(i +
+⎝
+ i2C m for Qm  1.
+
+⎞
+⎟⎟
+4Q 2 - 1 )2 ⎠
+
+4Q 2
+
+(B9)
+
+The capacitance is thus approximatively given by
+C m = Im [Y ¢j (z k)] 2.
+
+(B10)
+
+B.4. Multiple junctions
+When more than a single junction is present, we start by choosing a single reference junction, labeled r. All
+junctions will be again replaced by their inductances, and by using the admittance Yr across the reference
+junction, we can determine the Hamiltonian including the nonlinearity of the reference junction through the
+procedure described above.
+In this section, we will describe how to obtain the Hamiltonian including the nonlinearity of all other
+junctions too
+⎡
+jˆ j2 ⎤
+⎥,
+Hˆ = å wm aˆm† aˆ m + å E j ⎢1 - cos jˆ j ⎢
+⎥⎦
+2
+m
+j
+⎣
+
+(B11)
+
+where ĵj is the phase across the jth junction. This phase is determined by ﬁrst calculating the zero-point
+ﬂuctuations in phase jzpf,m,r through the reference junction r for each mode m given by equation (B4). For each
+junction j, we then calculate the (complex) transfer function Tjr(ω) which converts phase in the reference
+junction to phase in junction j. We can then calculate the total phase across a junction j with respect to the
+reference phase of junction r, summing the contributions of all modes and both quadratures of the phase
+jˆ j = å jzpf, m, r [Re (Tjr (wm))(aˆ m + aˆm† ) - i Im (Tjr (wm))(aˆ m - aˆm† )].
+
+(B12)
+
+m
+
+1
+The deﬁnition of phase (Vool and Devoret 2017) jj (t ) = f0 ò
+
+t
+
+vj (t ) dt where vj is the voltage across
+-1
+junction j translates in the frequency domain to jj (w ) = iwf0 Vj (w ). Finding the transfer function Tjr for phase
+-¥
+
+is thus equivalent to ﬁnding a transfer function for voltage Tjr(ω)=Vj(ω)/Vr(ω). This is a standard task in
+microwave network analysis (see section D.3 for more details).
+
+B.5. Further treatment of the Hamiltonian
+The cosine potential in equation (B11) can be expressed in the Fock basis by Taylor expanding it around small
+values of the phase. This yields
+18
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+⎤2 n
+( - 1)n + 1 ⎡
+⎢å jzpf, m, j (aˆm† + aˆ m) ⎥
+Hˆ = å wm aˆm† aˆ m + å å E j
+(2n)! ⎣ m
+⎦
+m
+j n 2
+
+(B13)
+
+which is the form returned by the QuCAT hamiltonian method. By keeping only the fourth power in the
+Taylor expansion and performing ﬁrst order perturbation theory, we obtain
+⎛
+c ⎞
+A
+Hˆ = å å ⎜wm - Am - mn ⎟ aˆm† aˆ m - m aˆm† aˆm† aˆ m aˆ m - cmn aˆm† aˆ m aˆn† aˆ n ,
+⎝
+⎠
+2
+2
+m n¹m
+
+(B14)
+
+where the anharmonicity or self-Kerr of mode m is
+A m = å A m, j
+
+(B15)
+
+j
+
+as returned by the anharmonicites method, where
+Ej
+
+A m, j =
+
+2
+
+j4zpf, m, j
+
+(B16)
+
+is the contribution of junction j to the total anharmonicity of a mode m. The cross-Kerr coupling between mode
+m and n is
+cmn = 2 å Am, j An, j .
+
+(B17)
+
+j
+
+Both self and cross-Kerr parameters are computed by the kerr method. Note in equation (B14) that the
+harmonic frequency of the Hamiltonian is shifted by Am and ån ¹ mcnm 2 . The former comes from the change
+in Josephson inductance induced by phase ﬂuctuations of mode m. The latter is called the Lamb shift (Gely et al
+2018) and is induced by phase ﬂuctuations of the other modes of the circuit.
+
+Appendix C. Algorithmic methods
+There are three calculations to accomplish in order to obtain all the parameters necessary to write the circuit
+Hamiltonian. We need:
+• the eigen-frequencies ωm and loss rates κm fulﬁlling Yr(ζm=ωm+iκm/2)=0 where Yr is the admittance
+across a reference junction
+• the derivative of this admittance evaluated at ζm
+• the transfer functions Tjr between junctions j and the reference junction r.
+In this section, we cover the algorithmic methods used to calculate these three quantities.
+C.1. Resonance frequency and dissipation rate
+C.1.1. Theoretical background. In order to obtain an expression for the admittance across the reference
+junction, we start by writing the set of equations governing the physics of the circuit. We ﬁrst determine a list of
+nodes, which are points at which circuit components connect. Each node, labeled n, is assigned a voltage vn. We
+name r± the positive and negative nodes of the reference junction.
+We are interested in the steady-state oscillatory behavior of the system. We can thus move to the frequency
+domain, with complex node voltages ∣Vn (w )∣e i (wt + q (Vn (wn))), fully described by their phasors, the complex
+numbers Vn = ∣Vn (w )∣e iq (Vn (wn)) . In this mathematical construct, the real-part of the complex voltages describes
+the voltage one would measure at the node in reality. Current conservation dictates that the sum of all currents
+arriving at any node n, from the other nodes k of the circuit should be equal to the oscillatory current injected at
+node n by a hypothetical, inﬁnite impedance current source. This current is also characterized by a phasor In.
+This can be compactly written as
+
+å Ynk (Vn - Vk) = In,
+
+(C1)
+
+k¹n
+
+where k label the other nodes of the circuit and Ynk is the admittance directly connecting nodes k and n. Note that
+in this notation, if a node k1 can only reach node n through another node k2, then Ynk1 = 0 . Inductors (with
+inductance L), capacitors (with capacitance C) and resistors (with resistance R) then have admittances 1/iLω,
+iCω and 1/R respectively.
+19
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Expanding equation (C1) yields
+( å Ynk) Vn - å Ynk Vk = In
+
+(C2)
+
+⎛Sk ¹ 0Y0k - Y01  - Y0N ⎞ ⎛ V0 ⎞ ⎛ I0 ⎞
+⎜ -Y
+Sk ¹ 1Y1k  - Y1N ⎟⎟ ⎜ V1 ⎟ ⎜ I1 ⎟
+10
+⎜
+⎜ ⎟ = ⎜ ⎟.
+
+
+
+⎜⎜ 
+⎟⎟ ⎜  ⎟ ⎜  ⎟
+- YN1  Sk ¹ N YNk ⎠ ⎝VN ⎠ ⎝ IN ⎠
+⎝ - YN 0
+
+(C3)
+
+k¹n
+
+k¹n
+
+which can be written in matrix form as
+
+Since voltage is the electric potential of a node relative to another, we still have the freedom of choosing a ground
+node. Equivalently, conservation of currents imposes that current exciting that node is equal to the sum of
+currents entering the others, there is thus a redundant degree of freedom in equation (C3). For simplicity, we will
+choose node 0 as ground. Since we are only interested in the admittance across the reference junction, we set all
+currents to zero, except the currents entering the positive and negative reference junction nodes: Ir+ and
+Ir- = -Ir+ respectively. The admittance is deﬁned by Yr = Ir+ (Vr+ - Vr-). The equations then reduce to
+⎛
+⎞
+
+⎜
+⎟
+0
+⎜
+⎟
+⎜Vr+ - Vr- ⎟
+⎛ V1 ⎞
+0
+⎜
+⎟
+⎜V ⎟
+⎟,
+Y ⎜ 2 ⎟ = Yr ⎜
+
+⎜
+⎟
+⎜  ⎟
+0
+⎜
+⎟
+⎝VN ⎠
+⎜Vr- - Vr+ ⎟
+0
+⎜⎜
+⎟⎟
+⎝
+⎠
+
+
+(C4)
+
+⎛Sk ¹ 1Y1k - Y12  - Y1N ⎞
+⎜ -Y
+Sk ¹ 1Y2k  - Y2N ⎟⎟
+21
+Y=⎜
+.
+
+
+
+⎜⎜ 
+⎟⎟
+- YN 2  Sk ¹ N YNk ⎠
+⎝ - YN1
+
+(C5)
+
+where Y is the admittance matrix
+
+For Yr=0, equation (C4) has a solution for only speciﬁc values of ω=ζm. These are the values which make
+the admittance matrix singular, i.e. which make its determinant zero
+Det [Y (zm)] = 0.
+
+(C6)
+
+The determinant is a polynomial in ω, so the problem of ﬁnding ζm=ωm+iκm/2 reduces to ﬁnding the roots
+of this polynomial. Note that plugging ζm into the frequency domain expression for the node voltages yields
+Vk (zm) e iwm t e-km t 2, such that the energy µvk (t )*vk (t ) µ e-km t decays at a rate κm, which explains the division
+by two in the expression of ζm. Also note, that we would have obtained equation equation (C6) regardless of the
+choice of reference element.
+C.1.2. Algorithm. We now describe the algorithm used to determine the solutions ζm=ωm+iκm/2 of
+equation (C6). As an example, we consider the circuit of ﬁgure C1(a) that a user would have built with the GUI.
+The algorithm is as follows
+1. Eliminate wires and grounds. In this case, nodes N0, N5 would be grouped under a single node labeled 0 and
+nodes N1, N2, N3 would be grouped under node 1, we label node N4 node 2, as shown in ﬁgure C1(b).
+2. Compute the un-grounded admittance matrix. For each component present between the different couples
+of nodes, we append the admittance matrix with the components admittance. The matrix is then multiplied
+by ω such that all components are polynomials in ω, ensuring that the determinant is also a polynomial. In
+this example, the matrix is
+⎛ iCw 2 + 1 iL
+- iCw 2
+- 1 iL ⎞
+⎜
+⎟
+2
+2
+iCw + w R
+- w R ⎟.
+⎜⎜ - iCw
+⎟
+-w R
+1 iL + w R ⎠
+⎝ - 1 iL
+
+(C7)
+
+3. Choose a ground node. The node which has a corresponding column with the most components is chosen
+as the ground node (to reduce computation time). These rows and columns are erased from the matrix,
+yielding the ﬁnal form of the admittance matrix
+20
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure C1. Example circuit to illustrate the mode frequency ﬁnder algorithm. (a) Example of a circuit built through the GUI by a user.
+(b) Application of the ﬁrst step of the algorithm which removes the wires and grounds to obtain a minimal number of nodes without
+removing any components.
+
+⎛ iCw 2 + w R
+-w R ⎞
+Y=⎜
+⎟.
+1 iL + w R ⎠
+⎝ -w R
+
+(C8)
+
+4. Compute the determinant. Even if the capacitance, inductance and resistance were speciﬁed numerically,
+the admittance matrix would still be a function of the symbolic variable ω. We thus rely on a symbolic
+Berkowitz determinant calculation algorithm (Berkowitz 1984, Kerber 2009) implemented in the Sympy
+library through the berkowitz_det function. In this example, one would obtain
+Det [Y] = LCw 2 - iRCw - 1.
+
+(C9)
+
+5. Find the roots of the polynomial. Whilst the above steps have to be performed only once for a given circuit,
+this one should be performed each time the user edits the value of a component. The root-ﬁnding is divided
+in the following steps as prescribed by (Press et al 2007).
+Diagonalize the polynomials companion matrix (Horn and Johnson 1985) to obtain an exhaustive list of all
+roots of the polynomial. This is implemented in the NumPy library through the roots function.
+Reﬁne the precision of the roots using multiple iterations of Halley’s gradient based root ﬁnder (Press et al
+2007) until iterations do not improve the root value beyond a predeﬁned tolerance given by the Qcircuit
+argument root_relative_tolerance. The maximum number of iterations that may be carried out
+is determined by the Qcircuit argument root_max_iterations. If the imaginary part relative to
+the real part of the root is lower than the relative tolerance, the imaginary part will be set to zero. The
+relative tolerance thus sets the highest quality factor that QuCAT can detect.
+Remove identical roots (equal up to the relative tolerance), roots with negative imaginary or real parts,
+0-frequency roots, roots for which Yl ¢ (wm) < 0 for all l, where Yl is the admittance evaluated at the nodes of
+an inductive element l, and roots for which Qm < Qcircuit.Q_min. The user is warned of a root being
+discarded when one of these cases is unexpected.
+The roots ζm obtained through this algorithm are accessed through the method eigenfrequencies
+which returns the oscillatory frequency in Hertz of all the modes Re[ζm]/2π or loss_rates which returns
+2Im[ζm]/2π.
+C.2. Derivative of the admittance
+The zero-point ﬂuctuations in phase jzpf,m,r for each mode m across a reference junction r is the starting point to
+computing a Hamiltonian for the nonlinear potential of the Junctions. As expressed in equation (B4), this
+quantity depends on the derivative Yr ¢ of the admittance Yr calculated at the nodes of the reference element. In
+this section we ﬁrst cover the algorithm used to obtain the admittance at the nodes of an arbitrary component.
+From this admittance we then describe the method to obtain the derivative of the admittance on which jzpf, m, r
+depends Finally we describe how to choose a (mode-dependent) reference element.
+C.2.1. Computing the admittance. Here we describe a method to compute the admittance of a network between
+two arbitrary nodes. We will continue using the example circuit of ﬁgure C1, assuming we want to compute the
+admittance at the nodes of the inductor.
+1. Eliminate wires and grounds as in the resonance ﬁnding algorithm, nodes N0, N5 would be grouped under a
+single node labeled 0 and nodes N1, N2, N3 would be grouped under node 1, we label node N4 node 2. We
+thus obtain ﬁgure C3(a).
+21
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure C2. Star-mesh transform. A node N connected to nodes A, B, C ,.. through admittances YA, YB, K can be eliminated if we
+interconnect nodes A, B, C,.. with impedances YAB, YAC, YBC, K given by YXY = YX YY åM YM . We show the 5 node case, the initial
+network on the left is called the ‘star’, which is then transformed to the ‘mesh’ on the right, reducing the total number of nodes by 1.
+
+Figure C3. Example to illustrate the admittance calculation algorithm. (a) Example of a circuit built through the GUI by a user, after
+removal of all wires and grounds. (b) Application of the star-mesh transformation to remove node 1. (c) After each application of the
+star-mesh transformation, parallel connections are grouped together. Only the two nodes across which we want to compute the
+admittance remain, the admittance is that of the remaining ‘admittance component’.
+
+2. Group parallel connections. Group all components connected in parallel as a single ‘admittance
+component’ equal to the sum of admittances of its parts. In this way two nodes are either disconnected,
+connected by a single inductor, capacitor, junction or resistor, or connected by a single ‘admittance
+component’.
+3. Reduce the network through star-mesh transformations. Excluding the nodes across which we want to
+evaluate the admittance, we utilize the star-mesh transformation described in ﬁgure C2 to reduce the
+number of nodes in the network to two. If following a star-mesh transformation, two components are
+found in parallel, they are grouped under a single ‘admittance component’ as described previously. For a
+node connected to more than 3 other nodes the star-mesh transformation will increase the total number of
+components in the circuit. So we start with the least-connected nodes to maintain the total number of
+components in the network to a minimum. In this example, we want to keep nodes 0 and 2, but remove
+node 1, a start-mesh transform leads to the circuit of ﬁgure C3(b) then grouping parallel componnets leads
+to (c).
+4. The admittance is that of the remaining ‘admittance component’ once the network has been completely
+reduced to two nodes.
+The symbolic variables at this stage (Sympy Symbols) are ω, and the variables corresponding to any component
+with un-speciﬁed values.
+C.2.2. Differentiating the admittance. The expression for the admittance obtained from the above algorithm
+will necessarily be in the form of multiple multiplication, divisions or additions of the admittance of capacitors,
+inductors or resistors. It is thus possible to transform Y to a rational function of ω
+Y (w ) =
+
+p + p1 w + p2 w 2 + ...
+P (w )
+= 0
+Q (w )
+q0 + q1 w + q2 w 2 + ...
+
+(C10)
+
+with the sympy function together. It is then easy to symbolically determine the derivative of Y, ready to be
+evaluated at zm once the coefﬁcients pi and qi have been extracted
+Y ¢ ( z m) = ( P ¢ ( z m) Q ( z m) - P ( z m) Q ¢ ( z m ) Q ( z m ) 2
+= ( p1 + 2p2 zm + ...) (q0 + q1 zm + ...) ,
+
+(C11)
+
+taking advantage of the property P(ζm)∝Y(ζm)=0.
+C.2.3. Choice of reference element. For each mode m, we use as reference element r the inductor or junction
+which maximizes jzpf,m,r as speciﬁed by equation (B4). This corresponds to the element where the phase
+22
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure C4. Impact of the choice of reference element. (a) Schematic of the circuit used in this example. We have used a 100 fF
+capacitances, a 10 nH inductor and a 8 nH Josephson inductance, we will vary the coupling capacitance. The zero-point ﬂuctuations in
+phase jzpf, r across the inductor (r=L) and junction (r=J) for most anharmonic mode are drawn on the schematic and plotted in (b)
+for different values of the coupling capacitor CC. The phase oscillations associated with this mode are mostly located in the junction, so
+as the coupling capacitor is lowered, the amplitude of phase oscillations diminishes in the inductor. Below CC∼10−5 fF, numerical
+accuracies lead to unreliable values of the phase ﬂuctuations in the inductor. This results in the anharmonicity of the qubit-like mode
+Aq, plotted in (c), to be incorrectly estimated if the inductor is chosen as a reference element and the anharmonicity is computed using
+equation (B12).
+
+Figure C5. Visual summary of the notations and properties of the ABCD matrix applied to the calculation of Trj. The transfer function
+Trj=1/A is the inverse of the ﬁrst coefﬁcient of the ABCD matrix which relates the voltages and currents on either end of a network.
+These currents and voltages are deﬁned as shown above, with the reference junction on the left and junction j on the right. Currents
+are deﬁned as entering and exciting on the left and right respectively. If the circuit is constituted of a cascade of two port sub-networks,
+the product of the sub-network ABCD matrices are equal to the ABCD matrix of the total network.
+
+ﬂuctuations are majoritarily located. We ﬁnd that doing so considerably increases the success of evaluating
+Y ¢ (wm). As an example, we plot in ﬁgure C4 the zero-point ﬂuctuations in phase jzpf, m, r of the transmon-like
+mode, calculated for the circuit of ﬁgure 1, with the junction or inductor as reference element. What we ﬁnd is
+that if the coupling capacitor becomes too small, resulting in modes which are nearly totally localized in either
+inductor or junction, choosing the wrong reference element combined with numerical inaccuracies leads to
+unreliable values of jzpf, m, r .
+
+C.3. Transfer functions
+In this section, we describe the method used to determine the transfer function Tjr between a junction j and the
+reference junction r. This quantity can be computed from the ABCD matrix (Pozar 2009). The ABCD matrix
+relates the voltages and currents in a two port network
+⎛Vr ⎞
+A B ⎛Vj ⎞ ,
+⎜ ⎟ =
+⎜ ⎟
+⎝ Ir ⎠
+C D ⎝ Ij ⎠
+
+( )
+
+(C12)
+
+where the convention for current direction is described in ﬁgure C5. By constructing the network as in ﬁgure C5,
+with the reference junction on the left and junction j on the right, the transfer function is given by
+23
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure C6. Networks after star-mesh reduction. The two non-trivial situations reached after applying star-mesh transformations to a
+network to obtain Trj.
+
+Tjr (w ) =
+
+Vj (w )
+Vr (w )
+
+=
+
+1
+.
+A
+
+(C13)
+
+To determine A, we ﬁrst reduce the circuit using star-mesh transformations (see ﬁgure C2), and group
+parallel connections as described in the previous section, until only the nodes of junctions r and j are left. If the
+junctions initially shared a node, the resulting circuit will be equivalent to the network shown in ﬁgure C6 (a). In
+this case,
+⎛
+Yp ⎞
+A = ⎜1 +
+⎟.
+⎝
+Ya ⎠
+
+(C14)
+
+If the junctions do not share nodes, the resulting circuit will be equivalent to the network shown in ﬁgure C6(b),
+where some admittances may be equal to 0 to represent open circuits. To compute the ABCD matrix of this
+resulting circuit, we make use of the property illustrated in ﬁgure C5: the ABCD matrix of a cascade connection
+of two-port networks is equal to the product of the ABCD matrices of the individual networks. We ﬁrst
+determine the ABCD matrix of three parts of the network (separated by dashed line in ﬁgure C6) such that the
+ABCD matrix of the total network reads
+⎡ A B ⎤ ⎡ 1 0⎤ ⎡ A˜ B˜ ⎤ ⎡ 1 0⎤
+⎢⎣ C D ⎥⎦ = ⎢⎣Yr 1 ⎥⎦ ⎢⎣ ˜ ˜ ⎥⎦ ⎢⎣Yj 1 ⎥⎦.
+C D
+
+(C15)
+
+˜ j,
+A = A˜ + BY
+
+(C16)
+
+where the A and B coefﬁcients of the middle part of the network are
+A˜ = (Ya + Yb)(Yc + Yd ) (Ya Yd - Yb Yc )
+B˜ = (Ya + Yb + Yc + Yd ) (Ya Yd - Yb Yc ).
+
+(C17)
+
+The ABCD matrix for the middle part of the circuit is derived in section 10.11 of (Arshad 2010), and the ABCD
+matrices for the circuits on either sides are provided in (Pozar 2009).
+This method is also applied to calculate the transfer function to capacitors, inductors and resistors, notably
+to visualize the normal mode with the show_normal_mode function.
+C.4. Alternative algorithmic methods
+Since symbolic calculations are the most computationally expensive steps in a typical use of QuCAT, we cover in
+this section some alternatives to the methods previously described, and the reasons why they were not chosen.
+C.4.1. Eigen-frequencies from the zeros of admittance. One could solve Yr(ω)=0 where Yr is the admittance
+computed as explained in section D.2. Providing good initial guesses for all values of the zeros ζm can be
+provided, a number of root-ﬁnding algorithms can then be used to obtain ﬁnal values of ζm.
+A set of initial guesses could be obtained by noticing that Yr is a rational function of ω. Roots of its
+numerator are potentially zeros of Y, and a complete set of them is easy to obtain through a diagonalization
+
+24
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure C7. Determining zero-point ﬂuctuations from differentiating the admittance in decoupled circuits. Imaginary part of the
+admittance Im[Y] across the junction of the circuit of ﬁgure 1 for different values of the coupling capacitor Cc and for Lj=12 nH.
+Resonances correspond to the frequencies ω at which the admittance crosses 0, and the calculation of zero-point ﬂuctuations depends
+on the derivative Im [Y ¢] at that point. As the resonator and transmon parts of the circuit decouple, Im [Y ¢] becomes larger, requiring a
+lower δω if the admittance is to be determined through equation (C18). In extreme cases (see lower panel), when the derivative is very
+large, the smaller variation in the background slope may be mistaken for the slope at a resonance.
+
+of the companion matrix as discussed before. Note that if these roots are roots of the denominator with equal or
+higher multiplicity, then they are not zeros of Y. They can, however, make good initial guesses of a root-ﬁnding
+algorithm run on Yr. This requires a simpliﬁcation of Yr, as computed through star-mesh transforms, to its
+rational function form. We ﬁnd this last step to be as computationally expensive as obtaining a determinant.
+A different approach, which does not require using a root-ﬁnding algorithm on Yr, is to simplify the rationalfunction form of Y such that the numerator and denominator share no roots. This can be done by using the
+extended Euclidian algorithm to ﬁnd the greatest common polynomial divisor of the numerator and
+denominator. However, the numerical inaccuracies in the numerator and denominator coefﬁcients may make
+this method unreliable.
+The success of both of these approaches is dependent on determining a good reference component r, which
+may be mode-dependent (see ﬁgure C4). This reference component is difﬁcult to pick at this stage, when the
+mode frequencies are unknown.
+
+C.4.2. Finite difference estimation of the admittance derivative
+. Rather than symbolically differentiating the
+admittance, one could use a numerical ﬁnite difference approximation, for example
+Yr ¢ (w ) 
+
+Yr (w + dw 2) - Yr (w - dw 2)
+.
+dw
+
+(C18)
+
+Yr can be obtained through star-mesh reductions, or from a resolution of equation (C4).
+But ﬁnding a good value of δω is no easy task. As an example, we consider the circuit of ﬁgure 1, where we
+have taken as reference element the junction. As shown in ﬁgure C7, when the resonator and transmon decouple
+through a reduction of the coupling capacitor, a smaller and smaller δω is required to obtain Yr ¢ evaluated at the
+ζ1 of the resonator-like mode. We have tried making use of Ridders method of polynomial extrapolation to try
+and reliably approach the limit dx  0 (Press et al 2007). However at small coupling capacitance, it always
+converges to the slower varying background slope of Yr, without any way of detecting the error.
+
+C.4.3. Transfer functions from the admittance matrix. Calculating the transfer function Tij could alternatively be
+carried out through the resolution of the system of equations (C5). The difference in voltage of a reference
+elements nodes would ﬁrst have to be ﬁxed to the zero-point ﬂuctuations computed with the method of
+section (D.2). These equations would have to be resolved at each change of system parameters and for each
+mode, with ω replaced in the admittance matrix by its corresponding value for a given mode. This is to be
+
+25
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure D1. Computation time with increasing circuit size. On the vertical axis, we show the time necessary to initialize the Qcircuit
+object, which is the computationally expensive part of a typical QuCAT user case. This is plotted as a function of the number of nodes
+in the circuit. The test circuit used here is the multi-mode circuit of ﬁgure A3(c), optionally with a resistor in parallel of each capacitor.
+The number of nodes are increased by adding modes to the circuit. Most of the computational time is spent in the symbolic
+manipulations performed with the sympy library.
+
+balanced against a single symbolic derivation of Tij through star-mesh transformations, and fast evaluations of
+the symbolic expression for different parameters.
+
+Appendix D. Performance and limitations
+D.1. Number of nodes
+In this section we ask the question: how big a circuit can QuCAT analyze? To address this, we ﬁrst consider the
+circuit of ﬁgure A3(c), and secondly the same circuit with resistors added in parallel to each capacitor. As the
+number of (R)LC oscillators representing the modes of a CPW resonator is increased, we measure the time
+necessary for the initialization of the Qcircuit object. This is typically the most computationally expensive part of
+a QuCAT usage, limited by the speed of symbolic manipulations in Sympy.
+These symbolic manipulations include:
+• calculating the determinant of the admittance matrix
+• converting that determinant to a polynomial
+• reducing networks through star-mesh transformations both for admittance and transfer function calculations
+• rational function manipulations to prepare the admittance for differentiation.
+Once these operations have been performed, the most computationally expensive step in a Qcircuit method is
+ﬁnding the root of a polynomial (the determinant of the admittance matrix) which typically takes a few
+milliseconds.
+The results of this test are reported in ﬁgure D1. We ﬁnd that relatively long computation times above 10 s
+are required as one goes beyond 10 circuit nodes. Due to an increased complexity of symbolic expressions, the
+computation time increases when resistors are included. For example, the admittance matrix of a non-resistive
+circuit will have no coefﬁcients proportional to ω, only ω2 and only real parts, translating to a polynomial in
+Ω=ω2 which will have half the number of terms as a resistive circuit. However, we ﬁnd that this initialization
+time is also greatly dependent on the circuit connectivity, and this test should be taken as only a rough guideline.
+Making QuCAT compatible with the analysis of larger circuits will inevitably require the development of
+more efﬁcient open-source symbolic manipulation tools. The development of the open-source C++ library
+SymEngine https://github.com/symengine/symengine, together with its Python wrappers, the symengine.py
+project https://github.com/symengine/symengine.py, could lead to rapid progress in this direction. An
+enticing prospect would then be able to analyze the large scale cQED systems underlying modern transmonqubit-based quantum processors (Kelly et al 2019). One should keep in mind that an increase in circuit size
+translates to an increase in the number of degrees of freedom of the circuit and hence of the Hilbert space size
+needed for further analysis once a Hamiltonian has been extracted from QuCAT.
+
+26
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+Figure D2. Applicability of the harmonic Fock basis. (a) Transmon or Cooper-pair-box circuit. (b) On the x-axis, we vary the
+approximate anharmonicity EC=e2/2C with respect to the frequency w0 = 1 L j C . For each value, we plot a Hilbert space size,
+and order of Taylor-expansion of the junction cosine-potential. Incrementing these values produces less than a 0.1 percent change in
+the ﬁrst two transition frequencies obtained by diagonalizing the Hamiltonian. Beyond a relative anharmonicity of 8, convergence is
+no longer reached, even for Hilbert space sizes and Taylor expansions up to 100. (c) Frequency of the ﬁrst transition wg - e obtained
+from Hamiltonian diagonalization, relative to the value expected from ﬁrst order perturbation theory: ω0 − EC/ÿ. (d) Anharmonicity
+we - f - wg - e obtained from Hamiltonian diagonalization relative to the value expected from ﬁrst order perturbation theory EC/ÿ.
+Black lines correspond to a diagonalization in the harmonic Fock basis (equation (B13)), blue and orange dashed lines correspond to a
+diagonalization of the Cooper-pair box Hamiltonian with gate charges of 0 and 1/2 respectively. The harmonic Fock basis provides
+reliable results up to approximatively 6 percent anharmonicity.
+
+D.2. Degree of anharmonicity
+In this section we study the limits of the current quantization method used in QuCAT. More speciﬁcally, we
+study the applicability of the basis used to express the Hamiltonian, that of Fock-states of harmonic normal
+modes of the linearized circuit. To do so, we use the simplest circuit possible (ﬁgure D2(a)), the parallel
+connection of a Josephson junction and a capacitor. As the anharmonicity of this circuit becomes a greater
+fraction of its linearized circuit resonance, the physics of the circuit goes from that of a Transmon to that of a
+Cooper-pair box (Koch et al 2007), and the Fock-state basis becomes inadequate. This test should be viewed as a
+guideline for the maximum acceptable amount for anharmonicity. We ﬁnd that when the anharmonicity
+exceeds 6 percent of the eigenfrequency, a QuCAT generated Hamiltonian will not reliably describe the system.
+In this test, we vary the ratio of Josephson inductance Lj to capacitance C, increasing the anharmonicity
+expected from ﬁrst-order perturbation theory (see equation (B14)), called charging energy EC=e2/2C . The
+resonance frequency of the linearized circuit w0 = 1 L j C is maintained constant. For each different
+charging energy, we use the hamiltonian method to generate a Hamiltonian of the system. We are interested
+in the order of the Taylor expansion of the cosine potential, and the size of the Hilbert space, necessary to obtain
+realistic ﬁrst and second transition frequencies of the circuit, named wg - e and we - f respectively. To do so, we
+increase the order of Taylor expansion, and for each order we sweep through increasing Hilbert space sizes. In
+ﬁgure D2(b), we show the values of these parameters at which incrementing them would not change wg - e and
+we - f by more than 0.1 percent. Beyond a relative anharmonicity EC/ÿω0 of 8 percent, such convergence is no
+longer reached, even for cosine expansion orders and Hilbert space sizes up to 100.
+Up to the point of no convergence, we compare the results obtained from the diagonalization in the
+harmonic Fock basis (Hamiltonian generated by QuCAT), with a diagonalization of the Cooper-pair box
+Hamiltonian. In regimes of higher anharmonicity, the system becomes sensitive to the preferred charge offset
+between the two plates of the capacitor Ng (expressed in units of Cooper-pair charge 2e) imposed by the electric
+environment of the system. The Cooper-pair box Hamiltonian takes this into account
+⎛
+⎞2
+Hˆ CPB = 4EC ⎜å ∣ N ñá N ∣ - Ng ⎟ - å E j (∣ N + 1ñá N ∣ + ∣ N ñá N + 1∣) ,
+⎝N
+⎠
+N
+
+(D1)
+
+where ∣ N ñ is the quantum state of the system where N Cooper-pairs have tunneled across the junction to the
+node indicated in ﬁgure D2(a). For more details on Cooper-pair box physics and the derivation of this
+Hamiltonian, refer to (Schuster 2007). We diagonalize this Hamiltonian in a basis of 41 ∣ N ñ states.
+We ﬁnd that beyond 6 percent anharmonicity, the Cooper-pair box Hamiltonian becomes appreciably
+sensitive to Ng and diverges from the results obtained in the Fock basis. This corresponds to Ej/EC ; 35 at which
+27
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+the charge dispersion (the difference in frequency between 0 and 0.5 charge offset) is 4×10−5 and 1×10−3 for
+the ﬁrst two transitions respectively.
+Beyond 8 percent anharmonicity, one cannot reach convergence with the Fock basis and just before results
+diverge considerably from that of the Cooper-pair box Hamiltonian. This corresponds to Ej/EC ; 20 at which
+the charge dispersion is 1.5×10−3 and 3×10−2 for the ﬁrst two transitions respectively. A possible extension
+of the QuCAT Hamiltonian could thus include handling static offsets in charge and different quantization
+methods, for example quantization in the charge basis to extend QuCAT beyond the scope of weaklyanharmonic circuits.
+
+Appendix E. Installing QuCAT and dependencies
+The recommended way of installing QuCAT is through the standard Python package installer by running pip
+install qucat in a terminal. Alternatively, all versions of QuCAT, including the version currently underdevelopment is available on github at https://github.com/qucat. After downloading or cloning the repository,
+one can navigate to the src folder and run pip install. in a terminal.
+QuCAT and its GUI is cross-platform, and should function on Linux, MAC OS and Windows. QuCAT
+requires a version of Python 3, using the latest version is advised. QuCAT relies on several open-source Python
+libraries: Numpy, Scipy, Matplotlib, Sympy and QuTiP (Johansson et al 2012, 2013), installation of Python and
+these libraries through Anaconda is recommended. The performance of Sympy calculations can be improved by
+installing Gmpy2.
+
+Appendix F. List of QuCAT objects and methods
+QuCAT objects
+Network—Creates a Qcircuit from a list of components
+GUI —Opens a graphical user interface for the construction of a Qcircuit
+J —Creates a Josephson junction object
+L—Creates a inductor object
+C—Creates a capacitor object
+R—Creates a resistor object
+
+Qcircuit methods
+eigenfrequencies —Returns the normal mode frequencies
+loss_rates —Returns the normal mode loss rates
+anharmonicities —Returns the anharmonicities or self-Kerr of each normal mode
+kerr—Returns the self-Kerr and cross-Kerr for and between each normal mode
+f_k_A_chi—Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit
+hamiltonian—Returns the Hamiltonian of [B13]
+
+Qcircuit methods (only if built with GUI)
+show —Plots the circuit
+show_normal_mode —Plots the circuit overlaid with the currents, voltages, charge or ﬂuxes through each
+component when a normal mode is populated with a single-photon coherent state.
+
+J, L, R, C methods
+zpf —Returns contribution of a mode to the zero-point ﬂuctuations in current, voltages, charge or ﬂuxes.
+28
+
+New J. Phys. 22 (2020) 013025
+
+M F Gely and G A Steele
+
+J methods
+anharmonicity —Returns the contribution of this junction to the anharmonicity of a given normal mode
+(equation (B16)).
+
+Appendix G. Source code and documentation
+The code used to generate the ﬁgures of this paper are available in Zenodo with the identiﬁer (https://doi.org/
+10.5281/zenodo.3298107). Tutorials and examples, including those presented here are available on the QuCAT
+website at https://qucat.org/. The latest version of the QuCAT source code, is available to download or to
+contribute to at https://github.com/qucat.
+
+ORCID iDs
+Mario F Gely
+
+https://orcid.org/0000-0002-2861-2709
+
+References
+Arshad M 2010 Network Analysis and Circuits (New Delhi: Laxmi Publications)
+Arute F et al 2019 Nature 574 505–10
+Berkowitz S J 1984 Inf. Process. Lett. 18 147
+Bosman S J, Gely M F, Singh V, Bruno A, Bothner D and Steele G A 2017 npj Quantum Inf. 3 46
+Devoret M H and Schoelkopf R J 2013 Science 339 1169
+Foster R M 1924 Bell Syst. Tech. J. 3 259
+Gely M F, Parra-Rodriguez A, Bothner D, Blanter Y M, Bosman S J, Solano E and Steele G A 2017 Phys. Rev. B 95 245115
+Gely M F, Steele G A and Bothner D 2018 Phys. Rev. A 98 053808
+Gu X, Kockum A F, Miranowicz A, Liu Y-X and Nori F 2017 Phys. Rep. 718 1
+Horn R A and Johnson C 1985 Matrix Analysis (Cambridge: Cambridge University Press)
+Johansson J, Nation P and Nori F 2012 Comput. Phys. Commun. 183 1760
+Johansson J R, Nation P and Nori F 2013 Comput. Phys. Commun. 184 1234
+Kerber M 2009 Int. J. Comput. Math. 86 2186
+Koch J, Yu T M, Gambetta J, Houck A A, Schuster D I, Majer J, Blais A, Devoret M H, Girvin S M and Schoelkopf R J 2007 Phys. Rev. A 76
+042319
+Kounalakis M, Dickel C, Bruno A, Langford N and Steele G 2018 npj Quantum Inf. 4 38
+Nigg S E, Paik H, Vlastakis B, Kirchmair G, Shankar S, Frunzio L, Devoret M H, Schoelkopf R J and Girvin S M 2012 Phys. Rev. Lett. 108
+240502
+Ockeloen-Korppi C, Damskägg E, Pirkkalainen J-M, Heikkilä T, Massel F and Sillanpää M 2016 Phys. Rev. X 6 041024
+Pozar D M 2009 Microwave Engineering (New York: Wiley)
+Press W H, Teukolsky S A, Vetterling W T and Flannery B P 2007 Numerical Recipes: The Art of Scientiﬁc Computing 3rd edn (Cambridge:
+Cambridge University Press)
+Roy T, Kundu S, Chand M, Hazra S, Nehra N, Cosmic R, Ranadive A, Patankar M P, Damle K and Vijay R 2017 Phys. Rev. Appl. 7 054025
+Scheer M G and Block M B 2018 arXiv:1810.11510 [quant-ph]
+Schuster D I 2007 Circuit Quantum Electrodynamics (New Haven, CT: Yale University Press)
+Solgun F, Abraham D W and DiVincenzo D P 2014 Phys. Rev. B 90 134504
+Solgun F and DiVincenzo D P 2015 Ann. Phys. 361 605
+Teufel J D, Donner T, Li D, Harlow J W, Allman M S, Cicak K, Sirois A J, Whittaker J D, Lehnert K W and Simmonds R W 2011 Nature
+475 359
+Viennot J J, Ma X and Lehnert K W 2018 Phys. Rev. Lett. 121 183601
+Vool U and Devoret M 2017 Int. J. Circuit Theory Appl. 45 897
+Xiang Z-L, Ashhab S, You J and Nori F 2013 Rev. Mod. Phys. 85 623
+
+29
+
+
