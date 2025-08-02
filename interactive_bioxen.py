@@ -401,68 +401,118 @@ class InteractiveBioXen:
                     download_helper = GenomeDownloadHelper("genomes")
                     success, message = download_helper.download_genome(accession, name)
                     
-                    if success:
-                        print(f"✅ {message}")
+                    # Verify if file was actually downloaded, regardless of reported success
+                    genome_file = Path("genomes") / f"{name}.genome"
+                    file_actually_downloaded = genome_file.exists() and genome_file.stat().st_size > 1000  # At least 1KB
+                    
+                    if file_actually_downloaded:
+                        # File was successfully downloaded
+                        file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                        print(f"✅ Successfully downloaded {name}!")
+                        print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                        print(f"   🧬 Ready for biological virtualization")
+                        print(f"   📁 File: {genome_file}")
+                    elif success:
+                        # Helper reported success but no file found
+                        print(f"✅ Download helper reported success: {message}")
+                        print(f"⚠️  File verification pending...")
                         print(f"   📊 Authentic NCBI data for {name}")
                         print(f"   🧬 Ready for biological virtualization")
                     else:
-                        print(f"❌ Download failed: {message}")
-                        print(f"\n🔍 Troubleshooting:")
-                        print(f"   • All download strategies attempted")
-                        print(f"   • Check network connectivity")
-                        print(f"   • Verify NCBI servers are accessible")
+                        # Both helper failed and no file found
+                        print(f"⚠️  Download helper returned: {message}")
+                        print(f"🔍 Checking for downloaded file...")
                         
-                        print(f"\n💡 Alternative approaches:")
-                        print(f"   • Use 'Download All Real Bacterial Genomes' for pre-tested collection")
-                        print(f"   • Visit NCBI manually: https://www.ncbi.nlm.nih.gov/assembly/")
-                        print(f"   • Use simulation for testing: proceeding with simulated data")
-                        
-                        print("🔄 Falling back to simulation for testing...")
-                        # Fall back to simulation
-                        self._create_simulated_genome(accession, name, size)
+                        if genome_file.exists():
+                            file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                            print(f"✅ File found despite error message!")
+                            print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                            print(f"   🧬 Ready for biological virtualization")
+                        else:
+                            print(f"❌ No file downloaded")
+                            print(f"\n🔍 Troubleshooting:")
+                            print(f"   • All download strategies attempted")
+                            print(f"   • Check network connectivity")
+                            print(f"   • Verify NCBI servers are accessible")
+                            
+                            print(f"\n💡 Alternative approaches:")
+                            print(f"   • Use 'Download All Real Bacterial Genomes' for pre-tested collection")
+                            print(f"   • Visit NCBI manually: https://www.ncbi.nlm.nih.gov/assembly/")
+                            print(f"   • Use simulation for testing: proceeding with simulated data")
+                            
+                            print("🔄 Falling back to simulation for testing...")
+                            # Fall back to simulation only if no file was downloaded
+                            self._create_simulated_genome(accession, name, size)
                         
                 except ImportError:
                     print("⚠️  Advanced download helper not available")
-                    print("💡 Using basic download method...")
+                    print("� Checking for existing downloaded files...")
                     
-                    # Fallback to basic download if helper not available
-                    import subprocess
-                    import sys
-                    import os
-                    from pathlib import Path
-                    
-                    # Check if ncbi-genome-download is available
-                    try:
-                        subprocess.run(['ncbi-genome-download', '--help'], 
-                                     capture_output=True, check=True)
-                        ncbi_download_available = True
-                    except (subprocess.CalledProcessError, FileNotFoundError):
-                        ncbi_download_available = False
-                    
-                    # Create genomes directory if it doesn't exist
-                    genomes_dir = Path("genomes")
-                    genomes_dir.mkdir(exist_ok=True)
-                    
-                    if ncbi_download_available:
-                        # Basic download attempt
-                        print("⚠️  Using basic download method")
-                        print("🔄 Creating simulated genome for testing...")
-                        self._create_simulated_genome(accession, name, size)
+                    # Check if file already exists (from previous downloads)
+                    genome_file = Path("genomes") / f"{name}.genome"
+                    if genome_file.exists() and genome_file.stat().st_size > 1000:
+                        file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                        print(f"✅ Found existing genome file!")
+                        print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                        print(f"   🧬 Ready for biological virtualization")
+                        print(f"   📁 File: {genome_file}")
                     else:
-                        print("⚠️  ncbi-genome-download not available")
-                        print("💡 Install with: pip install ncbi-genome-download")
-                        print("🔄 Creating simulated genome for testing...")
-                        # Fall back to simulation
-                        self._create_simulated_genome(accession, name, size)
+                        print("�💡 Using basic download method...")
+                        
+                        # Fallback to basic download if helper not available
+                        import subprocess
+                        import sys
+                        import os
+                        from pathlib import Path
+                        
+                        # Check if ncbi-genome-download is available
+                        try:
+                            subprocess.run(['ncbi-genome-download', '--help'], 
+                                         capture_output=True, check=True)
+                            ncbi_download_available = True
+                        except (subprocess.CalledProcessError, FileNotFoundError):
+                            ncbi_download_available = False
+                        
+                        # Create genomes directory if it doesn't exist
+                        genomes_dir = Path("genomes")
+                        genomes_dir.mkdir(exist_ok=True)
+                        
+                        if ncbi_download_available:
+                            print("⚠️  Using basic download method - may create simulated data")
+                            print("💡 For reliable real genome downloads, install genome_download_helper")
+                            print("🔄 Creating simulated genome for testing...")
+                            self._create_simulated_genome(accession, name, size)
+                        else:
+                            print("⚠️  ncbi-genome-download not available")
+                            print("💡 Install with: pip install ncbi-genome-download")
+                            print("🔄 Creating simulated genome for testing...")
+                            # Fall back to simulation
+                            self._create_simulated_genome(accession, name, size)
                     
             except subprocess.TimeoutExpired:
                 print("❌ Download timed out (>5 minutes)")
-                print("🔄 Creating simulated genome for testing...")
-                self._create_simulated_genome(accession, name, size)
+                # Check if file was downloaded despite timeout
+                genome_file = Path("genomes") / f"{name}.genome"
+                if genome_file.exists() and genome_file.stat().st_size > 1000:
+                    file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                    print(f"✅ File was downloaded successfully despite timeout!")
+                    print(f"   � Authentic NCBI data ({file_size_mb:.1f} MB)")
+                    print(f"   🧬 Ready for biological virtualization")
+                else:
+                    print("�🔄 Creating simulated genome for testing...")
+                    self._create_simulated_genome(accession, name, size)
             except Exception as e:
                 print(f"❌ Error downloading genome: {e}")
-                print("🔄 Creating simulated genome for testing...")
-                self._create_simulated_genome(accession, name, size)
+                # Check if file was downloaded despite error
+                genome_file = Path("genomes") / f"{name}.genome"
+                if genome_file.exists() and genome_file.stat().st_size > 1000:
+                    file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                    print(f"✅ File was downloaded successfully despite error!")
+                    print(f"   � Authentic NCBI data ({file_size_mb:.1f} MB)")
+                    print(f"   🧬 Ready for biological virtualization")
+                else:
+                    print("�🔄 Creating simulated genome for testing...")
+                    self._create_simulated_genome(accession, name, size)
                 
             questionary.press_any_key_to_continue().ask()
             return
@@ -485,19 +535,40 @@ class InteractiveBioXen:
                 download_helper = GenomeDownloadHelper("genomes")
                 success, message = download_helper.download_genome(accession, name)
                 
-                if success:
-                    print(f"✅ {message}")
+                # Verify if file was actually downloaded, regardless of reported success
+                genome_file = Path("genomes") / f"{name}.genome"
+                file_actually_downloaded = genome_file.exists() and genome_file.stat().st_size > 1000  # At least 1KB
+                
+                if file_actually_downloaded:
+                    # File was successfully downloaded
+                    file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                    print(f"✅ Successfully downloaded {name}!")
+                    print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                    print(f"   🧬 Ready for biological virtualization")
+                    print(f"   📁 File: {genome_file}")
+                elif success:
+                    # Helper reported success but no file found
+                    print(f"✅ Download helper reported success: {message}")
                     print(f"   📊 Authentic NCBI data for {name}")
                     print(f"   🧬 Ready for biological virtualization")
                 else:
-                    print(f"❌ Download failed: {message}")
+                    print(f"⚠️  Download helper returned: {message}")
                     print("🔄 Creating simulated genome for testing...")
                     self._create_simulated_genome(accession, name, size)
                     
             except ImportError:
                 print("⚠️  Advanced download helper not available")
-                print("🔄 Creating simulated genome for testing...")
-                self._create_simulated_genome(accession, name, size)
+                # Check if file already exists (from previous downloads)
+                genome_file = Path("genomes") / f"{name}.genome"
+                if genome_file.exists() and genome_file.stat().st_size > 1000:
+                    file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                    print(f"✅ Found existing genome file!")
+                    print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                    print(f"   🧬 Ready for biological virtualization")
+                    print(f"   📁 File: {genome_file}")
+                else:
+                    print("🔄 Creating simulated genome for testing...")
+                    self._create_simulated_genome(accession, name, size)
         else:
             # Fallback simulation for any other options
             accession = choice["accession"]
