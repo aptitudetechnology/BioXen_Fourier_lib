@@ -24,3 +24,6 @@ ncbi-genome-download>=0.3.3
 # matplotlib>=3.3.0    # For performance visualization
 # biopython>=1.78      # For real biological sequence manipulation
 # jupyter>=1.0.0       # For interactive notebooks
+
+jcvi>=1.5.6
+# jcvi is a toolkit for comparative genomics and genome annotation.

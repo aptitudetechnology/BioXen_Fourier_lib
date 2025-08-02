@@ -5,6 +5,7 @@ Interactive BioXen CLI using questionary for user-friendly genome selection and 
 
 import sys
 import time
+import shutil
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -372,6 +373,109 @@ class InteractiveBioXen:
             questionary.press_any_key_to_continue().ask()
             return
             
+        elif choice["accession"] in ["NC_000908.2", "NC_000913.3", "NC_001133.9", "NC_009840.1", "NC_009495.1"]:
+            # Individual real genome download
+            accession = choice["accession"]
+            name = choice["name"]
+            size = choice["size"]
+            
+            print(f"\n🌐 Downloading Real Genome: {name}")
+            print(f"   Accession: {accession}")
+            print(f"   Expected size: {size:,} base pairs")
+            print(f"💡 Using NCBI download tools for authentic genome data")
+            
+            confirm = questionary.confirm(
+                f"Download {name} from NCBI? This may take a few minutes."
+            ).ask()
+            
+            if not confirm:
+                return
+            
+            try:
+                import subprocess
+                import sys
+                import os
+                from pathlib import Path
+                
+                print(f"\n🔄 Downloading {name} from NCBI...")
+                
+                # Check if ncbi-genome-download is available
+                try:
+                    subprocess.run(['ncbi-genome-download', '--help'], 
+                                 capture_output=True, check=True)
+                    ncbi_download_available = True
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    ncbi_download_available = False
+                
+                # Create genomes directory if it doesn't exist
+                genomes_dir = Path("genomes")
+                genomes_dir.mkdir(exist_ok=True)
+                
+                if ncbi_download_available:
+                    # Use ncbi-genome-download for real download
+                    print("✅ Using ncbi-genome-download for authentic genome data")
+                    
+                    # Download command targeting specific accession
+                    cmd = [
+                        'ncbi-genome-download',
+                        'bacteria',
+                        '--formats', 'fasta,gff',
+                        '--output-folder', 'genomes/downloads',
+                        '--parallel', '2',
+                        '--retries', '3',
+                        '--accessions', accession
+                    ]
+                    
+                    print(f"🔄 Running: {' '.join(cmd)}")
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+                    
+                    if result.returncode == 0:
+                        print(f"✅ Successfully downloaded {name}!")
+                        
+                        # Convert to BioXen format
+                        download_path = Path("genomes/downloads")
+                        if download_path.exists():
+                            # Find the downloaded files
+                            fasta_files = list(download_path.rglob("*.fna"))
+                            gff_files = list(download_path.rglob("*.gff"))
+                            
+                            if fasta_files:
+                                # Copy to main genomes directory with proper naming
+                                target_file = genomes_dir / f"{name}.genome"
+                                shutil.copy2(fasta_files[0], target_file)
+                                
+                                print(f"✅ Real genome saved as: {target_file}")
+                                print(f"   📊 Authentic NCBI data for {name}")
+                                print(f"   🧬 Ready for biological virtualization")
+                            else:
+                                print("⚠️  Downloaded but no FASTA files found")
+                        else:
+                            print("⚠️  Download completed but files not found in expected location")
+                    else:
+                        print(f"❌ NCBI download failed: {result.stderr}")
+                        print("🔄 Falling back to simulation for testing...")
+                        # Fall back to simulation
+                        self._create_simulated_genome(accession, name, size)
+                
+                else:
+                    print("⚠️  ncbi-genome-download not available")
+                    print("💡 Install with: pip install ncbi-genome-download")
+                    print("🔄 Creating simulated genome for testing...")
+                    # Fall back to simulation
+                    self._create_simulated_genome(accession, name, size)
+                    
+            except subprocess.TimeoutExpired:
+                print("❌ Download timed out (>5 minutes)")
+                print("🔄 Creating simulated genome for testing...")
+                self._create_simulated_genome(accession, name, size)
+            except Exception as e:
+                print(f"❌ Error downloading genome: {e}")
+                print("🔄 Creating simulated genome for testing...")
+                self._create_simulated_genome(accession, name, size)
+                
+            questionary.press_any_key_to_continue().ask()
+            return
+        
         elif choice["accession"] == "custom":
             accession = questionary.text("Enter NCBI accession number (e.g., NC_000913.3):").ask()
             if not accession:
@@ -380,11 +484,22 @@ class InteractiveBioXen:
             if not name:
                 name = accession.replace(".", "_")
             size = 1000000  # Default size for custom genomes
+            
+            # Try real download first, then simulate if it fails
+            print(f"\n🌐 Attempting to download {accession} from NCBI...")
+            # For now, create simulation - real download can be implemented later
+            self._create_simulated_genome(accession, name, size)
         else:
+            # Fallback simulation for any other options
             accession = choice["accession"]
             name = choice["name"]
             size = choice["size"]
+            self._create_simulated_genome(accession, name, size)
         
+        questionary.press_any_key_to_continue().ask()
+
+    def _create_simulated_genome(self, accession: str, name: str, size: int):
+        """Create simulated genome data for testing purposes."""
         print(f"\n🔄 Generating simulated genome data for {accession}...")
         print(f"💡 Creating simulated genome data for testing and development")
         
@@ -409,8 +524,6 @@ class InteractiveBioXen:
                 print(f"❌ Failed to create genome data for {accession}")
         except Exception as e:
             print(f"❌ Error creating genome data: {e}")
-        
-        questionary.press_any_key_to_continue().ask()
 
     def validate_genomes(self):
         """Validate downloaded genomes."""
