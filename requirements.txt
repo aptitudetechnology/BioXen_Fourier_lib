@@ -25,5 +25,26 @@ ncbi-genome-download>=0.3.3
 # biopython>=1.78      # For real biological sequence manipulation
 # jupyter>=1.0.0       # For interactive notebooks
 
+# JCVI Integration for Enhanced Genomics Analysis
 jcvi>=1.5.6
 # jcvi is a toolkit for comparative genomics and genome annotation.
+
+# JCVI Dependencies for Full Functionality
+biopython>=1.80
+# Required by JCVI for biological sequence manipulation
+
+matplotlib>=3.5.0
+# Required by JCVI for graphics and visualization modules
+
+numpy>=1.21.0
+# Required by JCVI for matrix operations and algorithms
+
+scipy>=1.7.0
+# Required by JCVI for scientific computing and advanced algorithms
+
+# Optional: ImageMagick support for JCVI graphics
+# Wand>=0.6.0
+# Note: Also requires ImageMagick to be installed on system:
+# - Ubuntu/Debian: sudo apt-get install libmagickwand-dev
+# - macOS: brew install imagemagick
+# - Windows: Download from https://imagemagick.org/

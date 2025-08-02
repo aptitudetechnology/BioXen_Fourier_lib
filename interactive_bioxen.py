@@ -423,7 +423,7 @@ class InteractiveBioXen:
                         '--output-folder', 'genomes/downloads',
                         '--parallel', '2',
                         '--retries', '3',
-                        '--accessions', accession
+                        '--assembly-accessions', accession
                     ]
                     
                     print(f"🔄 Running: {' '.join(cmd)}")
@@ -453,6 +453,33 @@ class InteractiveBioXen:
                             print("⚠️  Download completed but files not found in expected location")
                     else:
                         print(f"❌ NCBI download failed: {result.stderr}")
+                        
+                        # Provide specific troubleshooting based on error
+                        error_text = result.stderr.lower()
+                        print(f"\n🔍 Troubleshooting:")
+                        
+                        if "unrecognized arguments" in error_text:
+                            print(f"   • Command syntax error - this has been fixed")
+                            print(f"   • Please report this issue if you see it again")
+                        elif "assembly not found" in error_text or "no assemblies" in error_text:
+                            print(f"   • Assembly {accession} not found in NCBI RefSeq")
+                            print(f"   • Try with --section genbank for broader search")
+                            print(f"   • Verify accession number is correct")
+                        elif "connection" in error_text or "timeout" in error_text:
+                            print(f"   • Network connectivity issues")
+                            print(f"   • Check internet connection and try again")
+                        elif "permission denied" in error_text:
+                            print(f"   • File permission issues")
+                            print(f"   • Check write permissions in genomes/ directory")
+                        else:
+                            print(f"   • Generic download error")
+                            print(f"   • Try running manually: python3 test_download_fix.py")
+                        
+                        print(f"\n💡 Alternative approaches:")
+                        print(f"   • Use 'Download All Real Bacterial Genomes' for pre-tested collection")
+                        print(f"   • Visit NCBI manually: https://www.ncbi.nlm.nih.gov/assembly/")
+                        print(f"   • Use simulation for testing: proceeding with simulated data")
+                        
                         print("🔄 Falling back to simulation for testing...")
                         # Fall back to simulation
                         self._create_simulated_genome(accession, name, size)
