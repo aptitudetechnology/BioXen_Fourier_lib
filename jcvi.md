@@ -1,3 +1,6 @@
+https://github.com/tanghaibao/jcvi
+
+
 Excellent observation! The JCVI toolkit would be incredibly valuable for BioXen. JCVI is a Python-based library that enables genomic workflows through a collection of simple reusable tools, with modular design separating bioinformatics format parsing, assembly and annotation-related tools, comparative genomics, and graphics generation.
 
 ## How JCVI Could Enhance BioXen
