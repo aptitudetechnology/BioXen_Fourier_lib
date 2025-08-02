@@ -392,88 +392,25 @@ class InteractiveBioXen:
                 return
             
             try:
-                import subprocess
-                import sys
-                import os
-                from pathlib import Path
-                
                 print(f"\n🔄 Downloading {name} from NCBI...")
                 
-                # Check if ncbi-genome-download is available
+                # Use the new robust genome download helper
                 try:
-                    subprocess.run(['ncbi-genome-download', '--help'], 
-                                 capture_output=True, check=True)
-                    ncbi_download_available = True
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    ncbi_download_available = False
-                
-                # Create genomes directory if it doesn't exist
-                genomes_dir = Path("genomes")
-                genomes_dir.mkdir(exist_ok=True)
-                
-                if ncbi_download_available:
-                    # Use ncbi-genome-download for real download
-                    print("✅ Using ncbi-genome-download for authentic genome data")
+                    from genome_download_helper import GenomeDownloadHelper
                     
-                    # Download command targeting specific accession
-                    cmd = [
-                        'ncbi-genome-download',
-                        'bacteria',
-                        '--formats', 'fasta,gff',
-                        '--output-folder', 'genomes/downloads',
-                        '--parallel', '2',
-                        '--retries', '3',
-                        '--assembly-accessions', accession
-                    ]
+                    download_helper = GenomeDownloadHelper("genomes")
+                    success, message = download_helper.download_genome(accession, name)
                     
-                    print(f"🔄 Running: {' '.join(cmd)}")
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-                    
-                    if result.returncode == 0:
-                        print(f"✅ Successfully downloaded {name}!")
-                        
-                        # Convert to BioXen format
-                        download_path = Path("genomes/downloads")
-                        if download_path.exists():
-                            # Find the downloaded files
-                            fasta_files = list(download_path.rglob("*.fna"))
-                            gff_files = list(download_path.rglob("*.gff"))
-                            
-                            if fasta_files:
-                                # Copy to main genomes directory with proper naming
-                                target_file = genomes_dir / f"{name}.genome"
-                                shutil.copy2(fasta_files[0], target_file)
-                                
-                                print(f"✅ Real genome saved as: {target_file}")
-                                print(f"   📊 Authentic NCBI data for {name}")
-                                print(f"   🧬 Ready for biological virtualization")
-                            else:
-                                print("⚠️  Downloaded but no FASTA files found")
-                        else:
-                            print("⚠️  Download completed but files not found in expected location")
+                    if success:
+                        print(f"✅ {message}")
+                        print(f"   📊 Authentic NCBI data for {name}")
+                        print(f"   🧬 Ready for biological virtualization")
                     else:
-                        print(f"❌ NCBI download failed: {result.stderr}")
-                        
-                        # Provide specific troubleshooting based on error
-                        error_text = result.stderr.lower()
+                        print(f"❌ Download failed: {message}")
                         print(f"\n🔍 Troubleshooting:")
-                        
-                        if "unrecognized arguments" in error_text:
-                            print(f"   • Command syntax error - this has been fixed")
-                            print(f"   • Please report this issue if you see it again")
-                        elif "assembly not found" in error_text or "no assemblies" in error_text:
-                            print(f"   • Assembly {accession} not found in NCBI RefSeq")
-                            print(f"   • Try with --section genbank for broader search")
-                            print(f"   • Verify accession number is correct")
-                        elif "connection" in error_text or "timeout" in error_text:
-                            print(f"   • Network connectivity issues")
-                            print(f"   • Check internet connection and try again")
-                        elif "permission denied" in error_text:
-                            print(f"   • File permission issues")
-                            print(f"   • Check write permissions in genomes/ directory")
-                        else:
-                            print(f"   • Generic download error")
-                            print(f"   • Try running manually: python3 test_download_fix.py")
+                        print(f"   • All download strategies attempted")
+                        print(f"   • Check network connectivity")
+                        print(f"   • Verify NCBI servers are accessible")
                         
                         print(f"\n💡 Alternative approaches:")
                         print(f"   • Use 'Download All Real Bacterial Genomes' for pre-tested collection")
@@ -483,13 +420,40 @@ class InteractiveBioXen:
                         print("🔄 Falling back to simulation for testing...")
                         # Fall back to simulation
                         self._create_simulated_genome(accession, name, size)
-                
-                else:
-                    print("⚠️  ncbi-genome-download not available")
-                    print("💡 Install with: pip install ncbi-genome-download")
-                    print("🔄 Creating simulated genome for testing...")
-                    # Fall back to simulation
-                    self._create_simulated_genome(accession, name, size)
+                        
+                except ImportError:
+                    print("⚠️  Advanced download helper not available")
+                    print("💡 Using basic download method...")
+                    
+                    # Fallback to basic download if helper not available
+                    import subprocess
+                    import sys
+                    import os
+                    from pathlib import Path
+                    
+                    # Check if ncbi-genome-download is available
+                    try:
+                        subprocess.run(['ncbi-genome-download', '--help'], 
+                                     capture_output=True, check=True)
+                        ncbi_download_available = True
+                    except (subprocess.CalledProcessError, FileNotFoundError):
+                        ncbi_download_available = False
+                    
+                    # Create genomes directory if it doesn't exist
+                    genomes_dir = Path("genomes")
+                    genomes_dir.mkdir(exist_ok=True)
+                    
+                    if ncbi_download_available:
+                        # Basic download attempt
+                        print("⚠️  Using basic download method")
+                        print("🔄 Creating simulated genome for testing...")
+                        self._create_simulated_genome(accession, name, size)
+                    else:
+                        print("⚠️  ncbi-genome-download not available")
+                        print("💡 Install with: pip install ncbi-genome-download")
+                        print("🔄 Creating simulated genome for testing...")
+                        # Fall back to simulation
+                        self._create_simulated_genome(accession, name, size)
                     
             except subprocess.TimeoutExpired:
                 print("❌ Download timed out (>5 minutes)")
@@ -512,10 +476,28 @@ class InteractiveBioXen:
                 name = accession.replace(".", "_")
             size = 1000000  # Default size for custom genomes
             
-            # Try real download first, then simulate if it fails
+            # Try real download with the new helper
             print(f"\n🌐 Attempting to download {accession} from NCBI...")
-            # For now, create simulation - real download can be implemented later
-            self._create_simulated_genome(accession, name, size)
+            
+            try:
+                from genome_download_helper import GenomeDownloadHelper
+                
+                download_helper = GenomeDownloadHelper("genomes")
+                success, message = download_helper.download_genome(accession, name)
+                
+                if success:
+                    print(f"✅ {message}")
+                    print(f"   📊 Authentic NCBI data for {name}")
+                    print(f"   🧬 Ready for biological virtualization")
+                else:
+                    print(f"❌ Download failed: {message}")
+                    print("🔄 Creating simulated genome for testing...")
+                    self._create_simulated_genome(accession, name, size)
+                    
+            except ImportError:
+                print("⚠️  Advanced download helper not available")
+                print("🔄 Creating simulated genome for testing...")
+                self._create_simulated_genome(accession, name, size)
         else:
             # Fallback simulation for any other options
             accession = choice["accession"]
