@@ -284,32 +284,97 @@ class InteractiveComparativeGenomics:
         
         # Use existing multi_genome_analyzer
         try:
-            # This will use the Phase 2 analyzer we already built
-            compatibility_results = self.analyzer.run_compatibility_analysis(genomes)
+            # Use the correct method from Phase 2 analyzer
+            analysis_results = self.analyzer.analyze_genome_collection("genomes")
             
             print("\n✅ Compatibility Analysis Complete!")
             print("\n📊 Compatibility Matrix:")
             
-            # Display results in a nice format
-            for i, genome1 in enumerate(genomes):
-                name1 = Path(genome1).stem
-                for j, genome2 in enumerate(genomes[i+1:], i+1):
-                    name2 = Path(genome2).stem
-                    # Mock compatibility score for now
-                    score = hash(f"{name1}{name2}") % 100
+            # Extract and display compatibility results
+            if 'pairwise_compatibility' in analysis_results:
+                for pair_data in analysis_results['pairwise_compatibility']:
+                    genome1 = pair_data.get('genome1', 'Unknown')
+                    genome2 = pair_data.get('genome2', 'Unknown')
+                    similarity = pair_data.get('similarity_score', 0.0)
+                    
+                    name1 = Path(genome1).stem if '/' in genome1 else genome1
+                    name2 = Path(genome2).stem if '/' in genome2 else genome2
+                    
+                    score = int(similarity * 100) if similarity < 1.0 else int(similarity)
                     status = "🟢" if score > 80 else "🟡" if score > 60 else "🔴"
                     print(f"   {status} {name1:15} ↔ {name2:15}: {score}% compatible")
+            else:
+                # Fallback to displaying genome profiles
+                for i, genome1 in enumerate(genomes):
+                    name1 = Path(genome1).stem
+                    for j, genome2 in enumerate(genomes[i+1:], i+1):
+                        name2 = Path(genome2).stem
+                        # Calculate compatibility based on actual genome data
+                        profile1 = self._get_genome_profile(genome1)
+                        profile2 = self._get_genome_profile(genome2)
+                        
+                        # Similarity based on gene count and complexity
+                        gene_ratio = min(profile1['gene_count'], profile2['gene_count']) / max(profile1['gene_count'], profile2['gene_count'])
+                        complexity_match = 1.0 if profile1['complexity'] == profile2['complexity'] else 0.7
+                        score = int((gene_ratio * 0.6 + complexity_match * 0.4) * 100)
+                        
+                        status = "🟢" if score > 80 else "🟡" if score > 60 else "🔴"
+                        print(f"   {status} {name1:15} ↔ {name2:15}: {score}% compatible")
             
             # Cache results
             self.analysis_cache['compatibility'] = {
                 'timestamp': datetime.now().isoformat(),
                 'genomes': genomes,
-                'results': 'compatibility_matrix_saved'
+                'results': analysis_results,
+                'analysis_type': 'full_compatibility_matrix'
             }
+            
+            # Display summary statistics
+            if 'summary' in analysis_results:
+                summary = analysis_results['summary']
+                print(f"\n📈 Analysis Summary:")
+                print(f"   🧬 Total genomes analyzed: {summary.get('total_genomes', len(genomes))}")
+                print(f"   🔗 Compatibility pairs: {summary.get('total_pairs', 'N/A')}")
+                print(f"   ⚡ Resource clusters: {summary.get('clusters', 'N/A')}")
             
         except Exception as e:
             print(f"❌ Error during analysis: {e}")
             print("   Falling back to basic comparison...")
+            self._run_basic_compatibility_fallback(genomes)
+    
+    def _run_basic_compatibility_fallback(self, genomes):
+        """Basic compatibility analysis when advanced methods fail"""
+        
+        print("\n🔄 Running basic compatibility analysis...")
+        
+        for i, genome1 in enumerate(genomes):
+            name1 = Path(genome1).stem
+            for j, genome2 in enumerate(genomes[i+1:], i+1):
+                name2 = Path(genome2).stem
+                
+                # Calculate compatibility based on actual genome data
+                profile1 = self._get_genome_profile(genome1)
+                profile2 = self._get_genome_profile(genome2)
+                
+                # Similarity metrics
+                gene_ratio = min(profile1['gene_count'], profile2['gene_count']) / max(profile1['gene_count'], profile2['gene_count'])
+                size_ratio = min(profile1['total_bases'], profile2['total_bases']) / max(profile1['total_bases'], profile2['total_bases'])
+                complexity_match = 1.0 if profile1['complexity'] == profile2['complexity'] else 0.7
+                
+                # Combined compatibility score
+                score = int((gene_ratio * 0.4 + size_ratio * 0.3 + complexity_match * 0.3) * 100)
+                
+                status = "🟢" if score > 80 else "🟡" if score > 60 else "🔴"
+                print(f"   {status} {name1:15} ↔ {name2:15}: {score}% compatible")
+                
+                # Add optimization suggestions
+                if score > 80:
+                    print(f"      💡 Excellent compatibility - ideal for VM co-location")
+                elif score > 60:
+                    print(f"      💡 Good compatibility - suitable for resource sharing")
+                else:
+                    print(f"      💡 Limited compatibility - separate VM clusters recommended")
+            self._run_basic_compatibility_fallback(genomes)
     
     def _run_synteny_analysis(self, genomes, analysis_type):
         """Run synteny analysis"""
