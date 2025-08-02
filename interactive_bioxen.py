@@ -458,10 +458,7 @@ class InteractiveBioXen:
                         print("�💡 Using basic download method...")
                         
                         # Fallback to basic download if helper not available
-                        import subprocess
-                        import sys
-                        import os
-                        from pathlib import Path
+                        # ...existing code...
                         
                         # Check if ncbi-genome-download is available
                         try:

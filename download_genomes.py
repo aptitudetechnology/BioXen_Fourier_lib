@@ -365,7 +365,6 @@ def interactive_genome_selection():
                 
                 if run_interactive:
                     print("🚀 Launching interactive BioXen...")
-                    import subprocess
                     subprocess.run([sys.executable, "interactive_bioxen.py"])
                     
             else:
@@ -408,7 +407,6 @@ def interactive_genome_selection():
                 
                 if run_interactive:
                     print("🚀 Launching interactive BioXen...")
-                    import subprocess
                     subprocess.run([sys.executable, "interactive_bioxen.py"])
             
             questionary.press_any_key_to_continue().ask()
