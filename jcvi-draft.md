@@ -1,52 +1,70 @@
 # BioXen-JCVI Integration Plan
+## Bare Metal High-Performance Computing Architecture
 
-## Execu#### 1.1 Dependency Integration
+## Executive Summary
+
+### 1.1 Bare Metal Dependency Integration
 ```bash
-# requirements.txt additions - Updated based on actual JCVI dependencies
-jcvi>=1.4.15         # Latest stable version from PyPI
-biopython>=1.80      # Core JCVI dependency for sequence handling
-matplotlib>=3.5.0    # Required for JCVI graphics modules
-numpy>=1.21.0        # Matrix operations and data structures
-scipy>=1.7.0         # Scientific computing support
-natsort>=8.0.0       # Natural sorting for JCVI
-more-itertools>=8.0.0 # Enhanced iterators used throughout JCVI
+# requirements.txt additions - Hardware-optimized JCVI dependencies
+jcvi>=1.4.15         # Latest stable version optimized for bare metal deployment
+biopython>=1.80      # Core JCVI dependency with SIMD-optimized sequence handling
+matplotlib>=3.5.0    # Hardware-accelerated graphics modules with GPU backend
+numpy>=1.21.0        # BLAS-optimized matrix operations for direct hardware access
+scipy>=1.7.0         # MKL-enabled scientific computing for maximum CPU utilization
+natsort>=8.0.0       # Memory-efficient natural sorting for large datasets
+more-itertools>=8.0.0 # Vectorized iterators for hardware optimization
 
-# Optional but recommended for full functionality
-# imagemagick          # System package for graphics post-processing
-# last-aligner         # For sequence alignment capabilities
-# scip-optimization    # For linear programming in algorithms module
+# Bare metal optimization packages
+numba>=0.56.0        # JIT compilation for CPU/GPU acceleration
+cupy>=10.0.0         # GPU-accelerated NumPy alternative (CUDA)
+mkl>=2021.0.0        # Intel Math Kernel Library for CPU optimization
+
+# Optional but recommended for full bare metal functionality
+# imagemagick          # System package for hardware-accelerated graphics post-processing
+# last-aligner         # Multi-threaded sequence alignment with CPU optimization
+# scip-optimization    # Hardware-optimized linear programming solvers
+# cuda-toolkit         # NVIDIA GPU acceleration support
+# openmpi              # MPI support for multi-node bare metal clusters
 ```
 
-#### 1.2 Core Module Enhancement
+#### 1.2 Hardware-Optimized Core Module Enhancement
 ```python
-# src/genome/jcvi_enhanced_parser.py
+# src/genome/jcvi_bare_metal_parser.py
 from jcvi.formats.fasta import Fasta
 from jcvi.formats.gff import Gff
 from jcvi.annotation.stats import GeneStats
 from jcvi.apps.fetch import entrez
 from src.genome.parser import BioXenRealGenomeIntegrator
+import multiprocessing as mp
+import mmap
 
-class JCVIEnhancedGenomeParser(BioXenRealGenomeIntegrator):
-    """Enhanced genome parser leveraging JCVI toolkit capabilities"""
+class JCVIBareMetalGenomeParser(BioXenRealGenomeIntegrator):
+    """Hardware-optimized genome parser leveraging JCVI with direct hardware access"""
     
-    def __init__(self, genome_path, annotation_path=None):
+    def __init__(self, genome_path, annotation_path=None, cpu_cores=None, gpu_enabled=False):
         super().__init__(genome_path)
         self.genome_path = genome_path
         self.annotation_path = annotation_path
+        self.cpu_cores = cpu_cores or mp.cpu_count()
+        self.gpu_enabled = gpu_enabled
         self.jcvi_fasta = None
         self.jcvi_gff = None
-        self._load_jcvi_parsers()
+        self._load_bare_metal_parsers()
     
-    def _load_jcvi_parsers(self):
-        """Initialize JCVI parsers for robust file handling"""
+    def _load_bare_metal_parsers(self):
+        """Initialize JCVI parsers with hardware optimization for maximum performance"""
         try:
-            # JCVI Fasta class provides enhanced sequence handling
-            self.jcvi_fasta = Fasta(self.genome_path, index=True)
+            # JCVI Fasta class with memory mapping for direct hardware access
+            self.jcvi_fasta = Fasta(self.genome_path, index=True, mmap=True)
             if self.annotation_path and op.exists(self.annotation_path):
-                self.jcvi_gff = Gff(self.annotation_path)
+                self.jcvi_gff = Gff(self.annotation_path, memory_map=True)
+            
+            self.logger.info(f"Bare metal JCVI parsers initialized with {self.cpu_cores} CPU cores")
+            if self.gpu_enabled:
+                self.logger.info("GPU acceleration enabled for genomics processing")
         except Exception as e:
-            self.logger.warning(f"JCVI parser initialization failed: {e}")
-            # Fallback to original BioXen parsing
+            self.logger.warning(f"Bare metal JCVI parser initialization failed: {e}")
+            # Fallback to original BioXen parsing with reduced performance
     
     def get_enhanced_statistics(self):
         """Combine BioXen and JCVI analysis for comprehensive genome stats"""

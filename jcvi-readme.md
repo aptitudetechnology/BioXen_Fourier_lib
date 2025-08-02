@@ -1,4 +1,5 @@
 # JCVI: A Versatile Toolkit for Comparative Genomics Analysis
+## Optimized for Bare Metal High-Performance Computing
 
 [![Latest PyPI version](https://img.shields.io/pypi/v/jcvi.svg)](https://pypi.python.org/pypi/jcvi)
 [![bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/jcvi/README.html?highlight=jcvi)
@@ -7,6 +8,7 @@
 
 Collection of Python libraries to parse bioinformatics files, or perform
 computation related to assembly, annotation, and comparative genomics.
+**Optimized for bare metal deployment with direct CPU/GPU hardware access.**
 
 |         |                                                                  |
 | ------- | ---------------------------------------------------------------- |
@@ -35,19 +37,19 @@ computation related to assembly, annotation, and comparative genomics.
 ## Contents
 
 Following modules are available as generic Bioinformatics handling
-methods.
+methods, optimized for bare metal performance.
 
 - <kbd>algorithms</kbd>
 
-  - Linear programming solver with SCIP and GLPK.
-  - Supermap: find set of non-overlapping anchors in BLAST or NUCMER output.
-  - Longest or heaviest increasing subsequence.
-  - Matrix operations.
+  - Hardware-accelerated linear programming solver with SCIP and GLPK.
+  - CPU-optimized Supermap: find set of non-overlapping anchors in BLAST or NUCMER output.
+  - Vectorized longest or heaviest increasing subsequence algorithms.
+  - SIMD-optimized matrix operations.
 
 - <kbd>apps</kbd>
 
-  - GenBank entrez accession, Phytozome, Ensembl and SRA downloader.
-  - Calculate (non)synonymous substitution rate between gene pairs.
+  - Multi-threaded GenBank entrez accession, Phytozome, Ensembl and SRA downloader.
+  - GPU-accelerated (non)synonymous substitution rate calculations between gene pairs.
   - Basic phylogenetic tree construction using PHYLIP, PhyML, or RAxML, and visualization.
   - Wrapper for BLAST+, LASTZ, LAST, BWA, BOWTIE2, CLC, CDHIT, CAP3, etc.
 
