@@ -207,6 +207,7 @@ def main():
     )
     parser.add_argument(
         'input', 
+        nargs='?',  # Make input optional when using --batch
         help='Input .genome file path'
     )
     parser.add_argument(
@@ -246,7 +247,13 @@ def main():
         return 0 if success_count == len(genome_files) else 1
     
     else:
-        # Single file conversion
+        # Single file conversion - require input argument
+        if not args.input:
+            print("❌ Error: Input file required for single file conversion")
+            print("   Use --batch to convert all .genome files in genomes/ directory")
+            parser.print_help()
+            return 1
+            
         if converter.convert_genome(args.input, args.output):
             return 0
         else:
