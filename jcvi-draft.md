@@ -1,21 +1,175 @@
 # BioXen-JCVI Integration Plan
 
-## Executive Summary
+## Execu#### 1.1 Dependency Integration
+```bash
+# requirements.txt additions - Updated based on actual JCVI dependencies
+jcvi>=1.4.15         # Latest stable version from PyPI
+biopython>=1.80      # Core JCVI dependency for sequence handling
+matplotlib>=3.5.0    # Required for JCVI graphics modules
+numpy>=1.21.0        # Matrix operations and data structures
+scipy>=1.7.0         # Scientific computing support
+natsort>=8.0.0       # Natural sorting for JCVI
+more-itertools>=8.0.0 # Enhanced iterators used throughout JCVI
 
-This document outlines a comprehensive integration plan for incorporating the JCVI toolkit into BioXen's biological hypervisor platform. JCVI (a versatile toolkit for comparative genomics analysis) will significantly enhance BioXen's genome processing, analysis, and visualization capabilities while maintaining compatibility with the existing architecture.
+# Optional but recommended for full functionality
+# imagemagick          # System package for graphics post-processing
+# last-aligner         # For sequence alignment capabilities
+# scip-optimization    # For linear programming in algorithms module
+```
+
+#### 1.2 Core Module Enhancement
+```python
+# src/genome/jcvi_enhanced_parser.py
+from jcvi.formats.fasta import Fasta
+from jcvi.formats.gff import Gff
+from jcvi.annotation.stats import GeneStats
+from jcvi.apps.fetch import entrez
+from src.genome.parser import BioXenRealGenomeIntegrator
+
+class JCVIEnhancedGenomeParser(BioXenRealGenomeIntegrator):
+    """Enhanced genome parser leveraging JCVI toolkit capabilities"""
+    
+    def __init__(self, genome_path, annotation_path=None):
+        super().__init__(genome_path)
+        self.genome_path = genome_path
+        self.annotation_path = annotation_path
+        self.jcvi_fasta = None
+        self.jcvi_gff = None
+        self._load_jcvi_parsers()
+    
+    def _load_jcvi_parsers(self):
+        """Initialize JCVI parsers for robust file handling"""
+        try:
+            # JCVI Fasta class provides enhanced sequence handling
+            self.jcvi_fasta = Fasta(self.genome_path, index=True)
+            if self.annotation_path and op.exists(self.annotation_path):
+                self.jcvi_gff = Gff(self.annotation_path)
+        except Exception as e:
+            self.logger.warning(f"JCVI parser initialization failed: {e}")
+            # Fallback to original BioXen parsing
+    
+    def get_enhanced_statistics(self):
+        """Combine BioXen and JCVI analysis for comprehensive genome stats"""
+        # Original BioXen statistics
+        bioxen_stats = super().get_genome_stats()
+        
+        # Enhanced JCVI statistics
+        jcvi_stats = {}
+        if self.jcvi_fasta:
+            # Use JCVI's robust sequence analysis
+            jcvi_stats = {
+                'total_sequences': len(self.jcvi_fasta),
+                'sequence_lengths': dict(self.jcvi_fasta.itersizes()),
+                'total_length': sum(len(rec) for rec in self.jcvi_fasta.iteritems()),
+                'gc_content': self._calculate_jcvi_gc_content(),
+                'n50': self._calculate_n50(),
+                'sequence_names': list(self.jcvi_fasta.keys())
+            }
+        
+        if self.annotation_path and self.jcvi_gff:
+            # Enhanced annotation statistics using JCVI
+            jcvi_stats.update({
+                'total_features': len(list(self.jcvi_gff)),
+                'feature_types': self._get_feature_type_counts(),
+                'gene_count': len([f for f in self.jcvi_gff if f.featuretype == 'gene']),
+                'exon_count': len([f for f in self.jcvi_gff if f.featuretype == 'exon'])
+            })
+        
+        return self._merge_statistics(bioxen_stats, jcvi_stats)
+    
+    def extract_sequences_by_region(self, region_list):
+        """Enhanced sequence extraction using JCVI methods"""
+        if not self.jcvi_fasta:
+            return super().extract_sequences_by_region(region_list)
+        
+        extracted = {}
+        for region in region_list:
+            try:
+                # Use JCVI's sequence extraction capabilities
+                if isinstance(region, str) and region in self.jcvi_fasta:
+                    seq_record = self.jcvi_fasta[region]
+                    extracted[region] = str(seq_record.seq)
+                elif isinstance(region, dict):
+                    # Handle coordinate-based extraction
+                    chr_name = region.get('chr', region.get('chromosome'))
+                    start = region.get('start', 0)
+                    end = region.get('end', region.get('stop'))
+                    
+                    if chr_name in self.jcvi_fasta:
+                        seq_record = self.jcvi_fasta[chr_name]
+                        extracted[f"{chr_name}:{start}-{end}"] = str(seq_record.seq[start:end])
+            except Exception as e:
+                self.logger.warning(f"JCVI extraction failed for {region}: {e}")
+                # Fallback to original method
+                extracted[region] = super().extract_sequence(region)
+        
+        return extracted
+```
+
+#### 1.3 Enhanced Download Integration
+```python
+# Enhanced download_genomes.py integration with JCVI fetch capabilities
+from jcvi.apps.fetch import entrez
+import questionary
+
+def enhanced_genome_downloader():
+    """Enhanced genome downloader with JCVI Entrez support"""
+    
+    # Existing questionary interface preserved
+    choice = questionary.select(
+        "Select download method:",
+        choices=[
+            "NCBI via JCVI Entrez (Recommended)",
+            "Original BioXen method",
+            "Custom accession list"
+        ]
+    ).ask()
+    
+    if choice == "NCBI via JCVI Entrez (Recommended)":
+        accession = questionary.text("Enter GenBank accession ID:").ask()
+        
+        try:
+            # Use JCVI's robust Entrez downloader
+            import tempfile
+            import os
+            
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Download using JCVI's entrez function
+                entrez_args = [accession]
+                entrez(entrez_args)
+                
+                # Convert downloaded GenBank to BioXen format
+                downloaded_file = f"{accession}.gb"
+                if os.path.exists(downloaded_file):
+                    bioxen_genome = convert_genbank_to_bioxen(downloaded_file)
+                    
+                    # Validate with JCVI enhanced parser
+                    validation_results = validate_with_jcvi_parser(bioxen_genome)
+                    
+                    return bioxen_genome, validation_results
+                else:
+                    raise FileNotFoundError(f"Download failed for {accession}")
+            
+        except Exception as e:
+            print(f"JCVI Entrez download failed: {e}")
+            print("Falling back to original BioXen method...")
+            return original_download_method(accession)
+```ry
+
+This document outlines a comprehensive integration plan for incorporating the JCVI toolkit into BioXen's biological hypervisor platform. JCVI (J. Craig Venter Institute toolkit) is a versatile Python-based collection of libraries for comparative genomics analysis, assembly, annotation, and bioinformatics file parsing. This integration will significantly enhance BioXen's genome processing, analysis, and visualization capabilities while maintaining compatibility with the existing architecture.
 
 ## 🎯 Integration Objectives
 
 ### Primary Goals
-1. **Enhanced Genome Processing**: Replace custom parsing with JCVI's battle-tested bioinformatics format support
-2. **Comparative Genomics**: Add multi-species analysis capabilities for VM optimization
+1. **Enhanced Genome Processing**: Replace custom parsing with JCVI's battle-tested bioinformatics format support (FASTA, GFF, GenBank, BLAST, BED, etc.)
+2. **Comparative Genomics**: Add multi-species analysis capabilities using JCVI's synteny detection and ortholog analysis
 3. **Professional Visualization**: Complement Love2D real-time visualization with JCVI's publication-quality genomics plots
-4. **Improved Scientific Credibility**: Leverage JCVI's peer-reviewed, widely-adopted methods
+4. **Improved Scientific Credibility**: Leverage JCVI's peer-reviewed, widely-adopted methods from the J. Craig Venter Institute
 
 ### Success Metrics
 - **Reliability**: 99.9% genome parsing success rate across all 5 bacterial species
 - **Performance**: <2 second genome loading times with enhanced statistics
-- **Features**: 5+ new comparative genomics capabilities
+- **Features**: 5+ new comparative genomics capabilities (synteny, orthology, phylogeny)
 - **Compatibility**: 100% backward compatibility with existing BioXen workflows
 
 ## 📋 Current State Analysis
@@ -166,87 +320,150 @@ def enhanced_genome_downloader():
 #### 2.1 Multi-Genome Analysis Module
 ```python
 # src/genetics/comparative_analysis.py
-from jcvi.compara.synteny import synteny_scan
-from jcvi.compara.ortholog import ortholog_finder
-from jcvi.algorithms.matrix import read_matrix
+from jcvi.compara.synteny import scan, mcscan, stats as synteny_stats
+from jcvi.compara.base import AnchorFile
+from jcvi.formats.blast import Blast
+from jcvi.formats.bed import Bed
 import questionary
 
 class BioXenComparativeGenomics:
-    """Comparative genomics analysis for VM optimization"""
+    """Comparative genomics analysis for VM optimization using JCVI"""
     
     def __init__(self, genome_collection):
         self.genomes = genome_collection
         self.synteny_results = {}
-        self.ortholog_groups = {}
+        self.anchor_files = {}
+        self.blast_results = {}
         
     def analyze_vm_compatibility(self):
         """Analyze genome compatibility for multi-species VM deployment"""
         
-        print("🧬 Analyzing genome compatibility for VM optimization...")
+        print("🧬 Analyzing genome compatibility using JCVI synteny detection...")
         
-        # Synteny analysis between genomes
-        self.synteny_results = synteny_scan(
-            [genome.path for genome in self.genomes]
-        )
+        # Step 1: Generate all-vs-all BLAST comparisons
+        self._generate_blast_comparisons()
         
-        # Ortholog detection for shared functionality
-        self.ortholog_groups = ortholog_finder(
-            [genome.path for genome in self.genomes]
-        )
+        # Step 2: Run JCVI synteny scan to identify conserved blocks
+        for genome_pair in self._get_genome_pairs():
+            genome1, genome2 = genome_pair
+            pair_key = f"{genome1.species}_vs_{genome2.species}"
+            
+            # Use JCVI's synteny scan algorithm
+            blast_file = f"blast/{pair_key}.blast"
+            anchor_file = f"anchors/{pair_key}.anchors"
+            
+            if os.path.exists(blast_file):
+                # Run JCVI synteny scan
+                scan_args = [blast_file, "--qbed", f"{genome1.species}.bed", 
+                           "--sbed", f"{genome2.species}.bed", "-o", anchor_file]
+                scan(scan_args)
+                
+                # Load and analyze results
+                if os.path.exists(anchor_file):
+                    anchors = AnchorFile(anchor_file)
+                    self.anchor_files[pair_key] = anchors
+                    
+                    # Get synteny statistics
+                    stats_args = [anchor_file]
+                    synteny_statistics = synteny_stats(stats_args)
+                    self.synteny_results[pair_key] = synteny_statistics
         
-        # Generate compatibility matrix
+        # Step 3: Generate compatibility matrix
         compatibility_matrix = self._generate_compatibility_matrix()
         
         return {
-            'synteny': self.synteny_results,
-            'orthologs': self.ortholog_groups,
-            'compatibility': compatibility_matrix,
-            'recommendations': self._generate_vm_recommendations()
+            'synteny_blocks': self.synteny_results,
+            'anchor_files': self.anchor_files,
+            'compatibility_matrix': compatibility_matrix,
+            'vm_recommendations': self._generate_vm_recommendations()
         }
     
     def find_shared_essential_genes(self):
-        """Identify essential genes shared across bacterial species"""
-        essential_genes = {}
+        """Identify essential genes shared across bacterial species using ortholog detection"""
         
+        print("🔍 Detecting orthologs and shared essential genes...")
+        
+        essential_genes = {}
+        ortholog_groups = {}
+        
+        # Use JCVI's anchor-based ortholog detection
+        for pair_key, anchors in self.anchor_files.items():
+            if anchors:
+                # Extract orthologous gene pairs from synteny blocks
+                ortho_pairs = self._extract_ortholog_pairs(anchors)
+                ortholog_groups[pair_key] = ortho_pairs
+        
+        # Identify essential genes in each genome
         for genome in self.genomes:
-            # Find essential genes in each genome
-            essential = self._identify_essential_genes(genome)
+            essential = self._identify_essential_genes_via_annotation(genome)
             essential_genes[genome.species] = essential
         
-        # Find intersection of essential genes
-        shared_essential = set.intersection(*[
-            set(genes) for genes in essential_genes.values()
-        ])
+        # Find shared essential genes across all species
+        shared_essential = self._find_conserved_essential_genes(
+            essential_genes, ortholog_groups
+        )
         
         return {
-            'per_species': essential_genes,
-            'shared_essential': list(shared_essential),
+            'per_species_essential': essential_genes,
+            'ortholog_groups': ortholog_groups,
+            'shared_essential': shared_essential,
             'vm_implications': self._analyze_vm_implications(shared_essential)
         }
     
     def optimize_resource_allocation(self):
-        """Use comparative analysis to optimize VM resource allocation"""
+        """Use JCVI comparative analysis to optimize VM resource allocation"""
         
-        # Analyze genome complexity differences
+        # Enhanced genome complexity analysis using JCVI statistics
         complexity_analysis = {}
         for genome in self.genomes:
-            complexity_analysis[genome.species] = {
-                'gene_count': len(genome.genes),
-                'genome_size': genome.size,
-                'gc_content': genome.gc_content,
-                'complexity_score': self._calculate_complexity_score(genome)
-            }
+            # Use JCVI's annotation statistics if available
+            if hasattr(genome, 'annotation_path') and genome.annotation_path:
+                jcvi_stats = self._get_jcvi_annotation_stats(genome)
+                complexity_analysis[genome.species] = {
+                    'gene_count': jcvi_stats.get('gene_count', len(genome.genes)),
+                    'exon_count': jcvi_stats.get('exon_count', 0),
+                    'average_gene_length': jcvi_stats.get('avg_gene_length', 0),
+                    'genome_size': genome.size,
+                    'gc_content': genome.gc_content,
+                    'synteny_complexity': self._calculate_synteny_complexity(genome.species),
+                    'ortholog_density': self._calculate_ortholog_density(genome.species)
+                }
+            else:
+                # Fallback to basic analysis
+                complexity_analysis[genome.species] = {
+                    'gene_count': len(genome.genes),
+                    'genome_size': genome.size,
+                    'gc_content': genome.gc_content,
+                    'complexity_score': self._calculate_basic_complexity_score(genome)
+                }
         
-        # Generate resource allocation recommendations
+        # Generate enhanced resource allocation recommendations
         allocations = {}
         for species, analysis in complexity_analysis.items():
             allocations[species] = {
                 'recommended_ribosomes': self._calculate_ribosome_need(analysis),
                 'memory_requirement': self._calculate_memory_need(analysis),
-                'cpu_priority': self._calculate_cpu_priority(analysis)
+                'cpu_priority': self._calculate_cpu_priority(analysis),
+                'synteny_weight': self._calculate_synteny_weight(species),
+                'ortholog_sharing_bonus': self._calculate_sharing_bonus(species)
             }
         
         return allocations
+    
+    def _generate_blast_comparisons(self):
+        """Generate BLAST files needed for synteny analysis"""
+        # Implementation details for BLAST generation
+        # This would integrate with JCVI's blast handling capabilities
+        pass
+    
+    def _get_jcvi_annotation_stats(self, genome):
+        """Get detailed annotation statistics using JCVI"""
+        from jcvi.annotation.stats import summary
+        
+        if genome.annotation_path:
+            stats_args = [genome.annotation_path, genome.path]
+            return summary(stats_args)
+        return {}
 ```
 
 #### 2.2 Interactive Comparative Interface
@@ -305,47 +522,138 @@ def comparative_analysis_menu():
 #### 3.1 JCVI Graphics Integration
 ```python
 # src/visualization/jcvi_plots.py
-from jcvi.graphics.chromosome import chromosome_plot
-from jcvi.graphics.synteny import synteny_plot
-from jcvi.graphics.histogram import histogram_plot
+from jcvi.graphics.chromosome import Chromosome, HorizontalChromosome
+from jcvi.graphics.synteny import main as synteny_plot
+from jcvi.graphics.dotplot import main as dotplot_main
+from jcvi.graphics.histogram import main as histogram_main
+from jcvi.graphics.base import plt, savefig
 import matplotlib.pyplot as plt
+import os
 
 class JCVIVisualizationIntegration:
     """Integration between JCVI graphics and BioXen visualization"""
     
     def __init__(self, output_dir="visualizations/"):
         self.output_dir = output_dir
+        os.makedirs(output_dir, exist_ok=True)
         
-    def generate_synteny_plots(self, genome_pairs):
-        """Generate synteny dot plots for genome comparison"""
+    def generate_synteny_plots(self, anchor_files):
+        """Generate synteny plots using JCVI's graphics.synteny module"""
         
         plots = {}
-        for pair in genome_pairs:
-            genome1, genome2 = pair
-            
-            # Generate JCVI synteny plot
-            plot_path = f"{self.output_dir}/synteny_{genome1}_{genome2}.png"
-            synteny_plot(
-                genome1_path=f"genomes/{genome1}.genome",
-                genome2_path=f"genomes/{genome2}.genome", 
-                output=plot_path
-            )
-            
-            plots[f"{genome1}_vs_{genome2}"] = plot_path
-            
+        for pair_name, anchor_file in anchor_files.items():
+            if os.path.exists(anchor_file):
+                # Prepare bed files for the genome pair
+                genome1, genome2 = pair_name.split('_vs_')
+                bed1_file = f"beds/{genome1}.bed"
+                bed2_file = f"beds/{genome2}.bed"
+                
+                # Generate layout configuration for synteny plot
+                layout_file = f"layouts/{pair_name}.layout"
+                self._create_synteny_layout(layout_file, genome1, genome2)
+                
+                # Generate synteny plot using JCVI
+                plot_path = f"{self.output_dir}/synteny_{pair_name}.pdf"
+                
+                try:
+                    # Call JCVI synteny plotting function
+                    synteny_args = [layout_file, "--format=pdf", f"--output={plot_path}"]
+                    synteny_plot(synteny_args)
+                    
+                    plots[pair_name] = plot_path
+                    print(f"✅ Generated synteny plot: {plot_path}")
+                    
+                except Exception as e:
+                    print(f"❌ Failed to generate synteny plot for {pair_name}: {e}")
+                    
         return plots
     
-    def generate_chromosome_paintings(self, genome_name):
-        """Generate chromosome painting visualization"""
+    def generate_dotplots(self, blast_files):
+        """Generate dot plots from BLAST results using JCVI"""
         
-        plot_path = f"{self.output_dir}/chromosome_{genome_name}.png"
-        chromosome_plot(
-            genome_path=f"genomes/{genome_name}.genome",
-            output=plot_path,
-            paint_regions=True
-        )
+        plots = {}
+        for pair_name, blast_file in blast_files.items():
+            if os.path.exists(blast_file):
+                plot_path = f"{self.output_dir}/dotplot_{pair_name}.pdf"
+                
+                try:
+                    # Generate dot plot using JCVI's dotplot module
+                    dotplot_args = [blast_file, "--format=pdf", f"--output={plot_path}"]
+                    dotplot_main(dotplot_args)
+                    
+                    plots[pair_name] = plot_path
+                    print(f"✅ Generated dot plot: {plot_path}")
+                    
+                except Exception as e:
+                    print(f"❌ Failed to generate dot plot for {pair_name}: {e}")
+                    
+        return plots
+    
+    def generate_chromosome_paintings(self, genome_name, bed_file, sizes_file):
+        """Generate chromosome painting visualization using JCVI"""
         
-        return plot_path
+        plot_path = f"{self.output_dir}/chromosome_{genome_name}.pdf"
+        
+        try:
+            # Create figure
+            fig, ax = plt.subplots(figsize=(12, 8))
+            
+            # Read chromosome sizes
+            sizes = {}
+            with open(sizes_file, 'r') as f:
+                for line in f:
+                    chrom, size = line.strip().split('\t')
+                    sizes[chrom] = int(size)
+            
+            # Create chromosome visualizations
+            y_pos = 0.9
+            for chrom, size in sizes.items():
+                # Create horizontal chromosome
+                chr_obj = HorizontalChromosome(
+                    ax, 0.1, 0.9, y_pos, 
+                    height=0.05, ec='black'
+                )
+                
+                # Add chromosome label
+                ax.text(0.05, y_pos, chrom, 
+                       verticalalignment='center', fontsize=10)
+                
+                y_pos -= 0.1
+            
+            # Set plot limits and styling
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.set_aspect('equal')
+            ax.axis('off')
+            
+            plt.title(f'Chromosome Overview: {genome_name}', fontsize=14, fontweight='bold')
+            savefig(plot_path, format='pdf')
+            plt.close()
+            
+            print(f"✅ Generated chromosome painting: {plot_path}")
+            return plot_path
+            
+        except Exception as e:
+            print(f"❌ Failed to generate chromosome painting for {genome_name}: {e}")
+            return None
+    
+    def generate_gc_histogram(self, fasta_file, genome_name):
+        """Generate GC content histogram using JCVI"""
+        
+        plot_path = f"{self.output_dir}/gc_histogram_{genome_name}.pdf"
+        
+        try:
+            # Use JCVI's fasta gc command to generate histogram
+            from jcvi.formats.fasta import gc
+            gc_args = [fasta_file, "--output", plot_path]
+            gc(gc_args)
+            
+            print(f"✅ Generated GC histogram: {plot_path}")
+            return plot_path
+            
+        except Exception as e:
+            print(f"❌ Failed to generate GC histogram for {genome_name}: {e}")
+            return None
     
     def export_data_for_love2d(self, analysis_results):
         """Export JCVI analysis results for Love2D visualization"""
@@ -353,25 +661,89 @@ class JCVIVisualizationIntegration:
         love2d_data = {
             'timestamp': time.time(),
             'comparative_analysis': {
-                'synteny_scores': analysis_results.get('synteny', {}),
-                'ortholog_counts': analysis_results.get('orthologs', {}),
-                'compatibility_matrix': analysis_results.get('compatibility', {})
+                'synteny_blocks': self._format_synteny_for_love2d(
+                    analysis_results.get('synteny_blocks', {})
+                ),
+                'anchor_counts': self._count_anchors(
+                    analysis_results.get('anchor_files', {})
+                ),
+                'compatibility_matrix': analysis_results.get('compatibility_matrix', {})
             },
-            'genome_statistics': {
-                genome.species: {
-                    'size': genome.size,
-                    'genes': len(genome.genes),
-                    'gc_content': genome.gc_content,
-                    'complexity_score': genome.complexity_score
-                } for genome in self.genomes
+            'genome_statistics': self._format_genome_stats_for_love2d(analysis_results),
+            'visualization_files': {
+                'synteny_plots': analysis_results.get('synteny_plots', {}),
+                'dotplots': analysis_results.get('dotplots', {}),
+                'chromosome_paintings': analysis_results.get('chromosome_paintings', {})
             }
         }
         
         # Export for BioLib2D consumption
-        with open("bioxen_comparative_data.json", "w") as f:
+        export_path = "bioxen_jcvi_data.json"
+        with open(export_path, "w") as f:
             json.dump(love2d_data, f, indent=2)
         
+        print(f"✅ Exported Love2D data: {export_path}")
         return love2d_data
+    
+    def _create_synteny_layout(self, layout_file, genome1, genome2):
+        """Create layout configuration file for JCVI synteny plotting"""
+        
+        layout_content = f"""# Synteny layout for {genome1} vs {genome2}
+# Generated by BioXen-JCVI integration
+
+[tracks]
+{genome1}.bed
+{genome2}.bed
+
+[synteny]
+{genome1}_vs_{genome2}.anchors
+
+[style]
+canvas_width = 800
+canvas_height = 600
+track_height = 50
+synteny_color = blue
+synteny_alpha = 0.7
+"""
+        
+        os.makedirs(os.path.dirname(layout_file), exist_ok=True)
+        with open(layout_file, 'w') as f:
+            f.write(layout_content)
+    
+    def _format_synteny_for_love2d(self, synteny_blocks):
+        """Format synteny data for Love2D consumption"""
+        formatted = {}
+        for pair, blocks in synteny_blocks.items():
+            if blocks:
+                formatted[pair] = {
+                    'block_count': len(blocks) if hasattr(blocks, '__len__') else 0,
+                    'total_anchors': sum(len(block) for block in blocks) if hasattr(blocks, '__iter__') else 0
+                }
+        return formatted
+    
+    def _count_anchors(self, anchor_files):
+        """Count anchors in each anchor file"""
+        counts = {}
+        for pair, anchor_file in anchor_files.items():
+            if anchor_file and hasattr(anchor_file, '__len__'):
+                counts[pair] = len(anchor_file)
+            else:
+                counts[pair] = 0
+        return counts
+    
+    def _format_genome_stats_for_love2d(self, analysis_results):
+        """Format genome statistics for Love2D visualization"""
+        # Extract and format genome statistics from analysis results
+        stats = {}
+        if 'genomes' in analysis_results:
+            for genome in analysis_results['genomes']:
+                stats[genome.species] = {
+                    'size': getattr(genome, 'size', 0),
+                    'genes': len(getattr(genome, 'genes', [])),
+                    'gc_content': getattr(genome, 'gc_content', 0),
+                    'complexity_score': getattr(genome, 'complexity_score', 0)
+                }
+        return stats
 ```
 
 #### 3.2 Enhanced BioLib2D Integration

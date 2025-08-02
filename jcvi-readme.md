@@ -48,6 +48,55 @@ methods.
 
   - GenBank entrez accession, Phytozome, Ensembl and SRA downloader.
   - Calculate (non)synonymous substitution rate between gene pairs.
+  - Basic phylogenetic tree construction using PHYLIP, PhyML, or RAxML, and visualization.
+  - Wrapper for BLAST+, LASTZ, LAST, BWA, BOWTIE2, CLC, CDHIT, CAP3, etc.
+
+- <kbd>formats</kbd>
+
+  Currently supports `.ace` format (phrap, cap3, etc.), `.agp`
+  (goldenpath), `.bed` format, `.blast` output, `.btab` format,
+  `.coords` format (`nucmer` output), `.fasta` format, `.fastq`
+  format, `.fpc` format, `.gff` format, `obo` format (ontology),
+  `.psl` format (UCSC blat, GMAP, etc.), `.posmap` format (Celera
+  assembler output), `.sam` format (read mapping), `.contig`
+  format (TIGR assembly format), etc.
+
+- <kbd>graphics</kbd>
+
+  - BLAST or synteny dot plot.
+  - Histogram using R and ASCII art.
+  - Paint regions on set of chromosomes.
+  - Macro-synteny and micro-synteny plots.
+  - Ribbon plots from whole genome alignments.
+
+- <kbd>utils</kbd>
+  - Grouper can be used as disjoint set data structure.
+  - range contains common range operations, like overlap
+    and chaining.
+  - Miscellaneous cookbook recipes, iterators decorators,
+    table utilities.
+
+Then there are modules that contain domain-specific methods.
+
+- <kbd>assembly</kbd>
+
+  - K-mer histogram analysis.
+  - Preparation and validation of tiling path for clone-based assemblies.
+  - Scaffolding through ALLMAPS, optical map and genetic map.
+  - Pre-assembly and post-assembly QC procedures.
+
+- <kbd>annotation</kbd>
+
+  - Training of _ab initio_ gene predictors.
+  - Calculate gene, exon and intron statistics.
+  - Wrapper for PASA and EVM.
+  - Launch multiple MAKER processes.
+
+- <kbd>compara</kbd>
+  - C-score based BLAST filter.
+  - Synteny scan (de-novo) and lift over (find nearby anchors).
+  - Ancestral genome reconstruction using Sankoff's and PAR method.
+  - Ortholog and tandem gene duplicates finder.
   - Basic phylogenetic tree construction using PHYLIP, PhyML, or RAxML, and viualization.
   - Wrapper for BLAST+, LASTZ, LAST, BWA, BOWTIE2, CLC, CDHIT, CAP3, etc.
 
@@ -97,6 +146,50 @@ Then there are modules that contain domain-specific methods.
   - Synteny scan (de-novo) and lift over (find nearby anchors).
   - Ancestral genome reconstruction using Sankoff's and PAR method.
   - Ortholog and tandem gene duplicates finder.
+
+## BioXen Integration Opportunities
+
+JCVI provides excellent opportunities for enhancing BioXen's biological hypervisor capabilities:
+
+### 🧬 Enhanced Genome Processing
+- **Robust Format Support**: Replace custom parsers with JCVI's battle-tested FASTA, GFF, GenBank, and BED format handling
+- **Comprehensive Statistics**: Use `jcvi.annotation.stats` for detailed genome analysis
+- **Download Integration**: Leverage `jcvi.apps.fetch.entrez` for reliable genome downloads from NCBI
+
+### 🔬 Comparative Genomics for VM Optimization  
+- **Synteny Analysis**: Use `jcvi.compara.synteny.scan` and `jcvi.compara.synteny.mcscan` to analyze relationships between BioXen's 5 bacterial genomes
+- **Ortholog Detection**: Identify functionally equivalent genes across species for better VM resource allocation
+- **Compatibility Matrices**: Generate data-driven recommendations for multi-species VM deployments
+
+### 📊 Professional Visualization
+- **Publication-Quality Plots**: Complement Love2D real-time visualization with static plots from `jcvi.graphics`
+- **Synteny Visualizations**: Use `jcvi.graphics.synteny` for genome comparison plots
+- **Chromosome Painting**: Visualize genomic features with `jcvi.graphics.chromosome`
+
+### Example BioXen Integration
+```python
+# Enhanced BioXen genome parser using JCVI
+from jcvi.formats.fasta import Fasta
+from jcvi.formats.gff import Gff
+from jcvi.annotation.stats import summary
+
+class JCVIEnhancedGenomeParser:
+    def __init__(self, genome_path, annotation_path=None):
+        self.fasta = Fasta(genome_path, index=True)
+        self.gff = Gff(annotation_path) if annotation_path else None
+        
+    def get_enhanced_statistics(self):
+        stats = {
+            'total_sequences': len(self.fasta),
+            'sequence_lengths': dict(self.fasta.itersizes()),
+            'total_length': sum(len(rec) for rec in self.fasta.iteritems())
+        }
+        
+        if self.gff:
+            stats['gene_count'] = len([f for f in self.gff if f.featuretype == 'gene'])
+            
+        return stats
+```
 
 ## Applications
 
