@@ -189,6 +189,39 @@ class JCVIEnhancedGenomeParser:
             stats['gene_count'] = len([f for f in self.gff if f.featuretype == 'gene'])
             
         return stats
+
+# Cross-domain test case: Wolffia australiana
+def test_wolffia_australiana_integration():
+    """Test JCVI with world's smallest flowering plant"""
+    
+    # Download Wolffia australiana (GCA_029677425.1)
+    from jcvi.apps.fetch import entrez
+    
+    wolffia_accession = "GCA_029677425.1"
+    entrez_args = [wolffia_accession]
+    entrez(entrez_args)
+    
+    # Parse with JCVI enhanced parser
+    wolffia_parser = JCVIEnhancedGenomeParser(f"{wolffia_accession}.fasta")
+    wolffia_stats = wolffia_parser.get_enhanced_statistics()
+    
+    print("🌱 Wolffia australiana Analysis:")
+    print(f"   Assembly: ASM2967742v1")
+    print(f"   Sequences: {wolffia_stats['total_sequences']}")
+    print(f"   Total length: {wolffia_stats['total_length']:,} bp")
+    print(f"   Significance: World's smallest flowering plant")
+    print(f"   Features: Streamlined genome, reduced gene set")
+    
+    # Test cross-domain comparative analysis
+    bacterial_genomes = ['syn3A', 'm_genitalium', 'm_pneumoniae']
+    
+    print("\n🔬 Cross-domain analysis (Plant vs Bacteria):")
+    for bacterial_genome in bacterial_genomes:
+        print(f"   Wolffia vs {bacterial_genome}: Extreme evolutionary distance")
+        print(f"   Expected synteny: Minimal (billion-year divergence)")
+        print(f"   Shared functions: Basic metabolism only")
+    
+    return wolffia_stats
 ```
 
 ## Applications
