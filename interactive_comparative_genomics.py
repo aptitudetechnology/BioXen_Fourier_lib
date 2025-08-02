@@ -374,7 +374,236 @@ class InteractiveComparativeGenomics:
                     print(f"      💡 Good compatibility - suitable for resource sharing")
                 else:
                     print(f"      💡 Limited compatibility - separate VM clusters recommended")
-            self._run_basic_compatibility_fallback(genomes)
+    
+    def _run_targeted_pair_analysis(self, genomes):
+        """Run targeted analysis between specific genome pairs"""
+        
+        print("\n🎯 Targeted Pair Analysis")
+        print("=" * 30)
+        
+        if len(genomes) < 2:
+            print("❌ Error: Need at least 2 genomes for pair analysis")
+            return
+        
+        # Let user select first genome
+        genome_choices = [Choice(f"🧬 {Path(g).stem} ({self._get_genome_profile(g)['gene_count']} genes)", g) 
+                         for g in genomes]
+        
+        genome1 = questionary.select(
+            "Select first genome:",
+            choices=genome_choices
+        ).ask()
+        
+        # Let user select second genome (excluding first)
+        remaining_genomes = [g for g in genomes if g != genome1]
+        genome_choices = [Choice(f"🧬 {Path(g).stem} ({self._get_genome_profile(g)['gene_count']} genes)", g) 
+                         for g in remaining_genomes]
+        
+        genome2 = questionary.select(
+            "Select second genome:",
+            choices=genome_choices
+        ).ask()
+        
+        # Analyze the pair
+        print(f"\n🔬 Analyzing compatibility between:")
+        print(f"   📊 Genome 1: {Path(genome1).stem}")
+        print(f"   📊 Genome 2: {Path(genome2).stem}")
+        
+        profile1 = self._get_genome_profile(genome1)
+        profile2 = self._get_genome_profile(genome2)
+        
+        # Calculate detailed compatibility metrics
+        gene_ratio = min(profile1['gene_count'], profile2['gene_count']) / max(profile1['gene_count'], profile2['gene_count'])
+        size_ratio = min(profile1['total_bases'], profile2['total_bases']) / max(profile1['total_bases'], profile2['total_bases'])
+        complexity_match = 1.0 if profile1['complexity'] == profile2['complexity'] else 0.7
+        
+        # Combined compatibility score
+        overall_score = int((gene_ratio * 0.4 + size_ratio * 0.3 + complexity_match * 0.3) * 100)
+        
+        print(f"\n📊 Detailed Compatibility Analysis:")
+        print(f"   🧬 Gene count similarity: {gene_ratio:.2f} ({profile1['gene_count']} vs {profile2['gene_count']})")
+        print(f"   📏 Genome size similarity: {size_ratio:.2f} ({profile1['total_bases']:,} vs {profile2['total_bases']:,} bases)")
+        print(f"   🎯 Complexity match: {complexity_match:.2f} ({profile1['complexity']} vs {profile2['complexity']})")
+        print(f"   ⭐ Overall compatibility: {overall_score}%")
+        
+        # Status indicator
+        if overall_score > 80:
+            status = "🟢 EXCELLENT"
+            recommendation = "Ideal for VM co-location and resource sharing"
+        elif overall_score > 60:
+            status = "🟡 GOOD" 
+            recommendation = "Suitable for clustered deployment"
+        else:
+            status = "🔴 LIMITED"
+            recommendation = "Recommend separate VM clusters"
+        
+        print(f"\n{status} - {recommendation}")
+        
+        # Resource optimization suggestions
+        print(f"\n💡 Optimization Suggestions:")
+        if overall_score > 80:
+            print(f"   • Co-locate VMs for maximum efficiency")
+            print(f"   • Share memory pools between instances")
+            print(f"   • Use unified resource scheduling")
+        elif overall_score > 60:
+            print(f"   • Group in same resource cluster")
+            print(f"   • Consider shared storage")
+            print(f"   • Monitor for resource conflicts")
+        else:
+            print(f"   • Isolate in separate clusters")
+            print(f"   • Independent resource allocation")
+            print(f"   • Different scheduling priorities")
+        
+        # Cache the result
+        pair_key = f"{Path(genome1).stem}_{Path(genome2).stem}"
+        self.analysis_cache['targeted_pairs'] = self.analysis_cache.get('targeted_pairs', {})
+        self.analysis_cache['targeted_pairs'][pair_key] = {
+            'timestamp': datetime.now().isoformat(),
+            'genome1': genome1,
+            'genome2': genome2,
+            'compatibility_score': overall_score,
+            'gene_ratio': gene_ratio,
+            'size_ratio': size_ratio,
+            'complexity_match': complexity_match,
+            'recommendation': recommendation
+        }
+    
+    def _run_quick_compatibility_check(self, genomes):
+        """Quick compatibility overview of all genomes"""
+        
+        print("\n🔄 Quick Compatibility Check")
+        print("=" * 35)
+        
+        print(f"📊 Genome Collection Overview:")
+        for genome in genomes:
+            profile = self._get_genome_profile(genome)
+            name = Path(genome).stem
+            print(f"   🧬 {name:20}: {profile['gene_count']:3d} genes, {profile['complexity']:6s} complexity")
+        
+        print(f"\n🎯 Quick Compatibility Matrix:")
+        high_compat = []
+        medium_compat = []
+        low_compat = []
+        
+        for i, genome1 in enumerate(genomes):
+            for j, genome2 in enumerate(genomes[i+1:], i+1):
+                profile1 = self._get_genome_profile(genome1)
+                profile2 = self._get_genome_profile(genome2)
+                
+                gene_ratio = min(profile1['gene_count'], profile2['gene_count']) / max(profile1['gene_count'], profile2['gene_count'])
+                size_ratio = min(profile1['total_bases'], profile2['total_bases']) / max(profile1['total_bases'], profile2['total_bases'])
+                complexity_match = 1.0 if profile1['complexity'] == profile2['complexity'] else 0.7
+                
+                score = int((gene_ratio * 0.4 + size_ratio * 0.3 + complexity_match * 0.3) * 100)
+                
+                pair = f"{Path(genome1).stem} ↔ {Path(genome2).stem}"
+                
+                if score > 80:
+                    high_compat.append((pair, score))
+                elif score > 60:
+                    medium_compat.append((pair, score))
+                else:
+                    low_compat.append((pair, score))
+        
+        if high_compat:
+            print(f"   🟢 High Compatibility ({len(high_compat)} pairs):")
+            for pair, score in high_compat:
+                print(f"      • {pair}: {score}%")
+        
+        if medium_compat:
+            print(f"   🟡 Medium Compatibility ({len(medium_compat)} pairs):")
+            for pair, score in medium_compat:
+                print(f"      • {pair}: {score}%")
+        
+        if low_compat:
+            print(f"   🔴 Low Compatibility ({len(low_compat)} pairs):")
+            for pair, score in low_compat:
+                print(f"      • {pair}: {score}%")
+        
+        print(f"\n💡 Quick Recommendations:")
+        if high_compat:
+            print(f"   • Focus on high-compatibility pairs for VM co-location")
+        if len(medium_compat) > len(high_compat):
+            print(f"   • Consider resource clustering for medium-compatibility genomes")
+        if len(low_compat) > 3:
+            print(f"   • Many genomes need separate allocation strategies")
+    
+    def _run_detailed_compatibility_report(self, genomes):
+        """Generate comprehensive compatibility report"""
+        
+        print("\n📈 Detailed Compatibility Report")
+        print("=" * 40)
+        
+        # Overall statistics
+        total_genes = sum(self._get_genome_profile(g)['gene_count'] for g in genomes)
+        avg_genes = total_genes // len(genomes)
+        total_bases = sum(self._get_genome_profile(g)['total_bases'] for g in genomes)
+        
+        print(f"📊 Collection Statistics:")
+        print(f"   🧬 Total genomes: {len(genomes)}")
+        print(f"   🧬 Total genes: {total_genes:,}")
+        print(f"   🧬 Average genes per genome: {avg_genes}")
+        print(f"   📏 Total bases: {total_bases:,}")
+        print(f"   📏 Average genome size: {total_bases // len(genomes):,} bases")
+        
+        # Complexity distribution
+        complexity_counts = {}
+        for genome in genomes:
+            complexity = self._get_genome_profile(genome)['complexity']
+            complexity_counts[complexity] = complexity_counts.get(complexity, 0) + 1
+        
+        print(f"\n🎯 Complexity Distribution:")
+        for complexity, count in complexity_counts.items():
+            percentage = (count / len(genomes)) * 100
+            print(f"   • {complexity.title()}: {count} genomes ({percentage:.1f}%)")
+        
+        # Full compatibility matrix with details
+        print(f"\n🔗 Complete Compatibility Matrix:")
+        compatibility_scores = []
+        
+        for i, genome1 in enumerate(genomes):
+            name1 = Path(genome1).stem
+            for j, genome2 in enumerate(genomes[i+1:], i+1):
+                name2 = Path(genome2).stem
+                
+                profile1 = self._get_genome_profile(genome1)
+                profile2 = self._get_genome_profile(genome2)
+                
+                gene_ratio = min(profile1['gene_count'], profile2['gene_count']) / max(profile1['gene_count'], profile2['gene_count'])
+                size_ratio = min(profile1['total_bases'], profile2['total_bases']) / max(profile1['total_bases'], profile2['total_bases'])
+                complexity_match = 1.0 if profile1['complexity'] == profile2['complexity'] else 0.7
+                
+                score = int((gene_ratio * 0.4 + size_ratio * 0.3 + complexity_match * 0.3) * 100)
+                compatibility_scores.append(score)
+                
+                status = "🟢" if score > 80 else "🟡" if score > 60 else "🔴"
+                print(f"   {status} {name1:15} ↔ {name2:15}: {score}% (genes:{gene_ratio:.2f}, size:{size_ratio:.2f}, complexity:{complexity_match:.2f})")
+        
+        # Summary statistics
+        if compatibility_scores:
+            avg_compat = sum(compatibility_scores) / len(compatibility_scores)
+            max_compat = max(compatibility_scores)
+            min_compat = min(compatibility_scores)
+            
+            print(f"\n📈 Compatibility Statistics:")
+            print(f"   • Average compatibility: {avg_compat:.1f}%")
+            print(f"   • Highest compatibility: {max_compat}%")
+            print(f"   • Lowest compatibility: {min_compat}%")
+            print(f"   • Total pairs analyzed: {len(compatibility_scores)}")
+        
+        # Save detailed report
+        report_data = {
+            'timestamp': datetime.now().isoformat(),
+            'genome_count': len(genomes),
+            'total_genes': total_genes,
+            'total_bases': total_bases,
+            'complexity_distribution': complexity_counts,
+            'average_compatibility': avg_compat if compatibility_scores else 0,
+            'compatibility_range': [min_compat, max_compat] if compatibility_scores else [0, 0]
+        }
+        
+        self.analysis_cache['detailed_report'] = report_data
+        print(f"\n💾 Detailed report saved to cache")
     
     def _run_synteny_analysis(self, genomes, analysis_type):
         """Run synteny analysis"""
