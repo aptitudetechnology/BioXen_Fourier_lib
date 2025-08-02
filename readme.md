@@ -2,7 +2,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](test_bioxen.py)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-BSD-green.svg)](jciv-LICENSE)
 [![Real Genomes](https://img.shields.io/badge/real_genomes-5-success.svg)](genomes/)
 [![Interactive](https://img.shields.io/badge/interface-questionary-blue.svg)](interactive_bioxen.py)
 [![Visualization](https://img.shields.io/badge/visualization-Love2D-ff69b4.svg)](https://github.com/aptitudetechnology/BioLib2D)
@@ -870,7 +870,7 @@ This project represents a novel intersection of computer science and computation
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+BSD License - see [jciv-LICENSE](jciv-LICENSE) file for details.
 
 ## 🏆 Acknowledgments
 
