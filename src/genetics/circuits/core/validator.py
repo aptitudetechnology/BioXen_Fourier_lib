@@ -301,7 +301,7 @@ class BioValidator:
         
         for enzyme, site in self.restriction_sites.items():
             if site in sequence:
-                result.add_warning(f"Element '{element.name}' contains {enzyme} site ({site})")
+                result.add_warning(f"Element '{element.element_id}' contains {enzyme} site ({site})")
     
     def _check_problematic_motifs(self, element: GeneticElement, result: ValidationResult):
         """Check for problematic sequence motifs"""
@@ -309,4 +309,101 @@ class BioValidator:
         
         for motif_name, pattern in self.problematic_motifs.items():
             if re.search(pattern, sequence):
-                result.add_warning(f"Element '{element.name}' contains {motif_name} motif")
+                result.add_warning(f"Element '{element.element_id}' contains {motif_name} motif")
+
+
+# Additional classes and enums required by the modular system
+from enum import Enum
+from dataclasses import dataclass
+
+
+class IssueSeverity(Enum):
+    """Severity levels for validation issues"""
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+@dataclass
+class ValidationIssue:
+    """Represents a validation issue"""
+    severity: IssueSeverity
+    message: str
+    element_id: str = None
+    suggestion: str = None
+
+
+class CircuitValidator:
+    """Main circuit validator class with enhanced functionality"""
+    
+    def __init__(self):
+        self.bio_validator = BioValidator()
+        self.issues: List[ValidationIssue] = []
+    
+    def validate_circuit(self, circuit: GeneticCircuit) -> ValidationResult:
+        """Validate a circuit using comprehensive rules"""
+        self.issues = []
+        
+        # Use the existing bio validator
+        result = self.bio_validator.validate_circuit(circuit)
+        
+        # Convert warnings and errors to ValidationIssue format
+        for warning in result.warnings:
+            self.issues.append(ValidationIssue(
+                severity=IssueSeverity.WARNING,
+                message=warning
+            ))
+        
+        for error in result.errors:
+            self.issues.append(ValidationIssue(
+                severity=IssueSeverity.ERROR,
+                message=error
+            ))
+        
+        # Add additional modular system validations
+        self._validate_modular_compatibility(circuit, result)
+        
+        return result
+    
+    def _validate_modular_compatibility(self, circuit: GeneticCircuit, result: ValidationResult):
+        """Validate compatibility with modular system requirements"""
+        
+        # Check that all elements have proper IDs
+        for element in circuit.elements:
+            if not element.element_id or element.element_id.strip() == "":
+                result.add_error(f"Element missing valid element_id")
+                self.issues.append(ValidationIssue(
+                    severity=IssueSeverity.ERROR,
+                    message="Element missing valid element_id",
+                    element_id=str(element)
+                ))
+        
+        # Check for duplicate element IDs
+        element_ids = [e.element_id for e in circuit.elements if e.element_id]
+        duplicate_ids = set([x for x in element_ids if element_ids.count(x) > 1])
+        
+        for dup_id in duplicate_ids:
+            result.add_error(f"Duplicate element ID: {dup_id}")
+            self.issues.append(ValidationIssue(
+                severity=IssueSeverity.ERROR,
+                message=f"Duplicate element ID: {dup_id}",
+                element_id=dup_id
+            ))
+    
+    def get_issues_by_severity(self, severity: IssueSeverity) -> List[ValidationIssue]:
+        """Get issues filtered by severity"""
+        return [issue for issue in self.issues if issue.severity == severity]
+
+
+# Standalone validation functions for convenience
+def validate_circuit_basic(circuit: GeneticCircuit) -> ValidationResult:
+    """Perform basic circuit validation"""
+    validator = BioValidator()
+    return validator.validate_circuit(circuit)
+
+
+def validate_circuit_advanced(circuit: GeneticCircuit) -> ValidationResult:
+    """Perform advanced circuit validation with modular system compatibility"""
+    validator = CircuitValidator()
+    return validator.validate_circuit(circuit)
