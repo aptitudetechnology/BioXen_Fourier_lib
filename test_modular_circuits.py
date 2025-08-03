@@ -14,8 +14,8 @@ def test_core_modules():
     """Test core circuit functionality"""
     print("Testing core modules...")
     
-    # Test element creation
-    from src.genetics.circuits.core.elements import GeneticElement, ElementType, GeneticCircuit
+    # Test basic elements
+    from src.genetics.circuits.core.elements import GeneticElement, GeneticCircuit, ElementType, CircuitType
     
     # Create test elements
     promoter = GeneticElement(
@@ -39,6 +39,7 @@ def test_core_modules():
     # Create circuit
     circuit = GeneticCircuit(
         circuit_id="test_circuit",
+        circuit_type=CircuitType.GENE_EXPRESSION,
         elements=[promoter, gene, terminator]
     )
     
