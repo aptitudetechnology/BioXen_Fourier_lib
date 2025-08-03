@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-BSD-green.svg)](jciv-LICENSE)
 [![Real Genomes](https://img.shields.io/badge/real_genomes-5-success.svg)](genomes/)
 [![Interactive](https://img.shields.io/badge/interface-questionary-blue.svg)](interactive_bioxen.py)
-[![Visualization](https://img.shields.io/badge/visualization-Love2D-ff69b4.svg)](https://github.com/aptitudetechnology/BioLib2D)
+[![Visualization](https://img.shields.io/badge/visualization-Terminal%2BLove2D-ff69b4.svg)](https://github.com/aptitudetechnology/BioLib2D)
 
 **The world's first interactive biological hypervisor for virtualizing real bacterial genomes**
 
@@ -90,6 +90,7 @@ BioXen now leverages the full power of the JCVI toolkit for professional genomic
 
 - ✅ **5 Real Bacterial Genomes** - Complete minimal genome collection with JCVI analysis capabilities
 - ✅ **Interactive CLI** - Professional questionary menus for all genomics operations  
+- ✅ **Terminal DNA Visualization** - Real-time DNA transcription monitoring for headless servers
 - ✅ **JCVI Format Conversion** - All genomes converted to FASTA for JCVI compatibility
 - ✅ **Comparative Genomics** - Real synteny analysis, phylogenetic reconstruction, compatibility matrices
 - ✅ **Production Ready** - Complete VM lifecycle with biological constraints and hardware optimization
@@ -187,9 +188,36 @@ python3 phase4_jcvi_cli_integration.py
 
 ## 🔬 **Real-Time Cellular Visualization**
 
-BioXen now includes stunning real-time visualization of cellular processes using Love2D and the **BioLib2D** library:
+BioXen offers multiple visualization options for monitoring biological processes in real-time:
 
-### ✨ **Visualization Features**
+### 📺 **Terminal DNA Transcription Monitor**
+**NEW**: Terminal-based DNA transcription visualization perfect for headless servers and remote access:
+
+![Terminal DNA Visualization](screenshots/Screenshot%20From%202025-08-03%2019-14-35.png)
+
+*Real-time terminal DNA transcription monitor showing live cellular activity, ribosome movement, gene expression, and ATP levels across multiple VMs in a beautiful Rich-based interface.*
+
+#### 🧬 **Terminal Features**
+- **Live DNA Transcription**: Watch ribosomes move along DNA strands in real-time
+- **Multi-VM Monitoring**: 2x2 grid displaying all virtual machines simultaneously
+- **Biological Metrics**: Real-time ATP levels, gene expression rates, protein synthesis
+- **System Overview**: Chassis information, resource utilization, VM states
+- **Rich Interface**: Beautiful terminal UI with colors, progress bars, and live updates
+- **Headless Compatible**: Perfect for servers without desktop environments
+
+#### 🚀 **Access Terminal Visualization**
+```bash
+# Launch interactive BioXen interface
+python interactive_bioxen.py
+
+# Select: "📺 Terminal DNA Visualization" from the menu
+# Watch real-time DNA transcription from your running VMs!
+# Press Ctrl+C to return to menu
+```
+
+### ✨ **Love2D Visualization Features**
+BioXen also includes stunning graphical visualization using Love2D and the **BioLib2D** library:
+
 - **Live VM Cells**: Watch individual bacterial VMs with animated ribosomes, gene expression, and protein synthesis
 - **ATP Energy Flow**: Real-time particle system showing energy distribution across cellular compartments  
 - **Gene Expression**: DNA transcription visualization with active/inactive regions based on actual VM state
@@ -317,6 +345,7 @@ Choose the type of cell to use as your virtual machine chassis:
 matplotlib>=3.5.0            # Required for circuit visualization and JCVI graphics
 numpy>=1.21.0                # Required for genetic algorithm optimization
 scipy>=1.7.0                 # Required for scientific computing
+rich>=13.0.0                 # Required for terminal DNA transcription visualization
 
 # JCVI Integration for Enhanced Genomics Analysis
 jcvi>=1.5.6                  # Toolkit for comparative genomics and genome annotation
