@@ -308,21 +308,21 @@ class BioXenTerminalMonitor:
             elif len(vm_ids) == 3:
                 layout["vm_row2"].split_row(
                     Layout(self.create_vm_panel(vm_ids[2], vm_data[vm_ids[2]])),
-                    Layout("")
+                    Layout(Panel("", border_style="dim"))
                 )
         else:
             # Single VM display
             if vm_ids:
-                layout["vms"] = Layout(self.create_vm_panel(vm_ids[0], vm_data[vm_ids[0]]))
+                layout["vms"].update(self.create_vm_panel(vm_ids[0], vm_data[vm_ids[0]]))
         
         # Add header
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         header_text = Text(f"BioXen DNA Transcription Monitor - {current_time}", style="bold blue")
-        layout["header"] = Layout(Panel(Align.center(header_text), border_style="blue"))
+        layout["header"].update(Panel(Align.center(header_text), border_style="blue"))
         
         # Add overview panels
-        layout["system"] = Layout(self.create_system_overview(data))
-        layout["genes"] = Layout(self.create_gene_activity_chart(data))
+        layout["system"].update(self.create_system_overview(data))
+        layout["genes"].update(self.create_gene_activity_chart(data))
         
         return layout
         
