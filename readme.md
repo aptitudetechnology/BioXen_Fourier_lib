@@ -263,7 +263,7 @@ BioXen also includes stunning graphical visualization using Love2D and the **Bio
 
 ![BioXen Biological System Overview](diagrams/bioxen_biovis_20250803_045153.png)
 
-*Complete BioXen biological hypervisor visualization showing virtual machine cells, ATP energy flow, genetic circuits, and system metrics. This comprehensive diagram demonstrates the dual visualization system: static diagrams (matplotlib) for analysis and real-time visualization (Love2D) for interactive monitoring.*
+*Complete BioXen biological hypervisor static diagram showing virtual machine cells, ATP energy flow, genetic circuits, and system metrics. This matplotlib-generated visualization provides a comprehensive overview of the BioXen system architecture and biological components.*
 
 **Key Visualization Components:**
 - **🧬 Virtual Machine Cells**: Individual bacterial VMs with biological processes
