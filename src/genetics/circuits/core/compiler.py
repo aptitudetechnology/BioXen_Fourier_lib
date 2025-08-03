@@ -8,7 +8,42 @@ of high-level circuit definitions into actual DNA sequences.
 from typing import Dict, List, Optional
 import random
 import re
+from dataclasses import dataclass
+from enum import Enum
 from .elements import GeneticCircuit, GeneticElement, CircuitType, ElementType
+
+
+class OptimizationLevel(Enum):
+    """Optimization levels for DNA compilation"""
+    NONE = "none"
+    BASIC = "basic"
+    AGGRESSIVE = "aggressive"
+
+
+@dataclass
+class CompilationConfig:
+    """Configuration for circuit compilation"""
+    optimization_level: OptimizationLevel = OptimizationLevel.BASIC
+    target_organism: str = "ecoli"
+    codon_optimize: bool = True
+    remove_restriction_sites: bool = True
+    add_assembly_flanks: bool = False
+    flanking_sequence_length: int = 40
+    gc_content_target: float = 0.5
+    avoid_hairpins: bool = True
+    max_homology_length: int = 20
+
+
+@dataclass 
+class CompilationResult:
+    """Result of circuit compilation"""
+    compiled_sequence: str
+    optimization_log: List[str]
+    warnings: List[str] 
+    assembly_ready: bool
+    gc_content: float
+    restriction_sites_removed: int
+    codon_optimization_applied: bool
 
 
 class BioCompiler:

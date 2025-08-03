@@ -18,6 +18,7 @@ class ElementType(Enum):
     TERMINATOR = "terminator"
     SRNA = "sRNA"
     TAG = "tag"
+    OPERATOR = "operator"  # Added for modular system compatibility
 
 
 class CircuitType(Enum):
@@ -26,16 +27,30 @@ class CircuitType(Enum):
     SCHEDULER = "scheduler"
     ISOLATION = "isolation"
     MEMORY_MANAGER = "memory_manager"
+    GENE_EXPRESSION = "gene_expression"
+    REGULATORY = "regulatory"
+    METABOLIC = "metabolic"
 
 
 @dataclass
 class GeneticElement:
     """Represents a genetic element (gene, promoter, RBS, etc.)"""
-    name: str
-    sequence: str
+    element_id: str  # Changed from 'name' to 'element_id' for consistency
     element_type: ElementType
+    sequence: str
     vm_specific: bool = False
     regulation_target: Optional[str] = None
+    
+    # Backward compatibility property
+    @property
+    def name(self) -> str:
+        """Backward compatibility: name property maps to element_id"""
+        return self.element_id
+    
+    @name.setter
+    def name(self, value: str):
+        """Backward compatibility: setting name updates element_id"""
+        self.element_id = value
     
     def __post_init__(self):
         """Validate element after initialization"""
@@ -60,9 +75,9 @@ class GeneticElement:
 class GeneticCircuit:
     """A complete genetic circuit"""
     circuit_id: str
-    circuit_type: CircuitType
     elements: list[GeneticElement]
-    description: str
+    circuit_type: Optional[CircuitType] = None
+    description: str = ""
     
     def get_total_length(self) -> int:
         """Get the total length of all elements in this circuit"""
@@ -75,7 +90,7 @@ class GeneticCircuit:
     def get_vm_specific_elements(self, vm_id: str) -> list[GeneticElement]:
         """Get all elements specific to a VM"""
         return [element for element in self.elements 
-                if element.vm_specific and vm_id in element.name]
+                if element.vm_specific and vm_id in element.element_id]
     
     def has_regulatory_conflicts(self) -> bool:
         """Check for potential regulatory conflicts in the circuit"""
