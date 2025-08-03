@@ -10,7 +10,7 @@ import random
 from datetime import datetime
 from pathlib import Path
 
-from rich.console import Console
+from rich.console import Console, Group
 from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
@@ -185,8 +185,8 @@ class BioXenTerminalMonitor:
             border_style="blue"
         )
         
-        # Combine VM table and DNA visualization
-        vm_content = f"{vm_table}\n\n{dna_panel}"
+        # Combine VM table and DNA visualization using Group
+        vm_content = Group(vm_table, dna_panel)
         
         return Panel(
             vm_content,
