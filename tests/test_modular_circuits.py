@@ -8,7 +8,9 @@ and demonstrates the complete workflow from circuit creation to JCVI export.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add the project root to Python path so we can import src modules
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
 
 def test_core_modules():
     """Test core circuit functionality"""
