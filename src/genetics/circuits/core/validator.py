@@ -150,12 +150,12 @@ class BioValidator:
         """Validate an individual genetic element"""
         # Check sequence validity
         if not element.sequence:
-            result.add_error(f"Element '{element.name}' has empty sequence")
+            result.add_error(f"Element '{element.element_id}' has empty sequence")
             return
         
         # Check for valid DNA sequence
         if not self._is_valid_dna_sequence(element.sequence):
-            result.add_error(f"Element '{element.name}' contains invalid DNA characters")
+            result.add_error(f"Element '{element.element_id}' contains invalid DNA characters")
         
         # Element-specific validation
         if element.element_type == ElementType.GENE:
@@ -177,27 +177,27 @@ class BioValidator:
         
         # Check length is multiple of 3
         if len(sequence) % 3 != 0:
-            result.add_warning(f"Gene '{element.name}' length is not a multiple of 3")
+            result.add_warning(f"Gene '{element.element_id}' length is not a multiple of 3")
         
         # Check for start codon
         if len(sequence) >= 3:
             start_codon = sequence[:3]
             if start_codon not in self.start_codons:
-                result.add_warning(f"Gene '{element.name}' does not start with a start codon")
+                result.add_warning(f"Gene '{element.element_id}' does not start with a start codon")
         
         # Check for premature stop codons
         if len(sequence) >= 6:  # At least 2 codons
             for i in range(3, len(sequence) - 3, 3):
                 codon = sequence[i:i+3]
                 if codon in self.stop_codons:
-                    result.add_warning(f"Gene '{element.name}' contains premature stop codon at position {i}")
+                    result.add_warning(f"Gene '{element.element_id}' contains premature stop codon at position {i}")
                     break
         
         # Check for proper stop codon at end
         if len(sequence) >= 3:
             end_codon = sequence[-3:]
             if end_codon not in self.stop_codons:
-                result.add_warning(f"Gene '{element.name}' does not end with a stop codon")
+                result.add_warning(f"Gene '{element.element_id}' does not end with a stop codon")
     
     def _validate_promoter_element(self, element: GeneticElement, result: ValidationResult):
         """Validate a promoter element"""
@@ -205,13 +205,13 @@ class BioValidator:
         
         # Check reasonable length
         if len(sequence) < 10:
-            result.add_warning(f"Promoter '{element.name}' is very short ({len(sequence)} bp)")
+            result.add_warning(f"Promoter '{element.element_id}' is very short ({len(sequence)} bp)")
         elif len(sequence) > 200:
-            result.add_warning(f"Promoter '{element.name}' is very long ({len(sequence)} bp)")
+            result.add_warning(f"Promoter '{element.element_id}' is very long ({len(sequence)} bp)")
         
         # Check for common promoter motifs (simplified)
         if "TATA" not in sequence and "TTGACA" not in sequence:
-            result.add_suggestion(f"Promoter '{element.name}' may lack common recognition motifs")
+            result.add_suggestion(f"Promoter '{element.element_id}' may lack common recognition motifs")
     
     def _validate_rbs_element(self, element: GeneticElement, result: ValidationResult):
         """Validate a ribosome binding site element"""
@@ -219,13 +219,13 @@ class BioValidator:
         
         # Check reasonable length
         if len(sequence) < 8:
-            result.add_warning(f"RBS '{element.name}' is very short ({len(sequence)} bp)")
+            result.add_warning(f"RBS '{element.element_id}' is very short ({len(sequence)} bp)")
         elif len(sequence) > 30:
-            result.add_warning(f"RBS '{element.name}' is very long ({len(sequence)} bp)")
+            result.add_warning(f"RBS '{element.element_id}' is very long ({len(sequence)} bp)")
         
         # Check for Shine-Dalgarno sequence
         if "AGGAGG" not in sequence and "GGAGG" not in sequence:
-            result.add_warning(f"RBS '{element.name}' may lack Shine-Dalgarno sequence")
+            result.add_warning(f"RBS '{element.element_id}' may lack Shine-Dalgarno sequence")
     
     def _validate_element_interactions(self, circuit: GeneticCircuit, result: ValidationResult):
         """Validate interactions between elements in a circuit"""
@@ -247,7 +247,7 @@ class BioValidator:
         target_names = {e.name for e in circuit.elements}
         for element in circuit.elements:
             if element.regulation_target and element.regulation_target not in target_names:
-                result.add_warning(f"Element '{element.name}' targets '{element.regulation_target}' which is not in the circuit")
+                result.add_warning(f"Element '{element.element_id}' targets '{element.regulation_target}' which is not in the circuit")
     
     def _validate_circuit_sequence(self, circuit: GeneticCircuit, result: ValidationResult):
         """Validate the complete assembled circuit sequence"""
@@ -270,7 +270,7 @@ class BioValidator:
         all_element_names = []
         for circuit in circuits:
             for element in circuit.elements:
-                all_element_names.append((element.name, circuit.circuit_id))
+                all_element_names.append((element.element_id, circuit.circuit_id))
         
         name_counts = {}
         for name, circuit_id in all_element_names:
