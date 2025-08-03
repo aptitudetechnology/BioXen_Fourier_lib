@@ -69,13 +69,12 @@ class CircuitFactory:
         
         elements = [
             GeneticElement(
-                name=f"{monitor_type}_promoter",
+                element_id=f"{monitor_type}_promoter",
                 sequence=template["promoter"],
-                element_type=ElementType.PROMOTER,
-                regulation_target=f"{monitor_type}_reporter"
+                element_type=ElementType.PROMOTER
             ),
             GeneticElement(
-                name=f"{monitor_type}_reporter",
+                element_id=f"{monitor_type}_reporter",
                 sequence=template["reporter"],
                 element_type=ElementType.GENE
             )
@@ -103,7 +102,7 @@ class CircuitFactory:
             
             elements.append(
                 GeneticElement(
-                    name=f"{vm_id}_rbs",
+                    element_id=f"{vm_id}_rbs",
                     sequence=rbs_variants[rbs_type],
                     element_type=ElementType.RBS,
                     vm_specific=True
@@ -113,7 +112,7 @@ class CircuitFactory:
         # Add regulatory RNA
         elements.append(
             GeneticElement(
-                name="scheduler_sRNA",
+                element_id="scheduler_sRNA",
                 sequence=regulatory_rna,
                 element_type=ElementType.SRNA,
                 regulation_target="vm_rbs"
@@ -145,13 +144,13 @@ class CircuitFactory:
         
         elements = [
             GeneticElement(
-                name=f"{vm_id}_rnap",
+                element_id=f"{vm_id}_rnap",
                 sequence=rnap_variants[vm_id],
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name=f"{vm_id}_promoter",
+                element_id=f"{vm_id}_promoter",
                 sequence=promoter_variants[vm_id],
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
@@ -183,13 +182,13 @@ class CircuitFactory:
         
         elements = [
             GeneticElement(
-                name=f"{vm_id}_protease",
+                element_id=f"{vm_id}_protease",
                 sequence=protease_variants[vm_id],
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name=f"{vm_id}_deg_tag",
+                element_id=f"{vm_id}_deg_tag",
                 sequence=degradation_tags[vm_id],
                 element_type=ElementType.TAG,
                 vm_specific=True
@@ -219,3 +218,137 @@ class CircuitFactory:
             category: list(templates.keys()) 
             for category, templates in self.circuit_templates.items()
         }
+
+
+# Standalone factory functions for convenient circuit creation
+def create_gene_expression_circuit(circuit_id: str, gene_name: str, 
+                                 promoter_strength: str = "medium") -> GeneticCircuit:
+    """Create a basic gene expression circuit"""
+    
+    # Define promoter sequences by strength
+    promoters = {
+        "weak": "TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
+        "medium": "TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGC",
+        "strong": "TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCTACTAGAG"
+    }
+    
+    elements = [
+        GeneticElement(
+            element_id=f"{circuit_id}_promoter",
+            element_type=ElementType.PROMOTER,
+            sequence=promoters.get(promoter_strength, promoters["medium"])
+        ),
+        GeneticElement(
+            element_id=f"{circuit_id}_rbs",
+            element_type=ElementType.RBS,
+            sequence="AAGGAGGTGATCCATG"
+        ),
+        GeneticElement(
+            element_id=gene_name,
+            element_type=ElementType.GENE,
+            sequence="ATGAAAGCCATTTTGGCAGTAGCGGCGATCGGCACAGGCATTTATGCGTGA"
+        ),
+        GeneticElement(
+            element_id=f"{circuit_id}_terminator",
+            element_type=ElementType.TERMINATOR,
+            sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG"
+        )
+    ]
+    
+    return GeneticCircuit(
+        circuit_id=circuit_id,
+        elements=elements,
+        circuit_type=CircuitType.GENE_EXPRESSION,
+        description=f"Gene expression circuit for {gene_name}"
+    )
+
+
+def create_regulatory_circuit(circuit_id: str, target_gene: str, 
+                            regulation_type: str = "activation") -> GeneticCircuit:
+    """Create a regulatory circuit that controls gene expression"""
+    
+    # Define regulatory sequences
+    if regulation_type == "activation":
+        regulatory_seq = "TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGC"
+        regulator_gene = "ATGAAACGCATTCTGGCAGTGGCAGGATCGGCACAGGCATTTATGCGTGA"
+    else:  # repression
+        regulatory_seq = "TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC"
+        regulator_gene = "ATGAAACGCATTCTGGCAGTGGCAGGATCGGCACAGGCATTTATGCGAAA"
+    
+    elements = [
+        GeneticElement(
+            element_id=f"{circuit_id}_reg_promoter",
+            element_type=ElementType.PROMOTER,
+            sequence=regulatory_seq
+        ),
+        GeneticElement(
+            element_id=f"{circuit_id}_regulator",
+            element_type=ElementType.GENE,
+            sequence=regulator_gene,
+            regulation_target=target_gene
+        ),
+        GeneticElement(
+            element_id=f"{circuit_id}_operator",
+            element_type=ElementType.OPERATOR,
+            sequence="TGTGAGCGGATAAACAATTTCACACAGG"
+        ),
+        GeneticElement(
+            element_id=f"{circuit_id}_terminator",
+            element_type=ElementType.TERMINATOR,
+            sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG"
+        )
+    ]
+    
+    return GeneticCircuit(
+        circuit_id=circuit_id,
+        elements=elements,
+        circuit_type=CircuitType.REGULATORY,
+        description=f"Regulatory circuit for {regulation_type} of {target_gene}"
+    )
+
+
+def create_metabolic_circuit(circuit_id: str, pathway_name: str, 
+                           enzyme_count: int = 3) -> GeneticCircuit:
+    """Create a metabolic pathway circuit"""
+    
+    elements = []
+    
+    # Add promoter
+    elements.append(GeneticElement(
+        element_id=f"{circuit_id}_promoter",
+        element_type=ElementType.PROMOTER,
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGC"
+    ))
+    
+    # Add RBS
+    elements.append(GeneticElement(
+        element_id=f"{circuit_id}_rbs",
+        element_type=ElementType.RBS,
+        sequence="AAGGAGGTGATCCATG"
+    ))
+    
+    # Add enzymes for the pathway
+    base_enzyme_seq = "ATGAAAGCCATTTTGGCAGTAGCGGCGATCGGCACAGGCATTTATGCG"
+    for i in range(enzyme_count):
+        # Vary the enzyme sequence slightly
+        enzyme_seq = base_enzyme_seq + ("TGA" if i == enzyme_count - 1 else "AAA")
+        
+        elements.append(GeneticElement(
+            element_id=f"{pathway_name}_enzyme_{i+1}",
+            element_type=ElementType.GENE,
+            sequence=enzyme_seq
+        ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{circuit_id}_terminator",
+        element_type=ElementType.TERMINATOR,
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG"
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=circuit_id,
+        elements=elements,
+        circuit_type=CircuitType.METABOLIC,
+        description=f"Metabolic pathway circuit for {pathway_name} with {enzyme_count} enzymes"
+    )
