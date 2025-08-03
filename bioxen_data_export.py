@@ -54,6 +54,18 @@ class BioXenDataExporter:
         atp_level = vm.resources.atp_percentage
         expression_rate = min(95, max(20, int(atp_level * 0.8 + ribosome_utilization * 0.4)))
         
+        # Extract serializable genome information
+        genome_info = "Unknown"
+        if hasattr(vm.genome_template, 'organism'):
+            # Real genome object
+            genome_info = f"{vm.genome_template.organism} ({len(vm.genome_template.genes)} genes)"
+        elif isinstance(vm.genome_template, str):
+            # Simple string genome name
+            genome_info = vm.genome_template
+        else:
+            # Fallback for other types
+            genome_info = f"{type(vm.genome_template).__name__}"
+        
         return {
             "vm_id": vm_id,
             "state": vm.state.value,
@@ -64,7 +76,7 @@ class BioXenDataExporter:
             "mrna_count": mrna_count,
             "gene_expression_rate": expression_rate,
             "ribosome_utilization": ribosome_utilization,
-            "genome_template": vm.genome_template,
+            "genome_info": genome_info,
             "uptime": time.time() - vm.start_time if vm.start_time else 0,
             "health_status": vm.health_status,
             "memory_usage_kb": vm.resources.memory_kb,

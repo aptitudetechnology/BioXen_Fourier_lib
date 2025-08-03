@@ -344,6 +344,12 @@ class BioXenTerminalMonitor:
             self.console.print(f"\n[bold red]Error: {e}[/bold red]")
 
 
+def run_dna_monitor(data_source="bioxen_data.json", refresh_rate=2.0):
+    """Entry point function for running the DNA transcription monitor."""
+    monitor = BioXenTerminalMonitor(data_source)
+    monitor.run(refresh_rate)
+
+
 if __name__ == "__main__":
     import argparse
     
