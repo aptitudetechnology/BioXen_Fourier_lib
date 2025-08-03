@@ -447,7 +447,7 @@ def create_vm_isolation_circuit(vm_id: str, isolation_level: str = "standard") -
     
     elements.append(
         GeneticElement(
-            name=f"{vm_id}_rnap",
+            element_id=f"{vm_id}_rnap",
             sequence=modified_rnap,
             element_type=ElementType.GENE,
             vm_specific=True
@@ -460,7 +460,7 @@ def create_vm_isolation_circuit(vm_id: str, isolation_level: str = "standard") -
     
     elements.append(
         GeneticElement(
-            name=f"{vm_id}_promoter",
+            element_id=f"{vm_id}_promoter",
             sequence=modified_promoter,
             element_type=ElementType.PROMOTER,
             vm_specific=True,
@@ -473,7 +473,7 @@ def create_vm_isolation_circuit(vm_id: str, isolation_level: str = "standard") -
         # Add orthogonal tRNA
         elements.append(
             GeneticElement(
-                name=f"{vm_id}_orthogonal_trna",
+                element_id=f"{vm_id}_orthogonal_trna",
                 sequence=f"GGGGCCCGCCAGATGATGGATGTTAGGTGGCCTTCTAAACCG{chr(67 + int(vm_num) % 3)}ACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
@@ -483,7 +483,7 @@ def create_vm_isolation_circuit(vm_id: str, isolation_level: str = "standard") -
         # Add protein tag
         elements.append(
             GeneticElement(
-                name=f"{vm_id}_protein_tag",
+                element_id=f"{vm_id}_protein_tag",
                 sequence=f"ATGCACCACCACCACCACCAC{chr(67 + int(vm_num) % 3) * 3}",
                 element_type=ElementType.TAG,
                 vm_specific=True
