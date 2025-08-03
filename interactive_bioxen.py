@@ -1211,7 +1211,7 @@ class InteractiveBioXen:
             self.data_exporter = BioXenDataExporter(self.hypervisor)
             
             # Start data export
-            self.data_exporter.start_export()
+            self.data_exporter.start_continuous_export()
             print("✅ Data export started")
             
             # Start the terminal visualization
@@ -1234,7 +1234,7 @@ class InteractiveBioXen:
             finally:
                 # Stop data export when visualization ends
                 if hasattr(self, 'data_exporter'):
-                    self.data_exporter.stop_export()
+                    self.data_exporter.stop_continuous_export()
                     print("\n✅ Data export stopped")
                 
                 self.visualization_active = False
@@ -1249,7 +1249,7 @@ class InteractiveBioXen:
     def disable_terminal_visualization(self):
         """Disable terminal DNA visualization."""
         if hasattr(self, 'data_exporter'):
-            self.data_exporter.stop_export()
+            self.data_exporter.stop_continuous_export()
             print("✅ Terminal visualization disabled")
         
         self.visualization_active = False
