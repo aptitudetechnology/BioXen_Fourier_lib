@@ -51,6 +51,8 @@ BioXen has successfully completed its evolution into a **professional computatio
 - **Hardware Detection**: Automatic system optimization for genomics workloads
 - **Performance Benchmarking**: Real-world genomics performance measurement
 
+**📋 Hardware Specifications**: See [HARDWARE_RECOMMENDATIONS.md](HARDWARE_RECOMMENDATIONS.md) for optimal build configurations ($2K-$12K tiers)
+
 **⚠️ Note: Phase 4 requires bare metal hardware for proper testing. Currently tested on VM - awaiting dedicated hardware for full bare metal optimization validation.**
 
 ### **📈 Key Integration Achievements**
