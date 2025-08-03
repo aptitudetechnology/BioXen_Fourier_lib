@@ -196,6 +196,19 @@ BioXen now includes stunning real-time visualization of cellular processes using
 - **Resource Monitoring**: Visual representation of ribosome allocation, ATP levels, and cellular activity
 - **Interactive Controls**: Toggle different visualization layers and adjust animation speed
 
+### 📊 **Comprehensive BioXen System Visualization**
+
+![BioXen Biological System Overview](diagrams/bioxen_biovis_20250803_045153.png)
+
+*Complete BioXen biological hypervisor visualization showing virtual machine cells, ATP energy flow, genetic circuits, and system metrics. This comprehensive diagram demonstrates the dual visualization system: static diagrams (matplotlib) for analysis and real-time visualization (Love2D) for interactive monitoring.*
+
+**Key Visualization Components:**
+- **🧬 Virtual Machine Cells**: Individual bacterial VMs with biological processes
+- **⚡ ATP Energy Systems**: Energy flow and metabolic pathways
+- **🔬 Genetic Circuits**: Gene expression networks and regulatory systems  
+- **📊 System Metrics**: Performance monitoring and resource allocation
+- **🎮 Interactive Elements**: Real-time controls and system state indicators
+
 ### � **Static Diagrams & Circuit Visualization**
 - **Genetic Circuit Diagrams**: Publication-quality circuit schematics with element annotations
 - **Sequence Maps**: Linear and circular genome representations
@@ -204,7 +217,10 @@ BioXen now includes stunning real-time visualization of cellular processes using
 
 ### �🚀 **Launch Visualization**
 ```bash
-# Start BioXen with Love2D real-time visualization
+# Generate comprehensive BioXen system visualization (works on headless systems)
+python3 generate_biovis_png.py
+
+# Start BioXen with Love2D real-time visualization (requires desktop environment)
 love libs/biolib2d/
 
 # Or use the Love2D visualization directly
