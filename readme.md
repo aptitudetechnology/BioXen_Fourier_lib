@@ -196,17 +196,52 @@ BioXen now includes stunning real-time visualization of cellular processes using
 - **Resource Monitoring**: Visual representation of ribosome allocation, ATP levels, and cellular activity
 - **Interactive Controls**: Toggle different visualization layers and adjust animation speed
 
-### 🚀 **Launch Visualization**
+### � **Static Diagrams & Circuit Visualization**
+- **Genetic Circuit Diagrams**: Publication-quality circuit schematics with element annotations
+- **Sequence Maps**: Linear and circular genome representations
+- **Synteny Plots**: Comparative genomics visualization between bacterial species
+- **Phylogenetic Trees**: Evolutionary relationship diagrams with distance metrics
+
+### �🚀 **Launch Visualization**
 ```bash
-# Start BioXen with visualization
+# Start BioXen with Love2D real-time visualization
 love2d . --visualization
 
 # Or use the Love2D visualization directly
 love2d /path/to/biolib2d/
+
+# Generate genetic circuit diagrams
+python3 -c "
+from src.genetics.circuits.exports.visualization import CircuitVisualizer
+from src.genetics.circuits.core.elements import GeneticCircuit, GeneticElement, ElementType
+
+# Create a sample circuit
+elements = [
+    GeneticElement('prom1', ElementType.PROMOTER, 'TTGACAATTAATCATCGGCTCGTATAATGT'),
+    GeneticElement('rbs1', ElementType.RBS, 'AGGAGG'),
+    GeneticElement('gfp', ElementType.GENE, 'ATGAGTAAAGGAGAAGAACTTTTCACTGGAG'),
+    GeneticElement('term1', ElementType.TERMINATOR, 'AAAAAAAGGGGGG')
+]
+circuit = GeneticCircuit('demo_circuit', elements, description='GFP expression circuit')
+
+# Generate diagram
+visualizer = CircuitVisualizer()
+fig = visualizer.visualize_circuit(circuit, output_file='diagrams/my_circuit.png')
+print('Circuit diagram saved to diagrams/ folder')
+"
 ```
+
+### 📁 **Viewing Generated Diagrams**
+All visualization outputs are saved to organized directories:
+- **`diagrams/`**: Generated circuit diagrams and static plots
+- **`screenshots/`**: Interface demonstrations and system status captures  
+- **`jcvi_results/`**: JCVI analysis outputs and comparative genomics plots
 
 ![BioXen Cellular Visualization](screenshots/cellular_visualization.png)
 *Real-time visualization of bacterial VMs showing gene expression, protein synthesis, and ATP flow*
+
+![Genetic Circuit Diagram](diagrams/circuit_demo.png)
+*Example genetic circuit visualization showing promoter, RBS, gene, and terminator elements*
 
 ## System Overview
 **Target Genomes:** Real bacterial genomes from NCBI (5 genomes available: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola) + **🌸 Wolffia australiana** (Phase 5: world's smallest flowering plant)  
@@ -312,6 +347,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install Python dependencies only (if not using install_dependencies.sh)
 pip install -r requirements.txt
+
+# Create directories for visualization outputs
+mkdir -p diagrams screenshots jcvi_results
 
 # Launch interactive interface
 python3 interactive_bioxen.py
@@ -783,15 +821,21 @@ BioXen-JCVI/
 │   ├── requirements.txt                  # Python dependencies (JCVI-enhanced)
 │   ├── TESTING.md                       # Comprehensive testing guide
 │   └── readme.md                        # This file (updated with JCVI progress)
-└── 🎮 Visualization Components & Animation Pipeline
-    ├── love2d-bio-lib.md                # BioLib2D library specification
-    ├── visuals.md                       # BioXen visualization analysis
-    ├── biolib2d/                        # Love2D/Lua visualization engine
-    │   ├── genomics_diagrams.lua        # Color-coded genomics charts
-    │   ├── flowering_animation.lua      # Wolffia australiana bloom sequences
-    │   ├── synteny_visualizer.lua       # Interactive synteny block diagrams
-    │   └── phylogenetic_trees.lua       # Animated evolutionary trees
-    └── screenshots/                     # Interface demonstrations
+├── 🎮 Visualization Components & Animation Pipeline
+│   ├── love2d-bio-lib.md                # BioLib2D library specification
+│   ├── visuals.md                       # BioXen visualization analysis
+│   ├── visuals2.md                      # MVP visualization implementation specs
+│   ├── biolib2d/                        # Love2D/Lua visualization engine
+│   │   ├── genomics_diagrams.lua        # Color-coded genomics charts
+│   │   ├── flowering_animation.lua      # Wolffia australiana bloom sequences
+│   │   ├── synteny_visualizer.lua       # Interactive synteny block diagrams
+│   │   └── phylogenetic_trees.lua       # Animated evolutionary trees
+│   └── screenshots/                     # Interface demonstrations
+└── 📊 Generated Diagrams & Visualizations
+    ├── circuit_demo.png                 # Example genetic circuit diagram
+    ├── synteny_plots/                   # JCVI synteny analysis outputs
+    ├── phylogenetic_trees/              # Generated evolutionary trees
+    └── circuit_diagrams/                # Modular genetic circuit visualizations
 ```
 
 ## 🧪 Testing & Validation
@@ -954,6 +998,138 @@ Bare Metal Requirements for Phase 4:
 - **Maximum VMs:** ✅ **4 VMs per hypervisor instance** (demonstrated with real genomes)
 - **Concurrent VM management:** ✅ **2 active VMs** tested (M. pneumoniae instances)
 - **Resource allocation accuracy:** ✅ **±5% of intended allocation** (ribosome scheduling)
+
+## 📊 Visualization Examples & Diagram Generation
+
+### 🧬 **Creating Genetic Circuit Diagrams**
+```python
+# Example 1: Basic GFP Expression Circuit
+from src.genetics.circuits.exports.visualization import CircuitVisualizer
+from src.genetics.circuits.core.elements import GeneticCircuit, GeneticElement, ElementType
+
+# Define circuit elements
+elements = [
+    GeneticElement('T7_promoter', ElementType.PROMOTER, 'TAATACGACTCACTATAGGG'),
+    GeneticElement('strong_rbs', ElementType.RBS, 'AAGGAGATATACATATG'),
+    GeneticElement('gfp_gene', ElementType.GENE, 'ATGAGTAAAGGAGAAGAACTTTTCACTGGAG'),
+    GeneticElement('t7_terminator', ElementType.TERMINATOR, 'GCTAGTTATTGCTCAGCGG')
+]
+
+# Create and visualize circuit
+circuit = GeneticCircuit('gfp_expression', elements, description='Green Fluorescent Protein Expression')
+visualizer = CircuitVisualizer()
+fig = visualizer.visualize_circuit(circuit, output_file='diagrams/gfp_circuit.png')
+print("📊 GFP circuit diagram saved to diagrams/gfp_circuit.png")
+```
+
+### 🔬 **VM Image Circuit Generation**
+```python
+# Example 2: VM-Specific Monitoring Circuit
+from src.genome.syn3a import VMImageBuilder
+
+builder = VMImageBuilder()
+vm_config = {
+    "resource_limits": {"max_ribosomes": 25},
+    "isolation_level": "high",
+    "monitoring": True
+}
+
+# Build VM with integrated circuits
+vm_image = builder.build_vm_image("monitor_vm", vm_config)
+genome = vm_image["genome"]
+
+# Extract monitoring circuits for visualization
+monitoring_genes = [g for g in genome.genes if g.category == "hypervisor"]
+print(f"📋 VM contains {len(monitoring_genes)} monitoring circuits")
+
+# Create circuit diagram from VM genome
+vm_elements = [
+    GeneticElement(gene.gene_id, ElementType.GENE, gene.sequence[:50] + "...")  # Truncate for display
+    for gene in monitoring_genes[:4]  # Show first 4 monitoring circuits
+]
+vm_circuit = GeneticCircuit(f"{vm_image['vm_id']}_monitoring", vm_elements)
+fig = visualizer.visualize_circuit(vm_circuit, output_file=f'diagrams/{vm_image["vm_id"]}_circuits.png')
+```
+
+### 📈 **JCVI Analysis Visualization**
+```python
+# Example 3: Comparative Genomics Visualization
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Generate sample synteny data
+genomes = ['JCVI-Syn3A', 'M. genitalium', 'M. pneumoniae', 'C. ruddii', 'B. aphidicola']
+genome_sizes = [538, 580, 823, 174, 640]  # KB
+essential_genes = [68, 189, 193, 85, 146]  # Estimated
+
+# Create comparative plot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Genome size comparison
+ax1.bar(range(len(genomes)), genome_sizes, color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'])
+ax1.set_xlabel('Bacterial Genomes')
+ax1.set_ylabel('Genome Size (KB)')
+ax1.set_title('Comparative Genome Sizes')
+ax1.set_xticks(range(len(genomes)))
+ax1.set_xticklabels(genomes, rotation=45)
+
+# Essential genes scatter plot
+ax2.scatter(genome_sizes, essential_genes, s=100, c=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'])
+ax2.set_xlabel('Genome Size (KB)')
+ax2.set_ylabel('Essential Genes')
+ax2.set_title('Essential Genes vs Genome Size')
+for i, genome in enumerate(genomes):
+    ax2.annotate(genome, (genome_sizes[i], essential_genes[i]), xytext=(5, 5), textcoords='offset points')
+
+plt.tight_layout()
+plt.savefig('diagrams/comparative_genomics.png', dpi=300, bbox_inches='tight')
+print("📊 Comparative genomics plot saved to diagrams/comparative_genomics.png")
+```
+
+### 🎮 **Love2D Real-Time Visualization**
+```bash
+# Launch interactive cellular visualization
+love2d libs/biolib2d/
+
+# Or generate sample data for Love2D
+python3 -c "
+import json
+sample_data = {
+    'system': {'total_ribosomes': 80, 'available_ribosomes': 15, 'chassis_type': 'ecoli'},
+    'vms': {
+        'research_vm': {
+            'vm_id': 'research_vm',
+            'state': 'running',
+            'atp_percentage': 65.4,
+            'ribosomes': 25,
+            'active_genes': 45,
+            'cellular_activity': {'transcription_rate': 30.0, 'active_genes': ['dnaA', 'rpoA']}
+        }
+    }
+}
+with open('bioxen_data.json', 'w') as f:
+    json.dump(sample_data, f, indent=2)
+print('📊 Sample data for Love2D visualization created: bioxen_data.json')
+"
+```
+
+### 📁 **Diagram Organization**
+Generated diagrams are automatically organized:
+```
+diagrams/
+├── circuit_diagrams/
+│   ├── gfp_circuit.png              # Basic expression circuits
+│   ├── monitor_vm_circuits.png      # VM-specific monitoring circuits
+│   └── atp_sensor_circuit.png       # Resource monitoring circuits
+├── comparative_genomics/
+│   ├── genome_size_comparison.png   # Size distribution plots
+│   ├── synteny_blocks.png          # JCVI synteny analysis
+│   └── phylogenetic_tree.png       # Evolutionary relationships
+└── system_status/
+    ├── vm_resource_allocation.png   # Real-time resource distribution
+    ├── ribosome_utilization.png    # Scheduling efficiency plots
+    └── hypervisor_performance.png  # System performance metrics
+```
 - **System stability:** ✅ **Complete VM lifecycle** (create → start → monitor → pause → resume → destroy)
 
 ### Interactive Interface Performance
