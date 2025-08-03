@@ -41,6 +41,12 @@ biopython>=1.80
 scipy>=1.7.0
 # Required by JCVI for scientific computing and advanced algorithms
 
+# System Dependencies (install via package manager)
+# Ubuntu/Debian: sudo apt-get install ncbi-blast+
+# macOS: brew install blast
+# Windows: Download from https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+# Required for JCVI BLAST operations: makeblastdb, blastp, blastn, blastx, tblastn
+
 # Optional: ImageMagick support for JCVI graphics
 # Wand>=0.6.0
 # Note: Also requires ImageMagick to be installed on system:
