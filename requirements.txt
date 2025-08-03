@@ -1,7 +1,12 @@
 # BioXen Project Requirements
 
 ## Core Dependencies
-# No external dependencies required for basic functionality
+# Core dependencies for modular circuits system
+matplotlib>=3.5.0
+# Required for circuit visualization and JCVI graphics
+
+numpy>=1.21.0
+# Required for genetic algorithm optimization and scientific computing
 
 ## Development Dependencies  
 pytest>=6.0
@@ -32,12 +37,6 @@ jcvi>=1.5.6
 # JCVI Dependencies for Full Functionality
 biopython>=1.80
 # Required by JCVI for biological sequence manipulation
-
-matplotlib>=3.5.0
-# Required by JCVI for graphics and visualization modules
-
-numpy>=1.21.0
-# Required by JCVI for matrix operations and algorithms
 
 scipy>=1.7.0
 # Required by JCVI for scientific computing and advanced algorithms
