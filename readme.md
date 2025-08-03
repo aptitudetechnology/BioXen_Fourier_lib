@@ -207,6 +207,25 @@ BioXen offers multiple visualization options for monitoring biological processes
 - **Rich Interface**: Beautiful terminal UI with colors, progress bars, and live updates
 - **Headless Compatible**: Perfect for servers without desktop environments
 
+#### 🎮 **Interactive Controls (While Visualization is Running)**
+Once the DNA transcription monitor is active, you can use these keyboard controls:
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| **`r`** | Force Refresh | Update display immediately |
+| **`s`** | Toggle Statistics | Show/hide detailed system statistics |
+| **`v`** | VM Detail Level | Cycle through summary → detailed → advanced views |
+| **`d`** | DNA Sequences | Toggle DNA sequence display on/off |
+| **`a`** | ATP Animation | Show/hide ATP flow animation |
+| **`+`** | Speed Up | Increase animation update speed |
+| **`-`** | Slow Down | Decrease animation update speed |
+| **`h`** or **`?`** | Help Overlay | Show/hide keyboard shortcut help |
+| **Arrow Keys** | Navigate Grid | Move through VM grid layout |
+| **Space** | Pause/Resume | Pause or resume the live animation |
+| **Ctrl+C** | Exit to Menu | Return to main BioXen interface |
+
+*💡 Tip: Press `h` or `?` while the visualization is running to see these controls as an overlay!*
+
 #### 🚀 **Access Terminal Visualization**
 ```bash
 # Launch interactive BioXen interface
@@ -214,6 +233,17 @@ python interactive_bioxen.py
 
 # Select: "📺 Terminal DNA Visualization" from the menu
 # Watch real-time DNA transcription from your running VMs!
+
+# 🎮 INTERACTIVE CONTROLS (while visualization is running):
+# - 'r' → Force refresh display
+# - 's' → Show/hide system statistics  
+# - 'v' → Cycle through VM detail levels
+# - 'd' → Toggle DNA sequence display
+# - 'a' → Show/hide ATP flow animation
+# - '+'/'-' → Adjust update speed
+# - 'h' or '?' → Show help overlay
+# - Arrow keys → Navigate VM grid
+# - Space → Pause/resume animation
 
 # 🔄 TO RETURN TO MAIN MENU:
 # Press Ctrl+C to stop the visualization and return to the interactive menu
