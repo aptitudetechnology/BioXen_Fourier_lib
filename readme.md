@@ -193,7 +193,6 @@ BioXen offers multiple visualization options for monitoring biological processes
 ### 📺 **Terminal DNA Transcription Monitor**
 **NEW**: Terminal-based DNA transcription visualization perfect for headless servers and remote access:
 
-![Terminal DNA Visualization](screenshots/Screenshot%20From%202025-08-03%2020-34-31.png)
 
 ![Updated Terminal DNA Visualization](screenshots/Screenshot%20From%202025-08-03%2020-34-31.png)
 
