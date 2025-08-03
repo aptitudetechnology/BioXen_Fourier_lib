@@ -38,6 +38,10 @@ class InteractiveBioXen:
         self.available_genomes = []
         self.chassis_type = ChassisType.ECOLI  # Default chassis
         # Note: integrator will be created dynamically when needed for downloads
+        
+        # Terminal visualization support
+        self.visualization_monitor = None
+        self.visualization_active = False
 
     def _suggest_unique_vm_id(self, base_name: str) -> str:
         """Suggest a unique VM ID based on existing VMs."""
@@ -75,9 +79,10 @@ class InteractiveBioXen:
                 Choice("🖥️  Initialize Hypervisor", "init_hypervisor"),
                 Choice("📥 Download genomes", "download"),
                 Choice("⚡ Create Virtual Machine", "create_vm"),
-                Choice("� Manage Running VMs", "status"),
-                Choice("� View System Status", "view_status"),
-                Choice("� Download New Genomes", "download_new"),
+                Choice("📊 Manage Running VMs", "status"),
+                Choice("📺 Terminal DNA Visualization", "terminal_vis"),
+                Choice("📈 View System Status", "view_status"),
+                Choice("🌐 Download New Genomes", "download_new"),
                 Choice("❌ Exit", "exit"),
             ]
             
@@ -108,6 +113,8 @@ class InteractiveBioXen:
                     self.show_status()
                 elif action == "view_status":
                     self.show_status()  # Same as status for now
+                elif action == "terminal_vis":
+                    self.toggle_terminal_visualization()
                 elif action == "destroy_vm":
                     self.destroy_vm()
             except KeyboardInterrupt:
@@ -1181,6 +1188,72 @@ class InteractiveBioXen:
             questionary.press_any_key_to_continue().ask()
             return False
         return True
+
+    def toggle_terminal_visualization(self):
+        """Toggle terminal DNA visualization."""
+        if not self._check_hypervisor():
+            return
+        
+        if self.visualization_active:
+            self.disable_terminal_visualization()
+        else:
+            self.enable_terminal_visualization()
+
+    def enable_terminal_visualization(self):
+        """Enable real-time terminal DNA visualization."""
+        try:
+            print("\n📺 Starting Terminal DNA Visualization...")
+            
+            # Import and start the data exporter
+            from bioxen_data_export import BioXenDataExporter
+            
+            # Create data exporter with current hypervisor
+            self.data_exporter = BioXenDataExporter(self.hypervisor)
+            
+            # Start data export
+            self.data_exporter.start_export()
+            print("✅ Data export started")
+            
+            # Start the terminal visualization
+            print("🔬 Launching DNA transcription monitor...")
+            print("Press Ctrl+C to stop visualization and return to menu")
+            
+            # Import and run the terminal visualization
+            import subprocess
+            import sys
+            
+            # Run the terminal visualization in the same process
+            try:
+                from terminal_biovis import run_dna_monitor
+                run_dna_monitor()
+            except ImportError:
+                print("❌ Terminal visualization module not found")
+                print("Please ensure terminal_biovis.py is in the current directory")
+            except KeyboardInterrupt:
+                pass
+            finally:
+                # Stop data export when visualization ends
+                if hasattr(self, 'data_exporter'):
+                    self.data_exporter.stop_export()
+                    print("\n✅ Data export stopped")
+                
+                self.visualization_active = False
+                print("📺 Visualization stopped")
+                questionary.press_any_key_to_continue().ask()
+                
+        except Exception as e:
+            print(f"❌ Error starting visualization: {e}")
+            self.visualization_active = False
+            questionary.press_any_key_to_continue().ask()
+
+    def disable_terminal_visualization(self):
+        """Disable terminal DNA visualization."""
+        if hasattr(self, 'data_exporter'):
+            self.data_exporter.stop_export()
+            print("✅ Terminal visualization disabled")
+        
+        self.visualization_active = False
+        questionary.press_any_key_to_continue().ask()
 
 def main():
     """Main entry point."""
