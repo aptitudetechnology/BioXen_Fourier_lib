@@ -303,11 +303,14 @@ lfs                          # Lua file system library
 git clone https://github.com/aptitudetechnology/BioXen.git
 cd BioXen
 
-# Set up virtual environment
+# Install all dependencies (system packages + Python packages)
+./install_dependencies.sh
+
+# Set up virtual environment (optional but recommended)
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install Python dependencies
+# Install Python dependencies only (if not using install_dependencies.sh)
 pip install -r requirements.txt
 
 # Launch interactive interface
@@ -697,6 +700,10 @@ print(f"Genome utilization: {vm_result['genome_utilization_percent']:.1f}%")
 
 ```
 BioXen-JCVI/
+├── 🛠️ Installation & Setup
+│   ├── install_dependencies.sh            # Complete system + Python dependencies installer
+│   ├── requirements.txt                   # Python package dependencies
+│   └── install_phase5_bare_metal.sh       # Phase 5: Bare metal optimization installer
 ├── 🎮 JCVI-Enhanced Interactive Interfaces
 │   ├── interactive_comparative_genomics.py  # Phase 3: Full JCVI comparative genomics platform
 │   ├── interactive_bioxen.py               # Phase 1-2: Core hypervisor interface
