@@ -8,6 +8,193 @@ virtual machines using orthogonal genetic systems.
 from ..core.elements import GeneticCircuit, GeneticElement, CircuitType, ElementType
 
 
+# Factory functions for creating isolation circuits
+def create_vm_isolation_circuit(vm_id: str, isolation_features: list = None) -> GeneticCircuit:
+    """Create VM isolation circuit with specified features"""
+    if isolation_features is None:
+        isolation_features = ["memory", "cpu", "network"]
+    
+    elements = []
+    
+    # Add VM-specific RNA polymerase for transcriptional isolation
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_rnap",
+        sequence="ATGCGTCGTCTGACCCTGAAACAGGCAATCACCGGCATCGTG",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add VM-specific promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_isolate_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCAACCTGGATC",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_genes"
+    ))
+    
+    # Add isolation genes for each feature
+    base_sequence = "ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTG"
+    for i, feature in enumerate(isolation_features):
+        # Vary sequence slightly for each feature
+        sequence = base_sequence + ("AA" if i % 2 == 0 else "GG")
+        
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_{feature}_isolator",
+            sequence=sequence,
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_isolate_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_isolation",
+        circuit_type=CircuitType.ISOLATION,
+        elements=elements,
+        description=f"VM isolation circuit for {vm_id} with features: {', '.join(isolation_features)}"
+    )
+
+
+def create_namespace_circuit(vm_id: str, namespace_type: str = "genetic") -> GeneticCircuit:
+    """Create namespace isolation circuit for VM"""
+    elements = []
+    
+    # Add namespace controller promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_namespace_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCGGAATTC",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_namespace_controller"
+    ))
+    
+    # Add namespace controller gene
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_namespace_controller",
+        sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAATTC",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add namespace-specific RBS
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_namespace_rbs",
+        sequence="AAGGAGGTGATCCATGCC",
+        element_type=ElementType.RBS,
+        vm_specific=True
+    ))
+    
+    # Add namespace isolation genes based on type
+    if namespace_type == "genetic":
+        # Genetic namespace isolation
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_genetic_barrier",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCCAA",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    elif namespace_type == "metabolic":
+        # Metabolic namespace isolation
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_metabolic_barrier",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCCGG",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_namespace_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_namespace",
+        circuit_type=CircuitType.ISOLATION,
+        elements=elements,
+        description=f"Namespace isolation circuit for {vm_id} ({namespace_type} type)"
+    )
+
+
+def create_security_circuit(vm_id: str, security_features: list = None) -> GeneticCircuit:
+    """Create security circuit for VM protection"""
+    if security_features is None:
+        security_features = ["authentication", "encryption", "access_control"]
+    
+    elements = []
+    
+    # Add security controller promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_security_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCAAGCTTCC",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_security_controller"
+    ))
+    
+    # Add security controller gene
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_security_controller",
+        sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAAGC",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add security genes for each feature
+    base_sequence = "ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTG"
+    for i, feature in enumerate(security_features):
+        # Create unique sequences for each security feature
+        if feature == "authentication":
+            sequence = base_sequence + "AAGC"
+        elif feature == "encryption":
+            sequence = base_sequence + "CCGG" 
+        elif feature == "access_control":
+            sequence = base_sequence + "TTAA"
+        else:
+            sequence = base_sequence + "GGCC"
+        
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_{feature}_security",
+            sequence=sequence,
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add security monitoring sRNA
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_security_monitor",
+        sequence="GCAAGCUGGUCGGCAUCAAGCCUUAA",
+        element_type=ElementType.SRNA,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_security_genes"
+    ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_security_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_security",
+        circuit_type=CircuitType.ISOLATION,
+        elements=elements,
+        description=f"Security circuit for {vm_id} with features: {', '.join(security_features)}"
+    )
+
+
+# Legacy functions (keeping for backward compatibility)
 def get_memory_isolation_circuit() -> GeneticCircuit:
     """Get the memory isolation circuit"""
     return GeneticCircuit(

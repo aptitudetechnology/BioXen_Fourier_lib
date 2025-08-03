@@ -8,6 +8,220 @@ RNA cleanup, and cellular memory management in the hypervisor.
 from ..core.elements import GeneticCircuit, GeneticElement, CircuitType, ElementType
 
 
+# Factory functions for creating memory management circuits
+def create_memory_allocator(vm_id: str, memory_size: int = 1024) -> GeneticCircuit:
+    """Create memory allocator circuit for VM"""
+    elements = []
+    
+    # Add allocator controller promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_allocator_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCGGAATTC",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_allocator"
+    ))
+    
+    # Add memory allocator gene
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_allocator",
+        sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAATTC",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add memory tracking genes based on size
+    block_count = max(1, memory_size // 256)  # One gene per 256 units
+    base_sequence = "ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTG"
+    
+    for i in range(min(block_count, 4)):  # Limit to 4 genes
+        sequence = base_sequence + ("AA" if i % 2 == 0 else "GG")
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_memory_block_{i+1}",
+            sequence=sequence,
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add allocation monitoring sRNA
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_alloc_monitor",
+        sequence="GCAAGCUGGUCGGCAUCAAGCC",
+        element_type=ElementType.SRNA,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_memory_genes"
+    ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_allocator_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_memory_allocator",
+        circuit_type=CircuitType.MEMORY_MANAGER,
+        elements=elements,
+        description=f"Memory allocator circuit for {vm_id} ({memory_size} units)"
+    )
+
+
+def create_garbage_collector(vm_id: str, gc_algorithm: str = "mark_sweep") -> GeneticCircuit:
+    """Create garbage collection circuit for VM"""
+    elements = []
+    
+    # Add GC controller promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_gc_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCAAGCTT",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_gc_controller"
+    ))
+    
+    # Add GC controller gene
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_gc_controller",
+        sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAAGC",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add algorithm-specific genes
+    if gc_algorithm == "mark_sweep":
+        # Mark phase gene
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_mark_gene",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAAAA",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+        
+        # Sweep phase gene
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_sweep_gene",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCCCC",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    elif gc_algorithm == "reference_counting":
+        # Reference counter gene
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_refcount_gene",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGGGGG",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add protease for protein cleanup
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_gc_protease",
+        sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACCGGC",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add degradation tags
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_deg_tag",
+        sequence="AACGCCAACGCCGCCTAG",
+        element_type=ElementType.TAG,
+        vm_specific=True
+    ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_gc_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_garbage_collector",
+        circuit_type=CircuitType.MEMORY_MANAGER,
+        elements=elements,
+        description=f"Garbage collection circuit for {vm_id} ({gc_algorithm} algorithm)"
+    )
+
+
+def create_heap_manager(vm_id: str, heap_type: str = "dynamic") -> GeneticCircuit:
+    """Create heap management circuit for VM"""
+    elements = []
+    
+    # Add heap controller promoter
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_heap_promoter",
+        sequence="TTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCCCTGGA",
+        element_type=ElementType.PROMOTER,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_heap_manager"
+    ))
+    
+    # Add heap manager gene
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_heap_manager",
+        sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCCGG",
+        element_type=ElementType.GENE,
+        vm_specific=True
+    ))
+    
+    # Add heap-specific components
+    if heap_type == "dynamic":
+        # Dynamic allocation gene
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_dynamic_alloc",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAAGG",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+        
+        # Deallocation gene
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_dealloc",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCCAA",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    elif heap_type == "fixed":
+        # Fixed pool manager
+        elements.append(GeneticElement(
+            element_id=f"{vm_id}_pool_manager",
+            sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGTTAA",
+            element_type=ElementType.GENE,
+            vm_specific=True
+        ))
+    
+    # Add heap monitoring sRNA
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_heap_monitor",
+        sequence="GCAAGCUGGUCGGCAUCAAGCCUGGAA",
+        element_type=ElementType.SRNA,
+        vm_specific=True,
+        regulation_target=f"{vm_id}_heap_genes"
+    ))
+    
+    # Add terminator
+    elements.append(GeneticElement(
+        element_id=f"{vm_id}_heap_terminator",
+        sequence="GCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGTGCTGCAAGGCG",
+        element_type=ElementType.TERMINATOR,
+        vm_specific=True
+    ))
+    
+    return GeneticCircuit(
+        circuit_id=f"{vm_id}_heap_manager",
+        circuit_type=CircuitType.MEMORY_MANAGER,
+        elements=elements,
+        description=f"Heap management circuit for {vm_id} ({heap_type} type)"
+    )
+
+
+# Legacy functions (keeping for backward compatibility)
 def get_protein_degradation_circuit() -> GeneticCircuit:
     """Get the protein degradation circuit"""
     return GeneticCircuit(
