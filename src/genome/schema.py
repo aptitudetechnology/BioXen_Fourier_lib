@@ -198,9 +198,42 @@ class BioXenGenomeSchema:
                 # Skip invalid lines - don't print errors for now
                 continue
         
-        # Create schema instance
+        # Create schema instance with organism name fallback
+        organism_name = metadata.get('organism')
+        
+        # If no organism found in comments, try to extract from filename or gene IDs
+        if not organism_name or organism_name == 'Unknown':
+            # Extract from filename (e.g., "buchnera_aphidicola.genome" -> "Buchnera aphidicola")
+            filename = genome_path.stem.lower()
+            if filename == 'syn3a':
+                organism_name = 'JCVI-Syn3A'
+            elif 'buchnera' in filename and 'aphidicola' in filename:
+                organism_name = 'Buchnera aphidicola'
+            elif 'mycoplasma' in filename and 'genitalium' in filename:
+                organism_name = 'Mycoplasma genitalium'
+            elif 'mycoplasma' in filename and 'pneumoniae' in filename:
+                organism_name = 'Mycoplasma pneumoniae'
+            elif 'carsonella' in filename and 'ruddii' in filename:
+                organism_name = 'Carsonella ruddii'
+            else:
+                # Try to extract from gene IDs (e.g., "BUCHNERAAPHIDICOLA_0001")
+                if genes and genes[0].gene_id:
+                    gene_prefix = genes[0].gene_id.split('_')[0].upper()
+                    if 'BUCHNERA' in gene_prefix:
+                        organism_name = 'Buchnera aphidicola'
+                    elif 'MYCOPLASMA' in gene_prefix:
+                        organism_name = 'Mycoplasma species'
+                    elif 'CARSONELLA' in gene_prefix:
+                        organism_name = 'Carsonella ruddii'
+                    else:
+                        # Format the filename nicely as fallback
+                        organism_name = filename.replace('_', ' ').title()
+        
+        if not organism_name:
+            organism_name = 'Unknown'
+        
         schema = cls(
-            organism=metadata.get('organism', 'Unknown'),
+            organism=organism_name,
             strain=metadata.get('strain'),
             genome_size=metadata.get('genome_size', 0),
             genes=genes
