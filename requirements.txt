@@ -8,6 +8,9 @@ matplotlib>=3.5.0
 numpy>=1.21.0
 # Required for genetic algorithm optimization and scientific computing
 
+rich>=13.0.0
+# Required for terminal DNA transcription visualization
+
 ## Development Dependencies  
 pytest>=6.0
 pytest-cov>=2.0
