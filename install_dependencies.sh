@@ -39,7 +39,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             
         # Install Love2D and LuaRocks for visualization
         echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
-        sudo apt-get install -y love2d luarocks lua5.1-dev
+        sudo apt-get install -y love luarocks liblua5.1-0-dev
             
         # Install ImageMagick for JCVI graphics (optional)
         echo "🎨 Installing ImageMagick for graphics support..."
