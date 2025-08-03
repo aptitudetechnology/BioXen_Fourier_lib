@@ -37,6 +37,10 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             build-essential \
             python3-dev
             
+        # Install Love2D and LuaRocks for visualization
+        echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
+        sudo apt-get install -y love2d luarocks lua5.1-dev
+            
         # Install ImageMagick for JCVI graphics (optional)
         echo "🎨 Installing ImageMagick for graphics support..."
         sudo apt-get install -y libmagickwand-dev imagemagick
@@ -61,6 +65,10 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             samtools \
             gcc \
             python3-devel
+            
+        # Install Love2D and LuaRocks for visualization
+        echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
+        sudo yum install -y love luarocks lua-devel
             
         # Install ImageMagick
         echo "🎨 Installing ImageMagick for graphics support..."
@@ -98,6 +106,10 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         bedtools \
         samtools
     
+    # Install Love2D and LuaRocks for visualization
+    echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
+    brew install love luarocks
+    
     # Install ImageMagick
     echo "🎨 Installing ImageMagick for graphics support..."
     brew install imagemagick
@@ -130,6 +142,17 @@ pip3 install --upgrade \
     notebook \
     ipywidgets
 
+# Install BioLib2D Love2D module via LuaRocks
+echo ""
+echo "🎮 Installing BioLib2D Love2D visualization module..."
+if command -v luarocks &> /dev/null; then
+    echo "  📦 Installing BioLib2D from GitHub..."
+    luarocks install --local https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec || echo "  ⚠️  BioLib2D installation failed (optional - visualization may not work)"
+else
+    echo "  ⚠️  LuaRocks not found - BioLib2D Love2D module not installed"
+    echo "  📝 To install manually: luarocks install https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec"
+fi
+
 # Verify installations
 echo ""
 echo "✅ Verifying installations..."
@@ -157,6 +180,28 @@ for tool in "${tools[@]}"; do
     fi
 done
 
+# Check Love2D and LuaRocks
+echo ""
+echo "🎮 Verifying Love2D and LuaRocks..."
+if command -v love &> /dev/null; then
+    echo "  ✅ Love2D: $(love --version | head -n1)"
+else
+    echo "  ⚠️  Love2D: not found (real-time visualization unavailable)"
+fi
+
+if command -v luarocks &> /dev/null; then
+    echo "  ✅ LuaRocks: $(luarocks --version | head -n1)"
+    
+    # Check if BioLib2D is installed
+    if luarocks list --local | grep -q "biolib2d"; then
+        echo "  ✅ BioLib2D: installed locally"
+    else
+        echo "  ⚠️  BioLib2D: not installed (run: luarocks install --local https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec)"
+    fi
+else
+    echo "  ⚠️  LuaRocks: not found (BioLib2D installation unavailable)"
+fi
+
 # Check Python packages
 echo ""
 echo "🐍 Verifying Python packages..."
@@ -178,6 +223,8 @@ echo "Next steps:"
 echo "  1. Test the installation: python3 tests/test_modular_circuits.py"
 echo "  2. Run Phase 4 integration: python3 phase4_jcvi_cli_integration.py"
 echo "  3. Start interactive interface: python3 interactive_bioxen.py"
+echo "  4. Launch Love2D visualization: love2d libs/biolib2d/ (if BioLib2D installed)"
 echo ""
 echo "For full functionality, ensure all tools show ✅ above."
 echo "Missing optional tools will not prevent BioXen from running."
+echo "📊 Static diagrams use matplotlib, 🎮 real-time visualization uses Love2D+BioLib2D"
