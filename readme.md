@@ -195,6 +195,8 @@ BioXen offers multiple visualization options for monitoring biological processes
 
 ![Terminal DNA Visualization](screenshots/Screenshot%20From%202025-08-03%2019-14-35.png)
 
+![Updated Terminal DNA Visualization](screenshots/Screenshot%20From%202025-08-03%2019-41-58.png)
+
 *Real-time terminal DNA transcription monitor showing live cellular activity, ribosome movement, gene expression, and ATP levels across multiple VMs in a beautiful Rich-based interface.*
 
 #### 🧬 **Terminal Features**
@@ -212,7 +214,10 @@ python interactive_bioxen.py
 
 # Select: "📺 Terminal DNA Visualization" from the menu
 # Watch real-time DNA transcription from your running VMs!
-# Press Ctrl+C to return to menu
+
+# 🔄 TO RETURN TO MAIN MENU:
+# Press Ctrl+C to stop the visualization and return to the interactive menu
+# The visualization will gracefully exit and restore the main BioXen interface
 ```
 
 ### ✨ **Love2D Visualization Features**
