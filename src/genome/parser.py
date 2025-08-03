@@ -292,7 +292,7 @@ class BioXenRealGenomeIntegrator:
             'essential_genes_active': len([g for g in active_genes 
                                          if any(eg['id'] == g['id'] 
                                                for eg in self.bioxen_template['minimal_gene_set'])]),
-            'genome_utilization_percent': (len(active_genes) / len(self.real_genome.genes)) * 100,
+            'genome_utilization_percent': (len(active_genes) / len(self.real_genome.genes)) * 100 if len(self.real_genome.genes) > 0 else 0,
             'estimated_boot_time_ms': self.bioxen_template['boot_time_ms'],
             'active_genes': active_genes[:10]  # Show first 10 for brevity
         }
@@ -302,15 +302,18 @@ class BioXenRealGenomeIntegrator:
         if not self.real_genome:
             self.load_genome()
         
+        total_genes = len(self.real_genome.genes)
+        essential_genes = len(self.real_genome.essential_genes)
+        
         return {
             'organism': self.real_genome.organism,
-            'total_genes': len(self.real_genome.genes),
-            'essential_genes': len(self.real_genome.essential_genes),
+            'total_genes': total_genes,
+            'essential_genes': essential_genes,
             'genome_length_bp': self.real_genome.total_length,
             'protein_coding_genes': len([g for g in self.real_genome.genes if g.type == 1]),
             'rna_genes': len([g for g in self.real_genome.genes if g.type == 0]),
             'gene_categories': self.real_genome.gene_count_by_category,
-            'essential_percentage': (len(self.real_genome.essential_genes) / len(self.real_genome.genes)) * 100,
-            'average_gene_length': sum(g.length for g in self.real_genome.genes) / len(self.real_genome.genes),
-            'coding_density': (sum(g.length for g in self.real_genome.genes) / self.real_genome.total_length) * 100
+            'essential_percentage': (essential_genes / total_genes) * 100 if total_genes > 0 else 0,
+            'average_gene_length': sum(g.length for g in self.real_genome.genes) / total_genes if total_genes > 0 else 0,
+            'coding_density': (sum(g.length for g in self.real_genome.genes) / self.real_genome.total_length) * 100 if self.real_genome.total_length > 0 else 0
         }
