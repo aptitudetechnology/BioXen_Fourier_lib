@@ -15,26 +15,26 @@ def get_memory_isolation_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.ISOLATION,
         elements=[
             GeneticElement(
-                name="vm1_rnap",
+                element_id="vm1_rnap",
                 sequence="ATGCGTCGTCTGACCCTGAAACAGGCAATCACC",  # RNA polymerase variant 1
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_rnap",
+                element_id="vm2_rnap",
                 sequence="ATGCGTCGTCTGACCCTGAAGCAGGCAATCACC",  # RNA polymerase variant 2  
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm1_promoter",
+                element_id="vm1_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
                 regulation_target="vm1_genes"
             ),
             GeneticElement(
-                name="vm2_promoter", 
+                element_id="vm2_promoter", 
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
@@ -53,32 +53,32 @@ def get_namespace_isolation_circuit() -> GeneticCircuit:
         elements=[
             # Orthogonal tRNA/synthetase pairs
             GeneticElement(
-                name="orthogonal_trna_1",
+                element_id="orthogonal_trna_1",
                 sequence="GGGGCCCGCCAGATGATGGATGTTAGGTGGCCTTCTAAACCCCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="orthogonal_synthetase_1",
+                element_id="orthogonal_synthetase_1",
                 sequence="ATGGTGACCCTGAAACAGGCAATCACCAAGATCATC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="orthogonal_trna_2",
+                element_id="orthogonal_trna_2",
                 sequence="GGGGCCCGCCAGATGATGGATGTTAGGTGGCCTTCTAAACCGCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="orthogonal_synthetase_2",
+                element_id="orthogonal_synthetase_2",
                 sequence="ATGGTGACCCTGAAACAGGCAATCACCAAGATCGTC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # Stop codon suppression elements
             GeneticElement(
-                name="amber_suppressor_trna",
+                element_id="amber_suppressor_trna",
                 sequence="GGGCCCGCCAGATGATGGATGTTAGGTGGCCTTCTAAACCGCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
@@ -96,40 +96,40 @@ def get_membrane_isolation_circuit() -> GeneticCircuit:
         elements=[
             # Membrane protein targeting sequences
             GeneticElement(
-                name="vm1_membrane_target",
+                element_id="vm1_membrane_target",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACCAAGATCATCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_membrane_target",
+                element_id="vm2_membrane_target",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCGCCAAGATCGTCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # Membrane channel proteins
             GeneticElement(
-                name="vm1_channel",
+                element_id="vm1_channel",
                 sequence="ATGCTGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_channel",
+                element_id="vm2_channel",
                 sequence="ATGCTGACCCTGAAACAGGCAATCGCCAAGATCGTCACCGGCTACGTG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # Compartment-specific promoters
             GeneticElement(
-                name="compartment1_promoter",
+                element_id="compartment1_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
                 regulation_target="vm1_compartment"
             ),
             GeneticElement(
-                name="compartment2_promoter",
+                element_id="compartment2_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
@@ -148,40 +148,40 @@ def get_transcriptional_isolation_circuit() -> GeneticCircuit:
         elements=[
             # Sigma factor variants for each VM
             GeneticElement(
-                name="vm1_sigma_factor",
+                element_id="vm1_sigma_factor",
                 sequence="ATGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTGCAG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_sigma_factor",
+                element_id="vm2_sigma_factor",
                 sequence="ATGACCCTGAAACAGGCAATCGCCAAGATCGTCACCGGCTACGTGCAG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm3_sigma_factor",
+                element_id="vm3_sigma_factor",
                 sequence="ATGACCCTGAAACAGGCAATCTCCAAGATCTTCACCGGCTACGTGCAG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # Corresponding promoters that only respond to specific sigma factors
             GeneticElement(
-                name="vm1_specific_promoter",
+                element_id="vm1_specific_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
                 regulation_target="vm1_genes"
             ),
             GeneticElement(
-                name="vm2_specific_promoter",
+                element_id="vm2_specific_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
                 regulation_target="vm2_genes"
             ),
             GeneticElement(
-                name="vm3_specific_promoter",
+                element_id="vm3_specific_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGGCC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
@@ -200,45 +200,45 @@ def get_protein_isolation_circuit() -> GeneticCircuit:
         elements=[
             # Protein tags for isolation
             GeneticElement(
-                name="vm1_protein_tag",
+                element_id="vm1_protein_tag",
                 sequence="ATGCACCACCACCACCACCAC",  # His6 tag DNA
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_protein_tag",
+                element_id="vm2_protein_tag",
                 sequence="ATGTACCCATACGATGTTCCAGATTACGCT",  # FLAG tag DNA
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm3_protein_tag",
+                element_id="vm3_protein_tag",
                 sequence="ATGGGCTCCAGCCACCACCACCACCACCACAGCCTGGGCCTCGAG",  # Extended tag
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             # Chaperones for proper protein folding
             GeneticElement(
-                name="vm1_chaperone",
+                element_id="vm1_chaperone",
                 sequence="ATGAAGAAGATCATTACCGACAAGGACGACGACAAGACCACCACC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_chaperone",
+                element_id="vm2_chaperone",
                 sequence="ATGAAGAAGATCATTACCGACAAGGACGACGACAAGACCACCGCC",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # Protein localization signals
             GeneticElement(
-                name="vm1_localization_signal",
+                element_id="vm1_localization_signal",
                 sequence="AAGAAGGCCACCACCACC",
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_localization_signal",
+                element_id="vm2_localization_signal",
                 sequence="AAGAAGGCCACCACCGCC",
                 element_type=ElementType.TAG,
                 vm_specific=True

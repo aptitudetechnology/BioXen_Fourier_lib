@@ -15,25 +15,25 @@ def get_protein_degradation_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.MEMORY_MANAGER,
         elements=[
             GeneticElement(
-                name="vm1_protease",
+                element_id="vm1_protease",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACC",  # VM1-specific protease
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm1_deg_tag",
+                element_id="vm1_deg_tag",
                 sequence="GGTAAATAA",  # Degradation tag for VM1 proteins
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_protease",
+                element_id="vm2_protease",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCGCC", # VM2-specific protease
                 element_type=ElementType.GENE, 
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_deg_tag",
+                element_id="vm2_deg_tag",
                 sequence="GGTACATAA",  # Degradation tag for VM2 proteins
                 element_type=ElementType.TAG,
                 vm_specific=True
@@ -51,33 +51,33 @@ def get_rna_cleanup_circuit() -> GeneticCircuit:
         elements=[
             # RNase variants for different VMs
             GeneticElement(
-                name="vm1_rnase",
+                element_id="vm1_rnase",
                 sequence="ATGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTGCAG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_rnase",
+                element_id="vm2_rnase",
                 sequence="ATGACCCTGAAACAGGCAATCGCCAAGATCGTCACCGGCTACGTGCAG",
                 element_type=ElementType.GENE,
                 vm_specific=True
             ),
             # RNA degradation signals
             GeneticElement(
-                name="vm1_rna_deg_signal",
+                element_id="vm1_rna_deg_signal",
                 sequence="AAUAAAUAAUAA",  # RNA degradation signal
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             GeneticElement(
-                name="vm2_rna_deg_signal",
+                element_id="vm2_rna_deg_signal",
                 sequence="AAUACAUAAUAA",  # Modified RNA degradation signal
                 element_type=ElementType.TAG,
                 vm_specific=True
             ),
             # Termination enhancement
             GeneticElement(
-                name="enhanced_terminator",
+                element_id="enhanced_terminator",
                 sequence="AAAAAAGCCCGCTCACGGCCCCTTTTTCTATATAGT",
                 element_type=ElementType.TERMINATOR
             )
@@ -94,31 +94,31 @@ def get_metabolite_recycling_circuit() -> GeneticCircuit:
         elements=[
             # Metabolite scavenging enzymes
             GeneticElement(
-                name="nucleotide_salvage_enzyme",
+                element_id="nucleotide_salvage_enzyme",
                 sequence="ATGCTGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTGCAGGCAATC",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="amino_acid_recycler",
+                element_id="amino_acid_recycler",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACCAAGATCATCACCCTGAAACAGGC",
                 element_type=ElementType.GENE
             ),
             # Metabolite sensors
             GeneticElement(
-                name="nucleotide_sensor_promoter",
+                element_id="nucleotide_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="nucleotide_salvage_enzyme"
             ),
             GeneticElement(
-                name="amino_acid_sensor_promoter",
+                element_id="amino_acid_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="amino_acid_recycler"
             ),
             # Recycling regulatory RNA
             GeneticElement(
-                name="recycling_control_rna",
+                element_id="recycling_control_rna",
                 sequence="GCAAGCUGGUCGGCAUCGGCAUCGCAUC",
                 element_type=ElementType.SRNA,
                 regulation_target="recycling_system"
@@ -136,36 +136,36 @@ def get_garbage_collection_circuit() -> GeneticCircuit:
         elements=[
             # Main garbage collector protease
             GeneticElement(
-                name="gc_protease",
+                element_id="gc_protease",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACCAAGATCATCACCCTGAAACAGGCAATC",
                 element_type=ElementType.GENE
             ),
             # Garbage collection trigger
             GeneticElement(
-                name="gc_trigger_promoter",
+                element_id="gc_trigger_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGGCC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="gc_protease"
             ),
             # Universal degradation tags
             GeneticElement(
-                name="universal_deg_tag",
+                element_id="universal_deg_tag",
                 sequence="AANDENYALAA",  # SsrA-like tag
                 element_type=ElementType.TAG
             ),
             GeneticElement(
-                name="urgent_deg_tag", 
+                element_id="urgent_deg_tag", 
                 sequence="AANDENYALAAWENYALAA",  # Extended urgent degradation
                 element_type=ElementType.TAG
             ),
             # Memory pressure sensor
             GeneticElement(
-                name="memory_pressure_sensor",
+                element_id="memory_pressure_sensor",
                 sequence="ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATC",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="memory_sensor_promoter",
+                element_id="memory_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAAA",
                 element_type=ElementType.PROMOTER,
                 regulation_target="memory_pressure_sensor"
@@ -183,25 +183,25 @@ def get_memory_compaction_circuit() -> GeneticCircuit:
         elements=[
             # DNA compaction proteins
             GeneticElement(
-                name="dna_compaction_protein",
+                element_id="dna_compaction_protein",
                 sequence="ATGACCAAGAAGATCATTACCGACAAGGACGACGACAAGACCACCACCGGCTACGTG",
                 element_type=ElementType.GENE
             ),
             # Chromatin remodeling complex
             GeneticElement(
-                name="chromatin_remodeler",
+                element_id="chromatin_remodeler",
                 sequence="ATGCTGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTGCAGGCAATCACC",
                 element_type=ElementType.GENE
             ),
             # Compaction regulatory elements
             GeneticElement(
-                name="compaction_promoter",
+                element_id="compaction_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGCCC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="compaction_proteins"
             ),
             GeneticElement(
-                name="compaction_control_rna",
+                element_id="compaction_control_rna",
                 sequence="GCAAGCUGGUCGGCAUCGGCAUCGCAUCGGCAUC",
                 element_type=ElementType.SRNA,
                 regulation_target="compaction_system"
@@ -219,20 +219,20 @@ def get_memory_allocation_circuit() -> GeneticCircuit:
         elements=[
             # Memory allocation tracker
             GeneticElement(
-                name="allocation_tracker",
+                element_id="allocation_tracker",
                 sequence="ATGGTGACCCTGAAACAGGCAATCACCAAGATCATCACCGGCTACGTGCAGGCAATC",
                 element_type=ElementType.GENE
             ),
             # Memory boundary markers
             GeneticElement(
-                name="vm1_memory_marker",
+                element_id="vm1_memory_marker",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
                 regulation_target="vm1_memory_space"
             ),
             GeneticElement(
-                name="vm2_memory_marker",
+                element_id="vm2_memory_marker",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 vm_specific=True,
@@ -240,12 +240,12 @@ def get_memory_allocation_circuit() -> GeneticCircuit:
             ),
             # Allocation control system
             GeneticElement(
-                name="allocation_controller",
+                element_id="allocation_controller",
                 sequence="ATGAAACGCATCGGCTACGTGCAGGCAATCACCAAGATCATCACCCTG",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="allocation_control_rna",
+                element_id="allocation_control_rna",
                 sequence="GCAAGCUGGUCGGCAUCGGCAUC",
                 element_type=ElementType.SRNA,
                 regulation_target="allocation_system"

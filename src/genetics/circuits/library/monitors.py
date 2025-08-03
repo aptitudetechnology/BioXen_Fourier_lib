@@ -175,13 +175,13 @@ def get_atp_monitor_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.RESOURCE_MONITOR,
         elements=[
             GeneticElement(
-                name="atp_sensor_promoter",
+                element_id="atp_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAGC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="atp_reporter"
             ),
             GeneticElement(
-                name="atp_reporter",
+                element_id="atp_reporter",
                 sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGAA",
                 element_type=ElementType.GENE,
                 regulation_target=None
@@ -198,18 +198,18 @@ def get_ribosome_monitor_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.RESOURCE_MONITOR,
         elements=[
             GeneticElement(
-                name="ribosome_sensor_promoter",
+                element_id="ribosome_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGACC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="ribosome_reporter"
             ),
             GeneticElement(
-                name="ribosome_reporter",
+                element_id="ribosome_reporter",
                 sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGCC",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="ribosome_sensor_rna",
+                element_id="ribosome_sensor_rna",
                 sequence="GCAAGCUGGUCGGCAUCGGCAUC",
                 element_type=ElementType.SRNA,
                 regulation_target="ribosome_reporter"
@@ -226,18 +226,18 @@ def get_metabolic_monitor_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.RESOURCE_MONITOR,
         elements=[
             GeneticElement(
-                name="metabolic_sensor_promoter",
+                element_id="metabolic_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGGCC",
                 element_type=ElementType.PROMOTER,
                 regulation_target="metabolic_reporter"
             ),
             GeneticElement(
-                name="metabolic_reporter",
+                element_id="metabolic_reporter",
                 sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGGG",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="metabolic_terminator",
+                element_id="metabolic_terminator",
                 sequence="AAAAAAGCCCGCTCACGGCCCCTTTTTCTATATAGT",
                 element_type=ElementType.TERMINATOR
             )
@@ -253,18 +253,18 @@ def get_resource_stress_circuit() -> GeneticCircuit:
         circuit_type=CircuitType.RESOURCE_MONITOR,
         elements=[
             GeneticElement(
-                name="stress_sensor_promoter",
+                element_id="stress_sensor_promoter",
                 sequence="TTGACAATTAATCATCCGGCTCGTATAATGTGTGGAATTGTGAAA",
                 element_type=ElementType.PROMOTER,
                 regulation_target="stress_reporter"
             ),
             GeneticElement(
-                name="stress_response_gene",
+                element_id="stress_response_gene",
                 sequence="ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGTT",
                 element_type=ElementType.GENE
             ),
             GeneticElement(
-                name="stress_reporter",
+                element_id="stress_reporter",
                 sequence="ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATC",
                 element_type=ElementType.GENE
             )
