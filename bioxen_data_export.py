@@ -73,7 +73,7 @@ class BioXenDataExporter:
     
     def export_system_data(self) -> Dict[str, Any]:
         """Export system-level hypervisor data"""
-        status = self.hypervisor.get_status()
+        system_resources = self.hypervisor.get_system_resources()
         chassis_info = self.hypervisor.get_chassis_info()
         
         # Calculate system metrics
