@@ -19,28 +19,28 @@ def test_imports():
     print("🧬 Testing BioXen Module Imports...")
     
     try:
-        from hypervisor.core import BioXenHypervisor, ResourceAllocation, VMState
+        from src.hypervisor.core import BioXenHypervisor, ResourceAllocation, VMState
         print("  ✅ Hypervisor core module imported")
     except ImportError as e:
         print(f"  ❌ Failed to import hypervisor.core: {e}")
         return False
     
     try:
-        from genetics.circuits import BioCompiler, GeneticCircuitLibrary, ProteinTagging
+        from src.genetics.circuits import BioCompiler, GeneticCircuitLibrary, ProteinTagging
         print("  ✅ Genetic circuits module imported")
     except ImportError as e:
         print(f"  ❌ Failed to import genetics.circuits: {e}")
         return False
     
     try:
-        from genome.syn3a import VMImageBuilder, Syn3ATemplate
+        from src.genome.syn3a import VMImageBuilder, Syn3ATemplate
         print("  ✅ Genome module imported")
     except ImportError as e:
         print(f"  ❌ Failed to import genome.syn3a: {e}")
         return False
     
     try:
-        from monitoring.profiler import PerformanceProfiler
+        from src.monitoring.profiler import PerformanceProfiler
         print("  ✅ Monitoring module imported")
     except ImportError as e:
         print(f"  ❌ Failed to import monitoring.profiler: {e}")
@@ -52,7 +52,7 @@ def test_hypervisor_basic():
     """Test basic hypervisor functionality"""
     print("\n🖥️  Testing Hypervisor Basic Operations...")
     
-    from hypervisor.core import BioXenHypervisor, ResourceAllocation
+    from src.hypervisor.core import BioXenHypervisor, ResourceAllocation
     
     try:
         # Create hypervisor
@@ -102,7 +102,7 @@ def test_genetic_circuits():
     """Test genetic circuit functionality"""
     print("\n🧬 Testing Genetic Circuits...")
     
-    from genetics.circuits import GeneticCircuitLibrary, BioCompiler, ProteinTagging
+    from src.genetics.circuits import GeneticCircuitLibrary, BioCompiler, ProteinTagging
     
     try:
         # Test circuit library
@@ -145,7 +145,7 @@ def test_genome_builder():
     """Test genome and VM image builder"""
     print("\n🧬 Testing Genome Builder...")
     
-    from genome.syn3a import VMImageBuilder, Syn3ATemplate
+    from src.genome.syn3a import VMImageBuilder, Syn3ATemplate
     
     try:
         # Test Syn3A template
@@ -182,7 +182,7 @@ def test_multi_vm_scenario():
     """Test multi-VM scenario with scheduling"""
     print("\n⚡ Testing Multi-VM Scenario...")
     
-    from hypervisor.core import BioXenHypervisor, ResourceAllocation
+    from src.hypervisor.core import BioXenHypervisor, ResourceAllocation
     
     try:
         hypervisor = BioXenHypervisor(max_vms=4, total_ribosomes=80)
@@ -230,7 +230,7 @@ def test_phase_simulation():
     """Simulate the development phases from the readme"""
     print("\n🚀 Testing Development Phases...")
     
-    from hypervisor.core import BioXenHypervisor
+    from src.hypervisor.core import BioXenHypervisor
     
     try:
         # Phase 1: Single VM

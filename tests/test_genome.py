@@ -5,6 +5,12 @@ Unit tests for Syn3A genome and VM image builder
 import unittest
 import tempfile
 import os
+import sys
+
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+
 from src.genome.syn3a import Syn3ATemplate, VMImageBuilder, Gene, Syn3AGenome
 
 class TestSyn3AGenome(unittest.TestCase):
