@@ -353,6 +353,29 @@ class JCVIFormatExporter:
             formatted += sequence[i:i+line_length] + "\n"
         return formatted
     
+    def _generate_sequence_section(self, sequence: str) -> str:
+        """Generate the sequence section for GenBank format"""
+        # Add ORIGIN line
+        result = "ORIGIN\n"
+        
+        # Format sequence with line numbers (GenBank format)
+        line_length = 60
+        for i in range(0, len(sequence), line_length):
+            line_num = i + 1
+            line_seq = sequence[i:i+line_length]
+            
+            # Format sequence in groups of 10 with spaces
+            formatted_seq = ""
+            for j in range(0, len(line_seq), 10):
+                if j > 0:
+                    formatted_seq += " "
+                formatted_seq += line_seq[j:j+10].lower()
+            
+            # Add line with proper spacing
+            result += f"{line_num:>9} {formatted_seq}\n"
+        
+        return result
+    
     def _element_type_to_jcvi_type(self, element_type: ElementType) -> str:
         """Convert element type to JCVI feature type"""
         mapping = {
