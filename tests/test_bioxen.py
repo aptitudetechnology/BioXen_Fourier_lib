@@ -11,8 +11,8 @@ import os
 
 # Add src directory to Python path
 script_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.join(script_dir, 'src')
-sys.path.insert(0, src_dir)
+project_root = os.path.dirname(script_dir)  # Go up one level from tests/ to project root
+sys.path.insert(0, project_root)
 
 def test_imports():
     """Test that all modules can be imported"""
