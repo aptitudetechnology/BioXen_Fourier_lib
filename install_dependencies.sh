@@ -146,11 +146,11 @@ pip3 install --upgrade \
 echo ""
 echo "🎮 Installing BioLib2D Love2D visualization module..."
 if command -v luarocks &> /dev/null; then
-    echo "  📦 Installing BioLib2D from GitHub..."
-    luarocks install --local https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec || echo "  ⚠️  BioLib2D installation failed (optional - visualization may not work)"
+    echo "  📦 Installing BioLib2D from LuaRocks server..."
+    luarocks install --local --server=https://luarocks.org/manifests/caston1981 biolib2d || echo "  ⚠️  BioLib2D installation failed (optional - visualization may not work)"
 else
     echo "  ⚠️  LuaRocks not found - BioLib2D Love2D module not installed"
-    echo "  📝 To install manually: luarocks install https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec"
+    echo "  📝 To install manually: luarocks install --local --server=https://luarocks.org/manifests/caston1981 biolib2d"
 fi
 
 # Verify installations
@@ -196,7 +196,7 @@ if command -v luarocks &> /dev/null; then
     if luarocks list --local | grep -q "biolib2d"; then
         echo "  ✅ BioLib2D: installed locally"
     else
-        echo "  ⚠️  BioLib2D: not installed (run: luarocks install --local https://raw.githubusercontent.com/aptitudetechnology/BioLib2D/main/biolib2d-1.0.0-1.rockspec)"
+        echo "  ⚠️  BioLib2D: not installed (run: luarocks install --local --server=https://luarocks.org/manifests/caston1981 biolib2d)"
     fi
 else
     echo "  ⚠️  LuaRocks: not found (BioLib2D installation unavailable)"
