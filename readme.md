@@ -205,10 +205,10 @@ BioXen now includes stunning real-time visualization of cellular processes using
 ### �🚀 **Launch Visualization**
 ```bash
 # Start BioXen with Love2D real-time visualization
-love2d . --visualization
+love libs/biolib2d/
 
 # Or use the Love2D visualization directly
-love2d /path/to/biolib2d/
+love /path/to/biolib2d/
 
 # Generate genetic circuit diagrams
 python3 -c "
@@ -359,10 +359,10 @@ python3 interactive_bioxen.py
 ```bash
 # Install Love2D game engine
 # Ubuntu/Debian:
-sudo apt install love2d
+sudo apt install love
 
 # macOS (with Homebrew):
-brew install love2d
+brew install love
 
 # Windows: Download from https://love2d.org/
 
@@ -373,7 +373,7 @@ git clone https://github.com/aptitudetechnology/BioLib2D.git
 # Dependencies listed in dependencies.txt will be loaded by BioLib2D
 
 # Launch visualization (after starting BioXen)
-love2d BioLib2D/
+love BioLib2D/
 ```
 
 ### 🎮 **Interactive Workflow**
@@ -1089,7 +1089,7 @@ print("📊 Comparative genomics plot saved to diagrams/comparative_genomics.png
 ### 🎮 **Love2D Real-Time Visualization**
 ```bash
 # Launch interactive cellular visualization
-love2d libs/biolib2d/
+love libs/biolib2d/
 
 # Or generate sample data for Love2D
 python3 -c "
