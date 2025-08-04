@@ -322,7 +322,7 @@ All visualization outputs are saved to organized directories:
 *Example genetic circuit visualization showing promoter, RBS, gene, and terminator elements*
 
 ## System Overview
-**Target Genomes:** Real bacterial genomes from NCBI (5 genomes available: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola) + **🌸 Wolffia australiana** (Phase 5: world's smallest flowering plant)  
+**Target Genomes:** Real bacterial genomes from NCBI (5 genomes available: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola) + **🌸 Plant targets** (Phase 5: **Wolffia australiana** ~158 Mb or **Spirodela polyrhiza** ~150 Mb flowering plant genomes)  
 **Host Hardware:** Simulated E. coli chassis (computational model) with **🌱 Plant chassis development** for eukaryotic flowering virtualization  
 **Hypervisor Model:** Type-1 (bare metal) - direct control of simulated cellular hardware  
 **Status:** ✅ **Production Ready** - Real genome support with interactive management | 🌸 **Phase 5 Goal: Digital Flowering**
