@@ -1,5 +1,17 @@
 # 🔬 BioXen-JCVI Hardware Specifications & Build Recommendations
 
+## ⚠️ **COMPUTATIONAL COMPLEXITY WARNING**
+
+> **🔬 CELLULAR SIMULATION REALITY CHECK**: Accurately simulating even a **single bacterial cell** requires enormous computational power. The complexity of modeling real-time molecular interactions, protein folding dynamics, metabolic pathways, and genetic regulation at cellular scale demands substantial hardware investment. 
+>
+> **💰 Cost Considerations**: Professional cellular simulation workstations start at $4,000+ and can exceed $12,000 for optimal performance. This reflects the computational intensity of biological virtualization - we're essentially creating digital life that models thousands of simultaneous molecular processes.
+>
+> **🧬 Why So Expensive?**: Each virtual bacterial cell contains ~500-1,500 genes, ~10,000 proteins, ~50,000 metabolites, and millions of molecular interactions occurring simultaneously. Add multiple VMs, comparative genomics, and real-time visualization, and the computational requirements scale exponentially.
+>
+> **💡 PRACTICAL RECOMMENDATION**: For most individuals, **prioritize your living expenses first** - rent, food, healthcare, and savings should always come before expensive computing hardware. Consider **cloud computing platforms** (AWS, Google Cloud, Azure) or **university computing clusters** for serious cellular simulation work. The $8,000-$12,000 hardware investment may be better left to **funded research institutions**, **biotech companies**, or **academic labs** with dedicated computational biology budgets.
+>
+> **🎯 Budget Reality**: If building personal hardware, expect significant investment for meaningful cellular simulation performance. The recommendations below reflect the actual computational demands of biological hypervisor technology.
+
 ## 🚀 **Optimal Hardware Configuration for Maximum Genomics Performance**
 
 Based on the comprehensive analysis of BioXen-JCVI platform requirements and the enhanced tools suite, here are the recommended hardware specifications for a production genomics workstation.
