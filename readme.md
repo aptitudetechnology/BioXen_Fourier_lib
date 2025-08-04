@@ -8,6 +8,20 @@
 [![Interactive](https://img.shields.io/badge/interface-questionary-blue.svg)](interactive_bioxen.py)
 [![Visualization](https://img.shields.io/badge/visualization-Terminal%2BLove2D-ff69b4.svg)](https://github.com/aptitudetechnology/BioLib2D)
 
+
+⚠️ WARNING: Educational Sandbox ⚠️
+
+BIOXEN IS FOR EDUCATIONAL USE ONLY.
+
+This is not a production-ready research tool.
+
+While BioXen simulates complex biological systems using real genome data and advanced tools, it is a proof-of-concept. The results are not biologically validated and should not be used for professional research or scientific publications.
+
+PROCEED WITH CAUTION AND CURIOSITY. This environment is a sandbox for learning, not a lab for serious work.
+
+Happy Exploring!
+
+
 **The world's first interactive biological hypervisor for virtualizing real bacterial genomes**
 
 > **🖥️ Computational Platform**: BioXen is a **pure software simulation** that models biological virtualization using real genome data from NCBI. No wet lab work required - everything runs as computational processes that simulate cellular biology.
