@@ -46,6 +46,7 @@ class ResourceAllocation:
     rna_polymerase: int = 0
     memory_kb: int = 0  # DNA/RNA space in "kilobases"
     priority: int = 1   # 1=low, 5=high
+    boot_time: Optional[float] = None  # Boot time in seconds
 
 @dataclass
 class VirtualMachine:

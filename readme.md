@@ -364,6 +364,7 @@ BioXen now supports multiple cellular chassis types for different virtualization
 |--------------|--------------|-----------|----------|------------|---------|
 | **E. coli** | Prokaryotic | 80 | 4 | None | ✅ Production |
 | **Yeast** | Eukaryotic | 200,000 | 2 | Nucleus, Mitochondria, ER | ⚠️ Placeholder |
+| **Orthogonal Cell (Synthetic)** | Synthetic/Prokaryotic | 40 | 2 | Orthogonal compartments | 🧪 Experimental |
 | **Mammalian** | Eukaryotic | 10M+ | 1 | Full organelle set | 🚧 Future |
 | **Plant** | Eukaryotic | 5M+ | 1 | Chloroplasts, Vacuoles | 🌱 Phase 5 |
 
