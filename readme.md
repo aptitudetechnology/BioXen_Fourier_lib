@@ -93,7 +93,7 @@ BioXen has successfully completed its evolution into a **professional computatio
 Enable running Lua VM's side by side with cellualr VM's 
 Enable communication between Lua VM's
 
-### **🚀 Phase 4.2: Enable networking and communication between cellular VM and Lua VMs** - 
+### **🚀 Phase 4.2: Enable networking and communication between Lua VMs** - 
 
 
 ### **🚀 Phase 4.3: Enable networking and communication between cellular VM and Lua VMs** - 
