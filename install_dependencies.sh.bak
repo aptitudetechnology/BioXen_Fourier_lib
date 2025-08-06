@@ -40,10 +40,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Install Love2D and LuaRocks for visualization
         echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
         sudo apt-get install -y love luarocks liblua5.1-0-dev
-        
-        # Install LuaSocket for P2P Lua VMs
-        echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-        luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
             
         # Install ImageMagick for JCVI graphics (optional)
         echo "🎨 Installing ImageMagick for graphics support..."
@@ -73,10 +69,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Install Love2D and LuaRocks for visualization
         echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
         sudo yum install -y love luarocks lua-devel
-        
-        # Install LuaSocket for P2P Lua VMs
-        echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-        luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
             
         # Install ImageMagick
         echo "🎨 Installing ImageMagick for graphics support..."
@@ -86,7 +78,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         echo "⚠️  Unsupported Linux distribution. Please install manually:"
         echo "   - ncbi-blast+ (BLAST+ tools)"
         echo "   - Optional: fasttree, raxml, muscle, clustalw, mafft, bedtools, samtools"
-        echo "   - Lua, LuaRocks, LuaSocket"
     fi
     
 elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -119,10 +110,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
     brew install love luarocks
     
-    # Install LuaSocket for P2P Lua VMs
-    echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-    luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
-    
     # Install ImageMagick
     echo "🎨 Installing ImageMagick for graphics support..."
     brew install imagemagick
@@ -132,7 +119,6 @@ else
     echo "Please install dependencies manually:"
     echo "   - BLAST+ tools (makeblastdb, blastp, blastn, blastx, tblastn)"
     echo "   - Optional: FastTree, RAxML, MUSCLE, ClustalW, MAFFT, BEDTools, SAMTools"
-    echo "   - Lua, LuaRocks, LuaSocket"
     exit 1
 fi
 
@@ -141,7 +127,7 @@ echo ""
 echo "🐍 Installing Python dependencies..."
 if command -v pip3 &> /dev/null; then
     pip3 install -r requirements.txt
-elif command -v pip &> /dev: /dev/null; then
+elif command -v pip &> /dev/null; then
     pip install -r requirements.txt
 else
     echo "❌ pip not found. Please install pip and run: pip install -r requirements.txt"
@@ -154,8 +140,7 @@ pip3 install --upgrade \
     wand \
     jupyter \
     notebook \
-    ipywidgets \
-    questionary # Ensure questionary is installed here explicitly if not in requirements.txt
+    ipywidgets
 
 # Install BioLib2D Love2D module via LuaRocks
 echo ""
@@ -207,13 +192,6 @@ fi
 if command -v luarocks &> /dev/null; then
     echo "  ✅ LuaRocks: $(luarocks --version | head -n1)"
     
-    # Check if LuaSocket is installed
-    if luarocks list --local | grep -q "luasocket"; then
-        echo "  ✅ LuaSocket: installed locally"
-    else
-        echo "  ⚠️  LuaSocket: not installed (run: luarocks install luasocket)"
-    fi
-
     # Check if BioLib2D is installed
     if luarocks list --local | grep -q "biolib2d"; then
         echo "  ✅ BioLib2D: installed locally"
@@ -221,7 +199,7 @@ if command -v luarocks &> /dev/null; then
         echo "  ⚠️  BioLib2D: not installed (run: luarocks install --local --server=https://luarocks.org/manifests/caston1981 biolib2d)"
     fi
 else
-    echo "  ⚠️  LuaRocks: not found (LuaSocket and BioLib2D installation unavailable)"
+    echo "  ⚠️  LuaRocks: not found (BioLib2D installation unavailable)"
 fi
 
 # Check Python packages
