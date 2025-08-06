@@ -11,13 +11,17 @@ numpy>=1.21.0
 rich>=13.0.0
 # Required for terminal DNA transcription visualization
 
+lupa>=2.5.0 # Updated: For direct embedding of Lua VM in Python
+# Required for direct interaction with Lua runtime from Python
+
 ## Development Dependencies  
 pytest>=6.0
 pytest-cov>=2.0
 black>=21.0
 flake8>=3.8
 mypy>=0.800
-questionary == 2.1.0
+questionary == 2.1.0lupa>=2.5.0 # Updated: For direct embedding of Lua VM in Python
+# Required for direct interaction with Lua runtime from Python
 
 
 ## Download genomes
