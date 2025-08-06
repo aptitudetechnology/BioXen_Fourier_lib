@@ -48,6 +48,17 @@ class ResourceAllocation:
     priority: int = 1   # 1=low, 5=high
     boot_time: Optional[float] = None  # Boot time in seconds
 
+    def __init__(self, ribosomes=0, atp_percentage=0.0, rna_polymerase=0, memory_kb=0, priority=1, boot_time=None, boot_time_ms=None):
+        self.ribosomes = ribosomes
+        self.atp_percentage = atp_percentage
+        self.rna_polymerase = rna_polymerase
+        self.memory_kb = memory_kb
+        self.priority = priority
+        if boot_time_ms is not None:
+            self.boot_time = boot_time_ms / 1000.0
+        else:
+            self.boot_time = boot_time
+
 @dataclass
 class VirtualMachine:
     """Represents a virtualized Syn3A instance"""
