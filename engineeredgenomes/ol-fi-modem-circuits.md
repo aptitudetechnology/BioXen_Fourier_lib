@@ -42,13 +42,13 @@ Assess whether `src/genetics/circuits.py` can handle the requirements of `ol-fi-
 
 | RFC Feature                | Module(s) to Upgrade                | Upgrade Advice |
 |---------------------------|-------------------------------------|---------------|
-| MVOC encoding/decoding    | GeneticElement, GeneticCircuitLibrary | Add MVOC cataloging, support for MVOC-producing/sensing elements, and chemical signal mapping. |
-| Frame structure           | BioCompiler, GeneticCircuit           | Implement parsing/generation of Ol-Fi chemical frames (preamble, address, control, payload, checksum, terminator) as modular genetic elements. |
-| Encoding schemes          | GeneticElement, BioCompiler           | Extend to support concentration ratio and temporal encoding via new element types and assembly logic. |
-| Error correction          | GeneticElement, BioCompiler           | Add elements for chemical checksums and FEC, and logic for error detection/correction in circuit assembly. |
-| Sender/receiver circuits  | GeneticCircuitLibrary                 | Expand library with sender/receiver circuits tailored for Ol-Fi MVOC signaling. |
-| Population-level response | GeneticCircuitLibrary                 | Add population-level sensing/response circuits, e.g., quorum sensing modules. |
-| Micrometer-scale comms    | GeneticCircuitLibrary                 | Add microfluidic/cell-to-cell signaling circuits, optimize for short-range communication. |
+| MVOC encoding/decoding    | GeneticElement (`src/genetics/circuits/core/elements.py`), GeneticCircuit (`src/genetics/circuits/core/elements.py`), library modules (`src/genetics/circuits/library/`) | Add MVOC cataloging, support for MVOC-producing/sensing elements, and chemical signal mapping. |
+| Frame structure           | BioCompiler (`src/genetics/circuits/core/compiler.py`), GeneticCircuit (`src/genetics/circuits/core/elements.py`) | Implement parsing/generation of Ol-Fi chemical frames (preamble, address, control, payload, checksum, terminator) as modular genetic elements. |
+| Encoding schemes          | GeneticElement (`src/genetics/circuits/core/elements.py`), BioCompiler (`src/genetics/circuits/core/compiler.py`) | Extend to support concentration ratio and temporal encoding via new element types and assembly logic. |
+| Error correction          | GeneticElement (`src/genetics/circuits/core/elements.py`), BioCompiler (`src/genetics/circuits/core/compiler.py`) | Add elements for chemical checksums and FEC, and logic for error detection/correction in circuit assembly. |
+| Sender/receiver circuits  | library modules (`src/genetics/circuits/library/`) | Expand library with sender/receiver circuits tailored for Ol-Fi MVOC signaling. |
+| Population-level response | library modules (`src/genetics/circuits/library/`) | Add population-level sensing/response circuits, e.g., quorum sensing modules. |
+| Micrometer-scale comms    | library modules (`src/genetics/circuits/library/`) | Add microfluidic/cell-to-cell signaling circuits, optimize for short-range communication. |
 
 ## 4. Gaps and Recommendations
 
