@@ -24,7 +24,7 @@ try:
     from genome.parser import BioXenRealGenomeIntegrator
     from genome.schema import BioXenGenomeValidator
     from hypervisor.core import BioXenHypervisor, ResourceAllocation, VMState
-    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
+    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis, OrthogonalChassis
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Make sure you're running from the BioXen root directory")
@@ -140,22 +140,21 @@ class InteractiveBioXen:
             choices=[
                 Choice("🦠 E. coli (Prokaryotic) - Stable, well-tested", ChassisType.ECOLI),
                 Choice("🍄 Yeast (Eukaryotic) - PLACEHOLDER - Advanced features", ChassisType.YEAST),
+                Choice("🧩 Orthogonal Cell (Synthetic) - Experimental, engineered system", ChassisType.ORTHOGONAL),
             ]
         ).ask()
         
         if chassis_choice is None:
             return None
             
-        if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST]:
+        if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST, ChassisType.ORTHOGONAL]:
             self.chassis_type = chassis_choice
-            
             if chassis_choice == ChassisType.ECOLI:
                 print(f"\n✅ Selected E. coli chassis")
                 print(f"   • Prokaryotic architecture")
                 print(f"   • 80 ribosomes available")
                 print(f"   • Up to 4 VMs supported")
                 print(f"   • Production-ready implementation")
-                
             elif chassis_choice == ChassisType.YEAST:
                 print(f"\n⚠️  Selected Yeast chassis (PLACEHOLDER)")
                 print(f"   • Eukaryotic architecture")
@@ -163,7 +162,13 @@ class InteractiveBioXen:
                 print(f"   • Organelle support (nucleus, mitochondria, ER)")
                 print(f"   • Up to 2 VMs supported")
                 print(f"   • ⚠️  PLACEHOLDER - Not fully implemented!")
-                
+            elif chassis_choice == ChassisType.ORTHOGONAL:
+                print(f"\n⚡ Selected Orthogonal Cell chassis (EXPERIMENTAL)")
+                print(f"   • Synthetic, engineered cell system")
+                print(f"   • 500 ribosomes available (customizable)")
+                print(f"   • Up to 1 VM supported")
+                print(f"   • ⚠️  Experimental: For advanced synthetic biology and virtualization")
+                print(f"   • ⚠️  Hardware requirements may be higher!")
         return chassis_choice
 
     def initialize_hypervisor(self):
@@ -184,33 +189,35 @@ class InteractiveBioXen:
         
         try:
             print(f"\n🔄 Initializing hypervisor with {self.chassis_type.value} chassis...")
-            
             if self.chassis_type == ChassisType.ECOLI:
                 print("   🦠 Loading E. coli cellular environment...")
                 print("   🧬 Configuring prokaryotic gene expression...")
                 print("   ⚙️  Setting up ribosome pools...")
-                
             elif self.chassis_type == ChassisType.YEAST:
                 print("   🍄 Loading Saccharomyces cerevisiae environment...")
                 print("   🧬 Configuring eukaryotic gene expression...")
                 print("   🏭 Setting up organelle systems...")
                 print("   ⚠️  Note: Using PLACEHOLDER implementation")
-            
+            elif self.chassis_type == ChassisType.ORTHOGONAL:
+                print("   🧩 Loading Orthogonal Cell synthetic environment...")
+                print("   🧬 Configuring engineered gene expression...")
+                print("   ⚡ Setting up custom ribosome pools...")
+                print("   ⚠️  Note: Experimental synthetic cell chassis")
             self.hypervisor = BioXenHypervisor(chassis_type=self.chassis_type)
-            
-            # Show warning for placeholder implementations
+            # Show warning for placeholder/experimental implementations
             if self.chassis_type == ChassisType.YEAST:
                 print(f"\n⚠️  WARNING: Yeast chassis is currently a PLACEHOLDER implementation")
                 print(f"   This chassis provides basic functionality for testing but")
                 print(f"   does not include full eukaryotic cellular mechanisms.")
-            
+            elif self.chassis_type == ChassisType.ORTHOGONAL:
+                print(f"\n⚡ WARNING: Orthogonal Cell chassis is EXPERIMENTAL")
+                print(f"   This chassis is designed for advanced synthetic biology and virtualization.")
+                print(f"   Hardware requirements may be higher. Use with caution!")
             print(f"\n✅ BioXen Hypervisor initialized successfully!")
             print(f"   Chassis: {self.chassis_type.value}")
             print(f"   Status: Ready for genome virtualization")
-            
         except Exception as e:
             print(f"❌ Failed to initialize hypervisor: {e}")
-        
         questionary.press_any_key_to_continue().ask()
 
     def browse_available_genomes(self):
