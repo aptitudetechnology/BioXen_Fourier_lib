@@ -76,6 +76,12 @@ class VirtualMachine:
             self.start_time = time.time()
 
 class BioXenHypervisor:
+    def get_vm_state(self, vm_id: str):
+        """Return the VMState for a given VM ID, or None if not found."""
+        vm = self.vms.get(vm_id)
+        if vm:
+            return vm.state
+        return None
     """
     Main hypervisor class implementing biological virtualization
     
