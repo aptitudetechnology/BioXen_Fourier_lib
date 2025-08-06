@@ -40,10 +40,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Install Love2D and LuaRocks for visualization
         echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
         sudo apt-get install -y love luarocks liblua5.1-0-dev
-        
-        # Install LuaSocket for P2P Lua VMs
-        echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-        luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
             
         # Install ImageMagick for JCVI graphics (optional)
         echo "🎨 Installing ImageMagick for graphics support..."
@@ -73,10 +69,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Install Love2D and LuaRocks for visualization
         echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
         sudo yum install -y love luarocks lua-devel
-        
-        # Install LuaSocket for P2P Lua VMs
-        echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-        luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
             
         # Install ImageMagick
         echo "🎨 Installing ImageMagick for graphics support..."
@@ -119,10 +111,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "🎮 Installing Love2D and LuaRocks for real-time visualization..."
     brew install love luarocks
     
-    # Install LuaSocket for P2P Lua VMs
-    echo "🌐 Installing LuaSocket for P2P Lua VMs..."
-    luarocks install luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
-    
     # Install ImageMagick
     echo "🎨 Installing ImageMagick for graphics support..."
     brew install imagemagick
@@ -136,12 +124,22 @@ else
     exit 1
 fi
 
+# Install LuaSocket for P2P Lua VMs (moved outside OS-specific blocks to ensure it runs after luarocks is installed)
+echo "🌐 Installing LuaSocket for P2P Lua VMs..."
+if command -v luarocks &> /dev/null; then
+    # Use --local to install in user's home directory if global permissions are an issue
+    luarocks install --local luasocket || echo "  ⚠️  LuaSocket installation failed (P2P Lua VM communication may not work)"
+else
+    echo "  ❌ LuaRocks not found - cannot install LuaSocket."
+    echo "  💡 Please ensure LuaRocks is installed before running this script."
+fi
+
 # Install Python dependencies
 echo ""
 echo "🐍 Installing Python dependencies..."
 if command -v pip3 &> /dev/null; then
     pip3 install -r requirements.txt
-elif command -v pip &> /dev: /dev/null; then
+elif command -v pip &> /dev/null; then
     pip install -r requirements.txt
 else
     echo "❌ pip not found. Please install pip and run: pip install -r requirements.txt"
@@ -211,7 +209,7 @@ if command -v luarocks &> /dev/null; then
     if luarocks list --local | grep -q "luasocket"; then
         echo "  ✅ LuaSocket: installed locally"
     else
-        echo "  ⚠️  LuaSocket: not installed (run: luarocks install luasocket)"
+        echo "  ⚠️  LuaSocket: not installed (run: luarocks install --local luasocket)"
     fi
 
     # Check if BioLib2D is installed
@@ -229,7 +227,7 @@ echo ""
 echo "🐍 Verifying Python packages..."
 python3 -c "
 import sys
-packages = ['jcvi', 'matplotlib', 'numpy', 'scipy', 'biopython', 'questionary']
+packages = ['jcvi', 'matplotlib', 'numpy', 'scipy', 'biopython', 'questionary', 'lupa'] # Added lupa for verification
 for pkg in packages:
     try:
         __import__(pkg)
