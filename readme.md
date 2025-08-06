@@ -88,6 +88,19 @@ BioXen has successfully completed its evolution into a **professional computatio
 - **📁 Production Ready**: Complete workflow from genome download to analysis export
 - **🧬 Modular Circuits System**: Professional-grade modular genetic circuits with full JCVI compatibility
 
+### **🚀 Phase 4.1: Python Subprocess to Lua VM's** - 
+
+Enable running Lua VM's side by side with cellualr VM's 
+Enable communication between Lua VM's
+
+### **🚀 Phase 4.2: Enable networking and communication between cellular VM and Lua VMs** - 
+
+
+### **🚀 Phase 4.3: Enable networking and communication between cellular VM and Lua VMs** - 
+
+Add a new life domain that can import and run engineered genomes. Build the chassis to enable this.
+
+
 ### **🚀 Phase 5: Advanced JCVI Integration & Bare Metal Deployment** - READY FOR HARDWARE
 - **Real JCVI CLI Integration**: Direct BLAST, MCscan, phylogenetic tools with modular circuit analysis
 - **Bare Metal Performance**: CPU/GPU optimization, NUMA awareness for genomics workloads
