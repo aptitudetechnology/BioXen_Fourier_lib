@@ -1166,6 +1166,7 @@ class InteractiveBioXen:
                         f.write(lua_p2p_script_content)
                     
                     lua_code_to_execute = str(temp_script_path) # Pass path directly to subprocess
+                    run_duration = 30  # Define run_duration in Python scope (matches the value in Lua script)
                     print(f"\n--- Starting {process_name} ---")
                     print(f"💡 This P2P VM will run for {run_duration} seconds, attempting to listen on port {local_port}")
                     if peer_ip_port_str:
