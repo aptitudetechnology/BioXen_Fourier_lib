@@ -24,7 +24,7 @@ try:
     from genome.parser import BioXenRealGenomeIntegrator
     from genome.schema import BioXenGenomeValidator
     from hypervisor.core import BioXenHypervisor, ResourceAllocation, VMState
-    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
+    from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis, OrthogonalChassis
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Make sure you're running from the BioXen root directory")
@@ -140,13 +140,14 @@ class InteractiveBioXen:
             choices=[
                 Choice("🦠 E. coli (Prokaryotic) - Stable, well-tested", ChassisType.ECOLI),
                 Choice("🍄 Yeast (Eukaryotic) - PLACEHOLDER - Advanced features", ChassisType.YEAST),
+                Choice("🧩 Orthogonal Cell - PLACEHOLDER - Engineered for synthetic circuits", ChassisType.ORTHOGONAL),
             ]
         ).ask()
         
         if chassis_choice is None:
             return None
             
-        if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST]:
+        if chassis_choice in [ChassisType.ECOLI, ChassisType.YEAST, ChassisType.ORTHOGONAL]:
             self.chassis_type = chassis_choice
             
             if chassis_choice == ChassisType.ECOLI:
@@ -155,7 +156,6 @@ class InteractiveBioXen:
                 print(f"   • 80 ribosomes available")
                 print(f"   • Up to 4 VMs supported")
                 print(f"   • Production-ready implementation")
-                
             elif chassis_choice == ChassisType.YEAST:
                 print(f"\n⚠️  Selected Yeast chassis (PLACEHOLDER)")
                 print(f"   • Eukaryotic architecture")
@@ -163,7 +163,13 @@ class InteractiveBioXen:
                 print(f"   • Organelle support (nucleus, mitochondria, ER)")
                 print(f"   • Up to 2 VMs supported")
                 print(f"   • ⚠️  PLACEHOLDER - Not fully implemented!")
-                
+            elif chassis_choice == ChassisType.ORTHOGONAL:
+                print(f"\n⚠️  Selected Orthogonal Cell chassis (PLACEHOLDER)")
+                print(f"   • Engineered synthetic cell architecture")
+                print(f"   • 1 VM supported")
+                print(f"   • 1000 ribosomes available")
+                print(f"   • Designed for independent synthetic circuits")
+                print(f"   • ⚠️  PLACEHOLDER - Not fully implemented!")
         return chassis_choice
 
     def initialize_hypervisor(self):
@@ -189,21 +195,22 @@ class InteractiveBioXen:
                 print("   🦠 Loading E. coli cellular environment...")
                 print("   🧬 Configuring prokaryotic gene expression...")
                 print("   ⚙️  Setting up ribosome pools...")
-                
             elif self.chassis_type == ChassisType.YEAST:
                 print("   🍄 Loading Saccharomyces cerevisiae environment...")
                 print("   🧬 Configuring eukaryotic gene expression...")
                 print("   🏭 Setting up organelle systems...")
                 print("   ⚠️  Note: Using PLACEHOLDER implementation")
-            
+            elif self.chassis_type == ChassisType.ORTHOGONAL:
+                print("   🧩 Loading Orthogonal Cell chassis...")
+                print("   🧬 Configuring a genome that functions independently of host biology...")
+                print("   ⚙️  Setting up synthetic resource pools...")
+                print("   ⚠️  Note: Using PLACEHOLDER implementation for engineered systems")
             self.hypervisor = BioXenHypervisor(chassis_type=self.chassis_type)
-            
             # Show warning for placeholder implementations
-            if self.chassis_type == ChassisType.YEAST:
-                print(f"\n⚠️  WARNING: Yeast chassis is currently a PLACEHOLDER implementation")
+            if self.chassis_type in [ChassisType.YEAST, ChassisType.ORTHOGONAL]:
+                print(f"\n⚠️  WARNING: {self.chassis_type.value} chassis is currently a PLACEHOLDER implementation")
                 print(f"   This chassis provides basic functionality for testing but")
-                print(f"   does not include full eukaryotic cellular mechanisms.")
-            
+                print(f"   does not include full eukaryotic or orthogonal cellular mechanisms.")
             print(f"\n✅ BioXen Hypervisor initialized successfully!")
             print(f"   Chassis: {self.chassis_type.value}")
             print(f"   Status: Ready for genome virtualization")
@@ -947,20 +954,23 @@ class InteractiveBioXen:
             return False
         return True
 
-    # --- NEW: Method to create and interact with a Lua VM ---
     def create_lua_vm(self):
         """
         Allows the user to interact with a Lua VM by executing Lua code
-        via a subprocess.
+        via a subprocess, including options for socket communication.
         """
         print("\n🌙 Create Lua VM")
         print("💡 This option launches a standalone Lua interpreter via Python's subprocess.")
         print("   Make sure 'lua' is installed and accessible in your system's PATH.")
+        print("   For socket communication, ensure 'luasocket' is installed (e.g., `luarocks install luasocket`).")
         
         while True:
             lua_action = questionary.select(
                 "How would you like to interact with the Lua VM?",
                 choices=[
+                    Choice("Start Lua Server VM (Socket)", "server_socket"),
+                    Choice("Start Lua Client VM (Socket)", "client_socket"),
+                    Choice("Start Lua P2P VM (Socket)", "p2p_socket"), # NEW P2P OPTION
                     Choice("Execute Lua code string", "string"),
                     Choice("Execute Lua script file", "file"),
                     Choice("Back to Main Menu", "back")
@@ -971,36 +981,234 @@ class InteractiveBioXen:
                 print("↩️ Returning to main menu.")
                 break
 
-            lua_code = ""
-            is_file = False
+            lua_code_to_execute = ""
+            process_name = ""
+            temp_script_path = None # To store path of dynamically created script
 
-            if lua_action == "string":
-                lua_code = questionary.text(
-                    "Enter Lua code to execute (e.g., print('Hello')):").ask()
-                if not lua_code:
-                    print("⚠️ No Lua code entered. Returning to Lua VM menu.")
-                    continue
-            elif lua_action == "file":
-                file_path_str = questionary.text(
-                    "Enter path to Lua script file (e.g., my_script.lua):").ask()
-                if not file_path_str:
-                    print("⚠️ No file path entered. Returning to Lua VM menu.")
-                    continue
-                lua_code = Path(file_path_str)
-                if not lua_code.is_file():
-                    print(f"❌ Error: File not found at '{lua_code}'.")
-                    continue
-                is_file = True
+            try: # Outer try-except for general errors and file cleanup
+                if lua_action == "server_socket":
+                    port = questionary.text("Enter port for Lua Server (e.g., 8080):", default="8080", validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535").ask()
+                    if not port: continue
+                    
+                    process_name = f"Lua Server on Port {port}"
+                    lua_code_to_execute = f"""
+                    local socket = require("socket")
+                    local server = socket.bind("*", {port})
+                    if not server then
+                        io.stderr:write("Lua Server: Failed to bind to port {port}\\n")
+                        os.exit(1)
+                    end
+                    print("Lua Server: Listening on port {port}...")
+                    local client = server:accept()
+                    print("Lua Server: Client connected from " .. client:getpeername())
+                    client:send("Hello from Lua Server! What's your message?\\n")
+                    local data, err = client:receive()
+                    if data then
+                        print("Lua Server: Received from client: " .. data)
+                    else
+                        io.stderr:write("Lua Server: Error receiving data or client disconnected: " .. tostring(err) .. "\\n")
+                    end
+                    client:close()
+                    server:close()
+                    print("Lua Server: Connection closed.")
+                    """
+                    print(f"\n--- Starting {process_name} ---")
+                    print("💡 This process will block until a client connects and sends a message.")
+                    print("   You'll need to start a Lua Client VM in another instance of BioXen CLI.")
+                    
+                elif lua_action == "client_socket":
+                    ip = questionary.text("Enter Server IP (default: localhost):", default="localhost").ask()
+                    if not ip: continue
+                    port = questionary.text("Enter Server Port (e.g., 8080):", default="8080", validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535").ask()
+                    if not port: continue
+                    message = questionary.text("Enter message to send to server:", default="Greetings, Lua Server!").ask()
+                    if not message: continue
 
-            print(f"\n--- Running Lua via Subprocess ---")
-            try:
+                    process_name = f"Lua Client to {ip}:{port}"
+                    lua_code_to_execute = f"""
+                    local socket = require("socket")
+                    local client, err = socket.connect("{ip}", {port})
+                    if not client then
+                        io.stderr:write("Lua Client: Failed to connect to {ip}:{port}: " .. tostring(err) .. "\\n")
+                        os.exit(1)
+                    end
+                    print("Lua Client: Connected to server at {ip}:{port}")
+                    local response, err_recv = client:receive()
+                    if response then
+                        print("Lua Client: Received from server: " .. response)
+                    else
+                        io.stderr:write("Lua Client: Error receiving initial message from server: " .. tostring(err_recv) .. "\\n")
+                    end
+                    client:send("{message}\\n")
+                    print("Lua Client: Sent message: '{message}'")
+                    client:close()
+                    print("Lua Client: Connection closed.")
+                    """
+                    print(f"\n--- Starting {process_name} ---")
+                    print(f"💡 Attempting to connect to {ip}:{port}. Ensure a Lua Server VM is running there.")
+
+                elif lua_action == "p2p_socket": # NEW P2P LOGIC
+                    local_port = questionary.text("Enter local port for P2P VM to listen on (e.g., 8081):", default="8081", validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535").ask()
+                    if not local_port: continue
+                    peer_ip_port_str = questionary.text("Enter peer IP:Port to connect to (e.g., localhost:8080, leave blank for no outgoing connection):").ask()
+                    
+                    process_name = f"Lua P2P VM (Listen:{local_port}"
+                    if peer_ip_port_str:
+                        process_name += f", Connect:{peer_ip_port_str})"
+                    else:
+                        process_name += ")"
+
+                    # Generate a temporary Lua script for P2P logic
+                    temp_script_path = Path("lua-vm") / "p2p_vm_script.lua"
+                    
+                    peer_connect_code = ""
+                    if peer_ip_port_str:
+                        try:
+                            peer_ip, peer_port = peer_ip_port_str.split(':')
+                            peer_connect_code = f"""
+                            local peer_client, peer_err = socket.connect("{peer_ip}", {peer_port})
+                            if peer_client then
+                                peer_client:settimeout(0.1) -- Non-blocking for peer client
+                                print("P2P VM: Connected to peer at {peer_ip}:{peer_port}")
+                                table.insert(sockets_to_monitor, peer_client)
+                                peer_client:send("Hello from P2P VM on port {local_port}!\\n")
+                            else
+                                io.stderr:write("P2P VM: Failed to connect to peer {peer_ip}:{peer_port}: " .. tostring(peer_err) .. "\\n")
+                            end
+                            """
+                        except ValueError:
+                            print("❌ Invalid peer IP:Port format. Use IP:Port (e.g., localhost:8080).")
+                            continue
+
+                    lua_p2p_script_content = f"""
+                    local socket = require("socket")
+                    local timer = require("socket.timer") -- For periodic actions
+
+                    local local_port = {local_port}
+                    local server_socket = socket.bind("*", local_port)
+                    if not server_socket then
+                        io.stderr:write("P2P VM: Failed to bind to local port " .. local_port .. "\\n")
+                        os.exit(1)
+                    end
+                    server_socket:settimeout(0.1) -- Non-blocking for server socket
+                    print("P2P VM: Listening on local port " .. local_port .. "...")
+
+                    local sockets_to_monitor = {{server_socket}}
+                    local connected_peers = {{}} -- To store active client connections
+
+                    {peer_connect_code} -- Attempt to connect to a peer
+
+                    local last_send_time = timer.gettime()
+                    local send_interval = 5 -- Send a message every 5 seconds
+
+                    local run_duration = 30 -- Run for 30 seconds for demonstration
+                    local start_time = timer.gettime()
+
+                    while timer.gettime() - start_time < run_duration do
+                        local readable_sockets, writable_sockets, err = socket.select(sockets_to_monitor, nil, 0.1) -- 0.1s timeout
+
+                        if err then
+                            io.stderr:write("P2P VM: socket.select error: " .. tostring(err) .. "\\n")
+                            break
+                        end
+
+                        for i, sock in ipairs(readable_sockets) do
+                            if sock == server_socket then
+                                -- New incoming connection (server role)
+                                local new_client = server_socket:accept()
+                                if new_client then
+                                    new_client:settimeout(0.1) -- Non-blocking for new client
+                                    local peer_ip, peer_port = new_client:getpeername()
+                                    print("P2P VM: Accepted connection from " .. peer_ip .. ":" .. peer_port)
+                                    table.insert(sockets_to_monitor, new_client)
+                                    connected_peers[new_client] = true
+                                    new_client:send("Welcome to P2P VM on port " .. local_port .. "!\\n")
+                                else
+                                    io.stderr:write("P2P VM: Error accepting new client: " .. tostring(new_client) .. "\\n")
+                                end
+                            else
+                                -- Data from an existing connection (client/peer role or accepted client)
+                                local data, recv_err, partial = sock:receive()
+                                if data then
+                                    print("P2P VM: Received from " .. sock:getpeername() .. ": " .. data)
+                                elseif recv_err == "timeout" then
+                                    -- No data, just a timeout, continue
+                                else
+                                    -- Connection closed or error
+                                    print("P2P VM: Connection from " .. sock:getpeername() .. " closed or error: " .. tostring(recv_err))
+                                    sock:close()
+                                    -- Remove socket from monitoring list
+                                    for k, v in ipairs(sockets_to_monitor) do
+                                        if v == sock then
+                                            table.remove(sockets_to_monitor, k)
+                                            break
+                                        end
+                                    end
+                                    connected_peers[sock] = nil
+                                end
+                            end
+                        end
+
+                        -- Send periodic messages to connected peers (outgoing client role)
+                        if timer.gettime() - last_send_time > send_interval then
+                            for sock in pairs(connected_peers) do
+                                local success, send_err = sock:send("P2P VM " .. local_port .. ": Heartbeat at " .. timer.gettime() .. "\\n")
+                                if not success then
+                                    io.stderr:write("P2P VM: Error sending to " .. sock:getpeername() .. ": " .. tostring(send_err) .. "\\n")
+                                    -- Consider removing this socket if send fails persistently
+                                end
+                            end
+                            last_send_time = timer.gettime()
+                        end
+                    end
+
+                    print("P2P VM: Shutting down after " .. run_duration .. " seconds.")
+                    for sock in pairs(connected_peers) do
+                        sock:close()
+                    end
+                    server_socket:close()
+                    """
+                    
+                    with open(temp_script_path, "w") as f:
+                        f.write(lua_p2p_script_content)
+                    
+                    lua_code_to_execute = str(temp_script_path) # Pass path directly to subprocess
+                    run_duration = 30  # Define run_duration in Python scope (matches the value in Lua script)
+                    print(f"\n--- Starting {process_name} ---")
+                    print(f"💡 This P2P VM will run for {run_duration} seconds, attempting to listen on port {local_port}")
+                    if peer_ip_port_str:
+                        print(f"   and connect to peer {peer_ip_port_str}.")
+                    print("   You can start another P2P VM in a separate terminal to see them communicate.")
+                    
+                elif lua_action == "string":
+                    lua_code_to_execute = questionary.text(
+                        "Enter Lua code to execute (e.g., print('Hello')):").ask()
+                    if not lua_code_to_execute:
+                        print("⚠️ No Lua code entered. Returning to Lua VM menu.")
+                        continue
+                    process_name = "Lua Code String"
+                
+                elif lua_action == "file":
+                    file_path_str = questionary.text(
+                        "Enter path to Lua script file (e.g., my_script.lua):").ask()
+                    if not file_path_str:
+                        print("⚠️ No file path entered. Returning to Lua VM menu.")
+                        continue
+                    lua_file_path = Path(file_path_str)
+                    if not lua_file_path.is_file():
+                        print(f"❌ Error: File not found at '{lua_file_path}'.")
+                        continue
+                    lua_code_to_execute = str(lua_file_path) # Pass path directly to subprocess
+                    process_name = f"Lua Script File: {lua_file_path.name}"
+
+                if not lua_code_to_execute: # Catch cases where input was cancelled
+                    continue
+
                 command = ["lua"]
-                if is_file:
-                    command.append(str(lua_code))
-                    print(f"Executing Lua file: {lua_code}")
-                else:
-                    command.extend(["-e", lua_code])
-                    print(f"Executing Lua command:\n{lua_code}")
+                if lua_action == "file" or lua_action == "p2p_socket": # For file execution, pass the path directly
+                    command.append(lua_code_to_execute)
+                else: # For string execution, use -e
+                    command.extend(["-e", lua_code_to_execute])
 
                 result = subprocess.run(
                     command,
@@ -1010,16 +1218,16 @@ class InteractiveBioXen:
                 )
 
                 if result.stdout:
-                    print("--- Lua STDOUT ---")
+                    print(f"--- {process_name} STDOUT ---")
                     print(result.stdout.strip())
                 if result.stderr:
-                    print("--- Lua STDERR ---")
+                    print(f"--- {process_name} STDERR ---")
                     print(result.stderr.strip(), file=sys.stderr)
 
                 if result.returncode != 0:
-                    print(f"--- Lua Process Exited with Error Code: {result.returncode} ---", file=sys.stderr)
+                    print(f"--- {process_name} Exited with Error Code: {result.returncode} ---", file=sys.stderr)
                 else:
-                    print("--- Lua Process Completed Successfully ---")
+                    print(f"--- {process_name} Completed Successfully ---")
 
             except FileNotFoundError:
                 print("❌ Error: 'lua' executable not found.")
@@ -1027,10 +1235,15 @@ class InteractiveBioXen:
                 print("   (e.g., on Ubuntu: `sudo apt-get install lua5.3`, on macOS: `brew install lua`)")
             except Exception as e:
                 print(f"❌ An unexpected error occurred: {e}", file=sys.stderr)
+            finally: # Ensure temporary file is cleaned up
+                if temp_script_path and temp_script_path.exists():
+                    try:
+                        temp_script_path.unlink()
+                        print(f"Cleaned up temporary script: {temp_script_path}")
+                    except Exception as e:
+                        print(f"Warning: Could not remove temporary script {temp_script_path}: {e}", file=sys.stderr)
             
             questionary.press_any_key_to_continue().ask()
-
-    # ---------------------------------------------------
 
 # This is typically how your main CLI entry point would look
 if __name__ == "__main__":
