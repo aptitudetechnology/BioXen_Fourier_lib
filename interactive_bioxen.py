@@ -1221,14 +1221,13 @@ class InteractiveBioXen:
                 print("⚠️  No active hypervisor or VMs found. Visualization will be static.")
                 
             try:
-                from visualization.terminal_monitor import TerminalMonitor
+                from src.visualization.terminal_monitor import TerminalMonitor
                 self.visualization_monitor = TerminalMonitor(self.hypervisor)
                 self.visualization_monitor.start()
                 self.visualization_active = True
                 print("✅ Visualization started. Press Ctrl+C to return to menu.")
             except ImportError:
-                print("❌ Terminal visualization dependencies not met.")
-                print("   Install with: pip install 'bioxen[visualization]'")
+                print("❌ Terminal visualization module not found. Please ensure src/visualization/terminal_monitor.py exists.")
             except Exception as e:
                 print(f"❌ Error starting visualization: {e}")
                 
