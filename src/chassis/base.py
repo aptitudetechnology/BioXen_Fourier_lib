@@ -11,6 +11,7 @@ class ChassisType(Enum):
     """Supported chassis types for biological virtualization"""
     ECOLI = "ecoli"
     YEAST = "yeast"
+    ORTHOGONAL = "orthogonal"  # Synthetic cell chassis
     MAMMALIAN = "mammalian"  # Future support
     PLANT = "plant"          # Future support
 

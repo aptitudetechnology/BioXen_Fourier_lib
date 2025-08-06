@@ -8,5 +8,6 @@ including E. coli (prokaryotic) and Yeast (eukaryotic) for biological virtualiza
 from .base import ChassisType, BaseChassis
 from .ecoli import EcoliChassis
 from .yeast import YeastChassis
+from .orthogonal import OrthogonalChassis
 
-__all__ = ['ChassisType', 'BaseChassis', 'EcoliChassis', 'YeastChassis']
+__all__ = ['ChassisType', 'BaseChassis', 'EcoliChassis', 'YeastChassis', 'OrthogonalChassis']
