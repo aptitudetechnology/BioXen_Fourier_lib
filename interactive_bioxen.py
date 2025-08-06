@@ -1204,33 +1204,18 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def toggle_terminal_visualization(self):
-        """Toggle terminal-based DNA visualization."""
-        if self.visualization_active:
-            print("\n📺 Stopping Terminal DNA Visualization...")
-            if self.visualization_monitor:
-                self.visualization_monitor.stop()
-                self.visualization_monitor = None
-            self.visualization_active = False
-            print("✅ Visualization stopped.")
-        else:
-            print("\n📺 Starting Terminal DNA Visualization...")
-            print("💡 This feature provides a real-time, ASCII-based visualization of DNA activity.")
-            print("   It requires a running VM to display meaningful data.")
-            
-            if not self._check_hypervisor() or not self.hypervisor.vms:
-                print("⚠️  No active hypervisor or VMs found. Visualization will be static.")
-                
-            try:
-                from src.visualization.terminal_monitor import TerminalMonitor
-                self.visualization_monitor = TerminalMonitor(self.hypervisor)
-                self.visualization_monitor.start()
-                self.visualization_active = True
-                print("✅ Visualization started. Press Ctrl+C to return to menu.")
-            except ImportError:
-                print("❌ Terminal visualization module not found. Please ensure src/visualization/terminal_monitor.py exists.")
-            except Exception as e:
-                print(f"❌ Error starting visualization: {e}")
-                
+        """Launch advanced Rich-based DNA visualization from terminal_biovis.py."""
+        print("\n📺 Starting Terminal DNA Visualization...")
+        print("💡 This feature provides a real-time, Rich-based visualization of DNA transcription, ribosome activity, and gene expression.")
+        print("   It requires a running VM to display meaningful data.")
+        try:
+            from terminal_biovis import run_dna_monitor
+            # Optionally, pass a real data source if available
+            run_dna_monitor(refresh_rate=2.0)
+        except ImportError:
+            print("❌ Advanced visualization module 'terminal_biovis.py' not found.")
+        except Exception as e:
+            print(f"❌ Error starting advanced visualization: {e}")
         questionary.press_any_key_to_continue().ask()
 
     def _check_hypervisor(self):
