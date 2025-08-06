@@ -90,15 +90,17 @@ BioXen has successfully completed its evolution into a **professional computatio
 
 ### **🚀 Phase 4.1: Python Subprocess to Lua VM's** - 
 
-Enable running Lua VM's side by side with cellualr VM's 
-Enable communication between Lua VM's
 
 ### **🚀 Phase 4.2: Enable networking and communication between Lua VMs** - 
 
 
 ### **🚀 Phase 4.3: Enable networking and communication between cellular VM and Lua VMs** - 
 
-Add a new life domain that can import and run engineered genomes. Build the chassis to enable this.
+Enable running Lua VM's side by side with cellualr VM's 
+Enable communication between Lua VM's
+
+
+Add a new life domain that can import and run engineered genomes. Build the chassis to enable this. - Already added the PLACEHOLDER - need to developer Orthogonal Cell chassis
 
 
 ### **🚀 Phase 5: Advanced JCVI Integration & Bare Metal Deployment** - READY FOR HARDWARE
