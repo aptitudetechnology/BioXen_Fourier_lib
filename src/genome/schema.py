@@ -344,34 +344,36 @@ class BioXenGenomeSchema:
 class BioXenGenomeValidator:
     """Validates BioXen genome files and schemas."""
     
-    def validate_genome(self, genome_data: str) -> bool:
+    def validate_genome(self, genome_data: str) -> tuple[bool, list]:
         """
         Validate genome data (string format).
         
         Args:
             genome_data: String containing genome sequence data
-            
+        
         Returns:
-            bool: True if genome data appears valid, False otherwise
+            tuple: (is_valid: bool, messages: list)
         """
+        errors = []
         if not genome_data:
-            return False
-            
-        # Basic validation - check if it looks like DNA sequence
+            errors.append("Genome data is empty.")
+            return False, errors
+        
         valid_bases = set('ATGC')
         if isinstance(genome_data, str):
-            # Check if it's a DNA sequence (allowing for some non-standard characters)
             base_count = sum(1 for char in genome_data.upper() if char in valid_bases)
             total_chars = len(genome_data)
-            
             if total_chars == 0:
-                return False
-                
-            # If at least 80% of characters are valid DNA bases, consider it valid
+                errors.append("Genome data has zero length.")
+                return False, errors
             validity_ratio = base_count / total_chars
-            return validity_ratio >= 0.8
-            
-        return False
+            if validity_ratio >= 0.8:
+                return True, []
+            else:
+                errors.append(f"Only {validity_ratio*100:.1f}% of bases are valid DNA (ATGC). Minimum required: 80%.")
+                return False, errors
+        errors.append("Genome data is not a string.")
+        return False, errors
     
     @staticmethod
     def validate_file(genome_path: Path) -> tuple[bool, List[str]]:
