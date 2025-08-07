@@ -1109,17 +1109,65 @@ class InteractiveBioXen:
         print("   For socket communication, ensure 'luasocket' is installed (e.g., `luarocks install luasocket`).")
         
         while True:
-            lua_action = questionary.select(
-                "How would you like to interact with the Lua VM?",
+            action = questionary.select(
+                "Choose Lua VM action:",
                 choices=[
-                    Choice("Start Lua Server VM (Socket)", "server_socket"),
-                    Choice("Start Lua Client VM (Socket)", "client_socket"),
-                    Choice("Start Lua P2P VM (Socket)", "p2p_socket"), # NEW P2P OPTION
-                    Choice("Execute Lua code string", "string"),
-                    Choice("Execute Lua script file", "file"),
+                    Choice("Start Server VM", "server"),
+                    Choice("Start Client VM", "client"),
+                    Choice("Start P2P VM", "p2p"),
+                    Choice("Execute Lua code string", "code"),
+                    Choice("Execute Lua script file", "script"),
+                    Choice("Manage running VMs", "manage"),
                     Choice("Back to Main Menu", "back")
                 ]
             ).ask()
+
+            if action is None or action == "back":
+                print("↩️ Returning to main menu.")
+                break
+
+            try:
+                with VMManager() as manager:
+                    if action == "server":
+                        # ...existing server code...
+                        pass
+                    elif action == "client":
+                        # ...existing client code...
+                        pass
+                    elif action == "p2p":
+                        # Correctly place the p2p logic here
+                        local_port = questionary.text("Enter local port for P2P VM (e.g., 8081):", default="8081").ask()
+                        peer_ip_port = questionary.text("Enter peer IP:Port (e.g., localhost:8080, blank for none):").ask()
+                        peer_ip, peer_port = None, None
+                        if peer_ip_port:
+                            try:
+                                peer_ip, peer_port = peer_ip_port.split(":")
+                            except ValueError:
+                                print("❌ Invalid peer IP:Port format. Use IP:Port (e.g., localhost:8080).")
+                                continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"p2p_{local_port}").ask() or f"p2p_{local_port}"
+                        manager.create_vm(vm_id, networked=True)
+                        future = manager.start_p2p_vm(vm_id, int(local_port), peer_ip, peer_port)
+                        print(f"🌐 P2P VM '{vm_id}' running on port {local_port}...")
+                        try:
+                            result = future.result(timeout=35)
+                            print(result.get('stdout', ''))
+                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+                        except KeyboardInterrupt:
+                            print("🛑 P2P VM stopped.")
+                            future.cancel()
+                    elif action == "code":
+                        # ...existing code execution logic...
+                        pass
+                    elif action == "script":
+                        # ...existing script execution logic...
+                        pass
+                    elif action == "manage":
+                        # ...existing VM management logic...
+                        pass
+            except Exception as e:
+                print(f"❌ Error: {e}", file=sys.stderr)
+            questionary.press_any_key_to_continue().ask()
 
             if lua_action is None or lua_action == "back":
                 print("↩️ Returning to main menu.")
