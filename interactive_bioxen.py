@@ -33,11 +33,11 @@ except ImportError as e:
 class InteractiveBioXen:
     def create_lua_vm(self):
         """
-        Modernized: Use py-lua-vm (VMManager, LuaVM) for Lua VM management.
+        High-level Lua VM orchestration using VMManager from vm_manager.py.
         """
-        from pylua_vm import VMManager, LuaVM
-        print("\n🌙 Create Lua VM (py-lua-vm)")
-        print("💡 This option uses the py-lua-vm library for robust Lua VM management.")
+        from vm_manager import VMManager
+        print("\n🌙 Create Lua VM (VMManager)")
+        print("💡 This option uses the VMManager library for robust Lua VM orchestration.")
         print("   Make sure 'lua' and 'luasocket' are installed for networking features.")
 
         vm_manager = VMManager()
@@ -65,10 +65,9 @@ class InteractiveBioXen:
                     if not port:
                         continue
                     process_name = f"Lua Server on Port {port}"
-                    lua_vm = vm_manager.create_vm(mode="server", port=int(port))
                     print(f"\n--- Starting {process_name} ---")
                     print("💡 This process will block until a client connects and sends a message.")
-                    output, error = lua_vm.run_server()
+                    output, error = vm_manager.run_server(port=int(port))
                     if output:
                         print(f"--- {process_name} STDOUT ---\n{output.strip()}")
                     if error:
@@ -85,9 +84,8 @@ class InteractiveBioXen:
                     if not message:
                         continue
                     process_name = f"Lua Client to {ip}:{port}"
-                    lua_vm = vm_manager.create_vm(mode="client", ip=ip, port=int(port))
                     print(f"\n--- Starting {process_name} ---")
-                    output, error = lua_vm.run_client(message)
+                    output, error = vm_manager.run_client(ip=ip, port=int(port), message=message)
                     if output:
                         print(f"--- {process_name} STDOUT ---\n{output.strip()}")
                     if error:
@@ -111,12 +109,11 @@ class InteractiveBioXen:
                         process_name += f", Connect:{peer_ip_port_str})"
                     else:
                         process_name += ")"
-                    lua_vm = vm_manager.create_vm(mode="p2p", port=int(local_port), peer_ip=peer_ip, peer_port=peer_port)
                     print(f"\n--- Starting {process_name} ---")
                     print(f"💡 This P2P VM will run for 30 seconds, attempting to listen on port {local_port}")
                     if peer_ip_port_str:
                         print(f"   and connect to peer {peer_ip_port_str}.")
-                    output, error = lua_vm.run_p2p(run_duration=30)
+                    output, error = vm_manager.run_p2p(local_port=int(local_port), peer_ip=peer_ip, peer_port=peer_port, run_duration=30)
                     if output:
                         print(f"--- {process_name} STDOUT ---\n{output.strip()}")
                     if error:
@@ -128,8 +125,7 @@ class InteractiveBioXen:
                         print("⚠️ No Lua code entered. Returning to Lua VM menu.")
                         continue
                     process_name = "Lua Code String"
-                    lua_vm = vm_manager.create_vm()
-                    output, error = lua_vm.run_code(lua_code)
+                    output, error = vm_manager.run_code(lua_code)
                     print(f"--- {process_name} STDOUT ---\n{output.strip() if output else ''}")
                     if error:
                         print(f"--- {process_name} STDERR ---\n{error.strip()}", file=sys.stderr)
@@ -144,8 +140,7 @@ class InteractiveBioXen:
                         print(f"❌ Error: File not found at '{lua_file_path}'.")
                         continue
                     process_name = f"Lua Script File: {lua_file_path.name}"
-                    lua_vm = vm_manager.create_vm()
-                    output, error = lua_vm.run_script(str(lua_file_path))
+                    output, error = vm_manager.run_script(str(lua_file_path))
                     print(f"--- {process_name} STDOUT ---\n{output.strip() if output else ''}")
                     if error:
                         print(f"--- {process_name} STDERR ---\n{error.strip()}", file=sys.stderr)
