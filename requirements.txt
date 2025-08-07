@@ -1,4 +1,5 @@
 # BioXen Project Requirements
+py-lua-vm>=0.1.0  # Python library for managing Lua VMs via subprocess
 
 ## Core Dependencies
 # Core dependencies for modular circuits system
