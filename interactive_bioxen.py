@@ -12,7 +12,6 @@ from typing import List, Dict, Optional
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
-
 try:
     import questionary
     from questionary import Choice
@@ -28,6 +27,7 @@ try:
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Make sure you're running from the BioXen root directory")
+    sys.exit(1)
     sys.exit(1)
 
 class InteractiveBioXen:
