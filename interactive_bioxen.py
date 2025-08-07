@@ -7,8 +7,13 @@ import sys
 import time
 import shutil
 import subprocess
+
 from pathlib import Path
 from typing import List, Dict, Optional
+try:
+    from pylua_bioxen_vm import VMManager
+except ImportError:
+    VMManager = None
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
