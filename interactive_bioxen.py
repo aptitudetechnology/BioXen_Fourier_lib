@@ -8,13 +8,9 @@ import time
 import shutil
 import subprocess
 
+from pylua_vm import VMManager
 from pathlib import Path
 from typing import List, Dict, Optional
-try:
-    from pylua_vm import VMManager
-except ImportError:
-    print("❌ pylua-vm library not installed. Install with: pip install pylua-vm")
-    sys.exit(1)
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
