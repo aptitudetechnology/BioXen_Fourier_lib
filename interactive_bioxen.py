@@ -84,66 +84,51 @@ class InteractiveBioXen:
                     if action == "server":
                         port = questionary.text("Enter port for Lua Server (e.g., 8080):", default="8080").ask()
                         if not port:
-                            continue
-                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"server_{port}").ask() or f"server_{port}"
-                        manager.create_vm(vm_id, networked=True)
-                        future = manager.start_server_vm(vm_id, port=int(port))
-                        print(f"🌐 Server VM '{vm_id}' listening on port {port}...")
-                        try:
-                            result = future.result(timeout=None)
-                            print(result.get('stdout', ''))
-                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except KeyboardInterrupt:
-                            print("🛑 Server stopped.")
-                            future.cancel()
-                    elif action == "client":
-                        ip = questionary.text("Enter Server IP (default: localhost):", default="localhost").ask()
-                        port = questionary.text("Enter Server Port (e.g., 8080):", default="8080").ask()
-                        message = questionary.text("Enter message to send to server:", default="Greetings, Lua Server!").ask()
-                        if not ip or not port or not message:
-                            continue
-                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"client_{ip}_{port}").ask() or f"client_{ip}_{port}"
-                        manager.create_vm(vm_id, networked=True)
-                        future = manager.start_client_vm(vm_id, ip, int(port), message)
-                        print(f"🌐 Client VM '{vm_id}' connecting to {ip}:{port}...")
-                        try:
-                            result = future.result(timeout=10)
-                            print(result.get('stdout', ''))
-                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"❌ Client error: {e}")
-                    elif action == "p2p":
-                        local_port = questionary.text("Enter local port for P2P VM (e.g., 8081):", default="8081", validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535").ask()
-                        if not local_port:
-                            continue
-                        peer_ip_port_str = questionary.text("Enter peer IP:Port to connect to (e.g., localhost:8080, leave blank for no outgoing connection):").ask()
-                        peer_ip, peer_port = None, None
-                        if peer_ip_port_str:
-                            try:
-                                peer_ip, peer_port = peer_ip_port_str.split(":")
-                                peer_port = int(peer_port)
-                            except ValueError:
-                                print("❌ Invalid peer IP:Port format.")
-                                continue
-                        process_name = f"Lua P2P VM (Listen:{local_port}"
-                        if peer_ip_port_str:
-                            process_name += f", Connect:{peer_ip_port_str})"
-                        else:
-                            process_name += ")"
-                        print(f"\n--- Starting {process_name} ---")
-                        print(f" This P2P VM will run for 30 seconds, listening on port {local_port}")
-                        if peer_ip_port_str:
-                            print(f"   and connecting to peer {peer_ip_port_str}.")
-                        try:
-                            vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"p2p_{local_port}").ask() or f"p2p_{local_port}"
-                            manager.create_vm(vm_id, networked=True)
-                            future = manager.start_p2p_vm(vm_id, int(local_port), peer_ip, peer_port)
-                            result = future.result(timeout=35)
-                            print(result.get('stdout', ''))
-                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"❌ P2P VM error: {e}")
-                    elif action == "code":
+        genome_options = [
+            {
+                "display": "🌐 Download All Real Bacterial Genomes - Complete minimal genome collection",
+                "accession": "download_all_real",
+                "name": "all_real_genomes",
+                "size": 0
+            },
+            {
+                "display": "🦠 E. coli K-12 MG1655 - Classic lab strain",
+                "accession": "NC_000913.3",
+                "name": "E_coli_K12_MG1655",
+                "size": 4641652
+            },
+            {
+                "display": "🍄 S. cerevisiae S288C - Baker's yeast reference",
+                "accession": "NC_001133.9",
+                "name": "S_cerevisiae_S288C",
+                "size": 230218
+            },
+            {
+                "display": "🔬 Mycoplasma genitalium - Minimal genome",
+                "accession": "NC_000908.2",
+                "name": "M_genitalium",
+                "size": 580076
+            },
+            {
+                "display": "🌊 Prochlorococcus marinus - Tiny ocean bacteria",
+                "accession": "NC_009840.1",
+                "name": "P_marinus",
+                "size": 1751080
+            },
+            {
+                "display": "💀 Clostridium botulinum - Botox producer",
+                "accession": "NC_009495.1",
+                "name": "C_botulinum",
+                "size": 3886916
+            },
+            {
+                "display": "🧪 Custom genome - Enter your own accession",
+                "accession": "custom",
+                "name": "custom",
+                "size": 1000000
+            }
+        ]
+        # ...existing code...
                         lua_code = questionary.text("Enter Lua code to execute:").ask()
                         if not lua_code:
                             continue
@@ -170,171 +155,7 @@ class InteractiveBioXen:
                         else:
                             print(f"Active VMs: {len(vms)}")
                             for vm_info in vms:
-                                print(f"  • {vm_info}")
-                        mgmt_action = questionary.select(
-                            "VM Management Actions:",
-                            choices=[
-                                Choice("List all VMs", "list"),
-                                Choice("Stop a VM", "stop"),
-                                Choice("Stop all VMs", "stop_all"),
-                                Choice("Back", "back")
-                            ]
-                        ).ask()
-                        if mgmt_action == "list":
-                            for vm_info in manager.list_vms():
-                                print(f"  • {vm_info}")
-                        elif mgmt_action == "stop":
-                            vm_to_stop = questionary.text("Enter VM ID to stop:").ask()
-                            if vm_to_stop:
-                                manager.stop_vm(vm_to_stop)
-                                print(f"✅ Stopped VM: {vm_to_stop}")
-                        elif mgmt_action == "stop_all":
-                            confirm = questionary.confirm("Stop all active VMs?").ask()
-                            if confirm:
-                                manager.stop_all_vms()
-                                print("✅ Stopped all VMs")
-            except Exception as e:
-                print(f"❌ Error: {e}", file=sys.stderr)
-            questionary.press_any_key_to_continue().ask()
-                "display": "🦠 E. coli K-12 MG1655 - Classic lab strain",
-                "accession": "NC_000913.3",
-                "name": "E_coli_K12_MG1655",
-                "size": 4641652
-            },
-            {
-                "display": "🍄 S. cerevisiae S288C - Baker's yeast reference",
-                "accession": "NC_001133.9", 
-                "name": "S_cerevisiae_S288C",
-                "size": 230218
-            },
-            {
-                "display": "🔬 Mycoplasma genitalium - Minimal genome",
-                "accession": "NC_000908.2",
-                "name": "M_genitalium",
-                "size": 580076
-            },
-            {
-                "display": "🌊 Prochlorococcus marinus - Tiny ocean bacteria",
-                "accession": "NC_009840.1",
-                "name": "P_marinus",
-                "size": 1751080
-            },
-            {
-                "display": "💀 Clostridium botulinum - Botox producer",
-                "accession": "NC_009495.1", 
-                "name": "C_botulinum",
-                "size": 3886916
-            },
-            {
-                "display": "🧪 Custom genome - Enter your own accession",
-                "accession": "custom",
-                "name": "custom",
-                "size": 1000000
-            }
-        ]
-        
-        choice = questionary.select(
-            "Select a genome to download:",
-            choices=[Choice(opt["display"], opt) for opt in genome_options]
-        ).ask()
-        
-        if choice is None:
-            return
-            
-        if choice["accession"] == "download_all_real":
-            # Launch the download_genomes.py script for real genome downloads
-            print("\n🌐 Downloading All Real Bacterial Genomes")
-            print("🔄 Launching genome downloader for complete minimal genome collection...")
-            print("📋 This will download: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola")
-            
-            confirm = questionary.confirm(
-                "Download all 5 real bacterial genomes? This may take several minutes."
-            ).ask()
-            
-            if not confirm:
-                return
-                
-            try:
-                print("\n🔄 Starting real genome download process...")
-                
-                # Run the download_genomes.py script with 'all' command
-                result = subprocess.run([
-                    sys.executable, 'download_genomes.py', 'all'
-                ], capture_output=True, text=True, cwd=Path(__file__).parent)
-                
-                if result.returncode == 0:
-                    print("✅ Successfully downloaded all real bacterial genomes!")
-                    print("📋 Available genomes:")
-                    print("   • JCVI-Syn3A (538 KB, 187 genes)")
-                    print("   • Mycoplasma genitalium (580 KB, 1,108 genes)")
-                    print("   • Mycoplasma pneumoniae (823 KB, 1,503 genes)")
-                    print("   • Carsonella ruddii (174 KB, 473 genes)")
-                    print("   • Buchnera aphidicola (640 KB, 583 genes)")
-                    print("\n🧬 You can now use 'Browse Available Genomes' to work with these real genomes!")
-                else:
-                    print(f"❌ Download failed: {result.stderr}")
-                    print("💡 Try running 'python3 download_genomes.py' separately for more details")
-                    
-            except Exception as e:
-                print(f"❌ Error launching genome downloader: {e}")
-                print("💡 Try running 'python3 download_genomes.py all' manually")
-                
-            questionary.press_any_key_to_continue().ask()
-            return
-            
-        elif choice["accession"] in ["NC_000908.2", "NC_000913.3", "NC_001133.9", "NC_009840.1", "NC_009495.1"]:
-            # Individual real genome download
-            accession = choice["accession"]
-            name = choice["name"]
-            size = choice["size"]
-            
-            print(f"\n🌐 Downloading Real Genome: {name}")
-            print(f"   Accession: {accession}")
-            print(f"   Expected size: {size:,} base pairs")
-            print(f"💡 Using NCBI download tools for authentic genome data")
-            
-            confirm = questionary.confirm(
-                f"Download {name} from NCBI? This may take a few minutes."
-            ).ask()
-            
-            if not confirm:
-                return
-            
-            try:
-                print(f"\n🔄 Downloading {name} from NCBI...")
-                
-                # Use the new robust genome download helper
-                try:
-                    from genome_download_helper import GenomeDownloadHelper
-                    
-                    download_helper = GenomeDownloadHelper("genomes")
-                    success, message = download_helper.download_genome(accession, name)
-                    
-                    # Verify if file was actually downloaded, regardless of reported success
-                    genome_file = Path("genomes") / f"{name}.genome"
-                    file_actually_downloaded = genome_file.exists() and genome_file.stat().st_size > 1000  # At least 1KB
-                    
-                    if file_actually_downloaded:
-                        # File was successfully downloaded
-                        file_size_mb = genome_file.stat().st_size / (1024 * 1024)
-                        print(f"✅ Successfully downloaded {name}!")
-                        print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
-                        print(f"   🧬 Ready for biological virtualization")
-                        print(f"   📁 File: {genome_file}")
-        while True:
-            action = questionary.select(
-                "Choose Lua VM action:",
-                choices=[
-                    Choice("Start Server VM", "server"),
-                    Choice("Start Client VM", "client"),
-                    Choice("Start P2P VM", "p2p"),
-                    Choice("Execute Lua code string", "code"),
-                    Choice("Execute Lua script file", "script"),
-                    Choice("Manage running VMs", "manage"),
-                    Choice("Back to Main Menu", "back")
-                ]
-            ).ask()
-
+        # ...existing code...
             if action is None or action == "back":
                 print("↩️ Returning to main menu.")
                 break
