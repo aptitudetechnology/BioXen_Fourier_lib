@@ -90,9 +90,9 @@ BioXen has successfully completed its evolution into a **professional computatio
 
 ### **🚀 Phase 4.1: Python Subprocess to Lua VM's** - 
 
-Creating a new library called py-lua-vm.
+Creating a new library called pylua_vm.
 
-https://github.com/aptitudetechnology/py-lua-vm/
+https://github.com/aptitudetechnology/pylua_vm
 
 ### **🚀 Phase 4.2: Enable networking and communication between Lua VMs** - 
 
