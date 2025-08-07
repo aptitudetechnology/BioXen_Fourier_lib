@@ -33,7 +33,7 @@ except ImportError as e:
 class InteractiveBioXen:
     def create_lua_vm(self):
         """
-        High-level Lua VM orchestration using pylua-bioxen-vm library.
+        Concise Lua VM orchestration using pylua-bioxen-vm library.
         """
         print("\n🌙 Create Lua VM (pylua-bioxen-vm)")
         print("💡 This option uses the pylua-bioxen-vm library for robust Lua VM orchestration.")
@@ -47,287 +47,43 @@ class InteractiveBioXen:
             questionary.press_any_key_to_continue().ask()
             return
 
-        vm_manager = VMManager()
-
         while True:
-            lua_action = questionary.select(
-                "How would you like to interact with the Lua VM?",
-                choices=[
-                    Choice("Start Lua Server VM (Socket)", "server_socket"),
-                    Choice("Start Lua Client VM (Socket)", "client_socket"),
-                    Choice("Start Lua P2P VM (Socket)", "p2p_socket"),
-                    Choice("Execute Lua code string", "string"),
-                    Choice("Execute Lua script file", "file"),
-                    Choice("Manage running VMs", "manage_vms"),
-                    Choice("Back to Main Menu", "back")
-                ]
-            ).ask()
-
-            if lua_action is None or lua_action == "back":
-                print("↩️ Returning to main menu.")
-                break
-
-            try:
-                if lua_action == "server_socket":
-                    port = questionary.text(
-                        "Enter port for Lua Server (e.g., 8080):", 
-                        default="8080", 
-                        validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535"
-                    ).ask()
-                    if not port:
-                        continue
-
-                    vm_id = questionary.text(
-                        "Enter VM ID (or press Enter for auto-generated):",
-                        default=f"server_{port}"
-                    ).ask()
-                    if not vm_id:
-                        vm_id = f"server_{port}"
-
-                    process_name = f"Lua Server VM '{vm_id}' on Port {port}"
-                    print(f"\n--- Starting {process_name} ---")
-                    print("💡 This VM will listen for client connections.")
-                    
-                    with vm_manager as manager:
-                        # Create networked VM
-                        server_vm = manager.create_vm(vm_id, networked=True)
-                        print(f"✅ Created VM: {vm_id}")
-                        
-                        # Start server
-                        server_future = manager.start_server_vm(vm_id, port=int(port))
-                        print(f"🌐 Server listening on port {port}...")
-                        print("   Press Ctrl+C to stop the server")
-                        
-                        try:
-                            # Wait for server to complete or user interruption
-                            result = server_future.result(timeout=None)
-                            print(f"--- {process_name} Output ---")
-                            if result.get('stdout'):
-                                print(result['stdout'])
-                            if result.get('stderr'):
-                                print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except KeyboardInterrupt:
-                            print(f"\n🛑 Stopping {process_name}...")
-                            server_future.cancel()
-                        except Exception as e:
-                            print(f"❌ Server error: {e}")
-
-                elif lua_action == "client_socket":
-                    ip = questionary.text("Enter Server IP (default: localhost):", default="localhost").ask()
-                    if not ip:
-                        continue
-                    port = questionary.text(
-                        "Enter Server Port (e.g., 8080):", 
-                        default="8080", 
-                        validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535"
-                    ).ask()
-                    if not port:
-                        continue
-                    message = questionary.text("Enter message to send to server:", default="Greetings, Lua Server!").ask()
-                    if not message:
-                        continue
-
-                    vm_id = questionary.text(
-                        "Enter VM ID (or press Enter for auto-generated):",
-                        default=f"client_{ip}_{port}"
-                    ).ask()
-                    if not vm_id:
-                        vm_id = f"client_{ip}_{port}"
-
-                    process_name = f"Lua Client VM '{vm_id}' to {ip}:{port}"
-                    print(f"\n--- Starting {process_name} ---")
-                    
-                    with vm_manager as manager:
-                        # Create networked VM
-                        client_vm = manager.create_vm(vm_id, networked=True)
-                        print(f"✅ Created VM: {vm_id}")
-                        
-                        # Start client
-                        client_future = manager.start_client_vm(vm_id, ip, int(port), message)
-                        print(f"🌐 Connecting to {ip}:{port}...")
-                        
-                        try:
-                            result = client_future.result(timeout=10)  # 10 second timeout for client
-                            print(f"--- {process_name} Output ---")
-                            if result.get('stdout'):
-                                print(result['stdout'])
-                            if result.get('stderr'):
-                                print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"❌ Client error: {e}")
-
+            action = questionary.select(
+                "Choose Lua VM action:",
                 elif lua_action == "p2p_socket":
-                    local_port = questionary.text(
-                        "Enter local port for P2P VM to listen on (e.g., 8081):", 
-                        default="8081", 
-                        validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535"
-                    ).ask()
+                    local_port = questionary.text("Enter local port for P2P VM to listen on (e.g., 8081):", default="8081", validate=lambda x: x.isdigit() and 1024 <= int(x) <= 65535 or "Port must be between 1024 and 65535").ask()
                     if not local_port:
                         continue
-                    
-                    peer_ip_port_str = questionary.text(
-                        "Enter peer IP:Port to connect to (e.g., localhost:8080, leave blank for no outgoing connection):"
-                    ).ask()
-                    
+                    peer_ip_port_str = questionary.text("Enter peer IP:Port to connect to (e.g., localhost:8080, leave blank for no outgoing connection):").ask()
                     peer_ip, peer_port = None, None
                     if peer_ip_port_str:
                         try:
-                            peer_ip, peer_port_str = peer_ip_port_str.split(":")
-                            peer_port = int(peer_port_str)
+                            peer_ip, peer_port = peer_ip_port_str.split(":")
+                            peer_port = int(peer_port)
                         except ValueError:
-                            print("❌ Invalid peer IP:Port format. Use IP:Port (e.g., localhost:8080).")
+                            print("❌ Invalid peer IP:Port format.")
                             continue
-
-                    vm_id = questionary.text(
-                        "Enter VM ID (or press Enter for auto-generated):",
-                        default=f"p2p_{local_port}"
-                    ).ask()
-                    if not vm_id:
-                        vm_id = f"p2p_{local_port}"
-
-                    process_name = f"Lua P2P VM '{vm_id}' (Listen:{local_port}"
+                    process_name = f"Lua P2P VM (Listen:{local_port}"
                     if peer_ip_port_str:
                         process_name += f", Connect:{peer_ip_port_str})"
                     else:
                         process_name += ")"
-
                     print(f"\n--- Starting {process_name} ---")
-                    print(f"💡 This P2P VM will run for 30 seconds, listening on port {local_port}")
+                    print(f"� This P2P VM will run for 30 seconds, listening on port {local_port}")
                     if peer_ip_port_str:
                         print(f"   and connecting to peer {peer_ip_port_str}.")
-
-                    with vm_manager as manager:
-                        # Create networked VM
-                        p2p_vm = manager.create_vm(vm_id, networked=True)
-                        print(f"✅ Created VM: {vm_id}")
-                        
-                        # Start P2P VM
-                        p2p_future = manager.start_p2p_vm(vm_id, int(local_port), peer_ip, peer_port)
-                        print(f"🌐 P2P VM running on port {local_port}...")
-                        print("   Press Ctrl+C to stop early")
-                        
-                        try:
-                            result = p2p_future.result(timeout=35)  # Slightly longer than the 30s runtime
-                            print(f"--- {process_name} Output ---")
-                            if result.get('stdout'):
-                                print(result['stdout'])
-                            if result.get('stderr'):
-                                print(f"STDERR: {result['stderr']}", file=sys.stderr)
-                        except KeyboardInterrupt:
-                            print(f"\n🛑 Stopping {process_name}...")
-                            p2p_future.cancel()
-                        except Exception as e:
-                            print(f"❌ P2P VM error: {e}")
-
-                elif lua_action == "string":
-                    lua_code = questionary.text("Enter Lua code to execute (e.g., print('Hello')):").ask()
-                    if not lua_code:
-                        print("⚠️ No Lua code entered. Returning to Lua VM menu.")
-                        continue
-
-                    vm_id = questionary.text(
-                        "Enter VM ID (or press Enter for auto-generated):",
-                        default="code_exec"
-                    ).ask()
-                    if not vm_id:
-                        vm_id = "code_exec"
-
-                    process_name = f"Lua Code String VM '{vm_id}'"
-                    
-                    with vm_manager as manager:
-                        # Create basic VM
-                        code_vm = manager.create_vm(vm_id, networked=False)
-                        print(f"✅ Created VM: {vm_id}")
-                        
-                        # Execute code
-                        result = manager.execute_code(vm_id, lua_code)
-                        print(f"--- {process_name} Output ---")
-                        if result.get('stdout'):
-                            print(result['stdout'])
-                        if result.get('stderr'):
-                            print(f"STDERR: {result['stderr']}", file=sys.stderr)
-
-                elif lua_action == "file":
-                    file_path_str = questionary.text("Enter path to Lua script file (e.g., my_script.lua):").ask()
-                    if not file_path_str:
-                        print("⚠️ No file path entered. Returning to Lua VM menu.")
-                        continue
-                    
-                    lua_file_path = Path(file_path_str)
-                    if not lua_file_path.is_file():
-                        print(f"❌ Error: File not found at '{lua_file_path}'.")
-                        continue
-
-                    vm_id = questionary.text(
-                        "Enter VM ID (or press Enter for auto-generated):",
-                        default=f"script_{lua_file_path.stem}"
-                    ).ask()
-                    if not vm_id:
-                        vm_id = f"script_{lua_file_path.stem}"
-
-                    process_name = f"Lua Script File VM '{vm_id}': {lua_file_path.name}"
-                    
-                    with vm_manager as manager:
-                        # Create basic VM
-                        script_vm = manager.create_vm(vm_id, networked=False)
-                        print(f"✅ Created VM: {vm_id}")
-                        
-                        # Execute script
-                        result = manager.execute_script(vm_id, str(lua_file_path))
-                        print(f"--- {process_name} Output ---")
-                        if result.get('stdout'):
-                            print(result['stdout'])
-                        if result.get('stderr'):
-                            print(f"STDERR: {result['stderr']}", file=sys.stderr)
-
-                elif lua_action == "manage_vms":
-                    print("\n🖥️ VM Management")
+                    # Use pylua-bioxen-vm high-level API for P2P orchestration
                     try:
-                        # List active VMs
-                        active_vms = vm_manager.list_vms()
-                        if not active_vms:
-                            print("No active Lua VMs found.")
-                        else:
-                            print(f"Active VMs: {len(active_vms)}")
-                            for vm_info in active_vms:
-                                print(f"  • {vm_info}")
-                        
-                        # VM management actions
-                        management_action = questionary.select(
-                            "VM Management Actions:",
-                            choices=[
-                                Choice("List all VMs", "list"),
-                                Choice("Stop a VM", "stop"),
-                                Choice("Stop all VMs", "stop_all"),
-                                Choice("Back", "back")
-                            ]
-                        ).ask()
-                        
-                        if management_action == "list":
-                            print("\n📋 All VMs:")
-                            for vm_info in vm_manager.list_vms():
-                                print(f"  • {vm_info}")
-                        elif management_action == "stop":
-                            vm_to_stop = questionary.text("Enter VM ID to stop:").ask()
-                            if vm_to_stop:
-                                vm_manager.stop_vm(vm_to_stop)
-                                print(f"✅ Stopped VM: {vm_to_stop}")
-                        elif management_action == "stop_all":
-                            confirm = questionary.confirm("Stop all active VMs?").ask()
-                            if confirm:
-                                vm_manager.stop_all_vms()
-                                print("✅ Stopped all VMs")
-                        
+                        from pylua_bioxen_vm import VMManager
+                        with VMManager() as manager:
+                            vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"p2p_{local_port}").ask() or f"p2p_{local_port}"
+                            manager.create_vm(vm_id, networked=True)
+                            future = manager.start_p2p_vm(vm_id, int(local_port), peer_ip, peer_port)
+                            result = future.result(timeout=35)
+                            print(result.get('stdout', ''))
+                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
                     except Exception as e:
-                        print(f"❌ VM management error: {e}")
-
-            except Exception as e:
-                print(f"❌ An unexpected error occurred: {e}", file=sys.stderr)
-            
-            questionary.press_any_key_to_continue().ask()
-    def __init__(self):
-        """Initialize the interactive BioXen interface."""
-        self.validator = BioXenGenomeValidator()
+                        print(f"❌ P2P VM error: {e}")
         self.hypervisor = None
         self.available_genomes = []
         self.chassis_type = ChassisType.ECOLI  # Default chassis
@@ -1031,20 +787,154 @@ class InteractiveBioXen:
         
         questionary.press_any_key_to_continue().ask()
 
-    def create_vm(self):
-        """Create a new virtual machine."""
-        if not self._check_hypervisor():
-            return
+    def create_lua_vm(self):
+        """
+        Concise Lua VM orchestration using pylua-bioxen-vm library.
+        """
+        print("\n🌙 Create Lua VM (pylua-bioxen-vm)")
+        print("💡 This option uses the pylua-bioxen-vm library for robust Lua VM orchestration.")
+        print("   Make sure 'lua' and 'luasocket' are installed for networking features.")
 
-        print("\n⚡ Create Virtual Machine")
-        print("📋 Scanning for available genomes to virtualize...")
-
-        genome_dir = Path("genomes")
-        if not genome_dir.exists() or not list(genome_dir.glob("*.genome")):
-            print("❌ No genome files found. Please download or validate genomes first.")
-            print("💡 Use 'Download New Genomes' or 'Load Genome for Analysis' options.")
+        try:
+            from pylua_bioxen_vm import VMManager
+        except ImportError:
+            print("❌ pylua-bioxen-vm library not installed. Install with: pip install pylua-bioxen-vm")
+            print("   Or install from source: https://github.com/aptitudetechnology/pylua-bioxen-vm")
             questionary.press_any_key_to_continue().ask()
             return
+
+        while True:
+            action = questionary.select(
+                "Choose Lua VM action:",
+                choices=[
+                    Choice("Start Server VM", "server"),
+                    Choice("Start Client VM", "client"),
+                    Choice("Start P2P VM", "p2p"),
+                    Choice("Execute Lua code string", "code"),
+                    Choice("Execute Lua script file", "script"),
+                    Choice("Manage running VMs", "manage"),
+                    Choice("Back to Main Menu", "back")
+                ]
+            ).ask()
+
+            if action is None or action == "back":
+                print("↩️ Returning to main menu.")
+                break
+
+            try:
+                with VMManager() as manager:
+                    if action == "server":
+                        port = questionary.text("Enter port for Lua Server (e.g., 8080):", default="8080").ask()
+                        if not port:
+                            continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"server_{port}").ask() or f"server_{port}"
+                        manager.create_vm(vm_id, networked=True)
+                        future = manager.start_server_vm(vm_id, port=int(port))
+                        print(f"🌐 Server VM '{vm_id}' listening on port {port}...")
+                        try:
+                            result = future.result(timeout=None)
+                            print(result.get('stdout', ''))
+                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+                        except KeyboardInterrupt:
+                            print("🛑 Server stopped.")
+                            future.cancel()
+
+                    elif action == "client":
+                        ip = questionary.text("Enter Server IP (default: localhost):", default="localhost").ask()
+                        port = questionary.text("Enter Server Port (e.g., 8080):", default="8080").ask()
+                        message = questionary.text("Enter message to send to server:", default="Greetings, Lua Server!").ask()
+                        if not ip or not port or not message:
+                            continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"client_{ip}_{port}").ask() or f"client_{ip}_{port}"
+                        manager.create_vm(vm_id, networked=True)
+                        future = manager.start_client_vm(vm_id, ip, int(port), message)
+                        print(f"🌐 Client VM '{vm_id}' connecting to {ip}:{port}...")
+                        try:
+                            result = future.result(timeout=10)
+                            print(result.get('stdout', ''))
+                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+                        except Exception as e:
+                            print(f"❌ Client error: {e}")
+
+                    elif action == "p2p":
+                        local_port = questionary.text("Enter local port for P2P VM (e.g., 8081):", default="8081").ask()
+                        peer_ip_port = questionary.text("Enter peer IP:Port (e.g., localhost:8080, blank for none):").ask()
+                        peer_ip, peer_port = None, None
+                        if peer_ip_port:
+                            try:
+                                peer_ip, peer_port = peer_ip_port.split(":")
+                                peer_port = int(peer_port)
+                            except ValueError:
+                                print("❌ Invalid peer IP:Port format.")
+                                continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"p2p_{local_port}").ask() or f"p2p_{local_port}"
+                        manager.create_vm(vm_id, networked=True)
+                        future = manager.start_p2p_vm(vm_id, int(local_port), peer_ip, peer_port)
+                        print(f"🌐 P2P VM '{vm_id}' running on port {local_port}...")
+                        try:
+                            result = future.result(timeout=35)
+                            print(result.get('stdout', ''))
+                            if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+                        except KeyboardInterrupt:
+                            print("🛑 P2P VM stopped.")
+                            future.cancel()
+
+                    elif action == "code":
+                        lua_code = questionary.text("Enter Lua code to execute:").ask()
+                        if not lua_code:
+                            continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default="code_exec").ask() or "code_exec"
+                        manager.create_vm(vm_id, networked=False)
+                        result = manager.execute_code(vm_id, lua_code)
+                        print(result.get('stdout', ''))
+                        if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+
+                    elif action == "script":
+                        file_path = questionary.text("Enter path to Lua script file:").ask()
+                        if not file_path or not Path(file_path).is_file():
+                            print(f"❌ Error: File not found at '{file_path}'.")
+                            continue
+                        vm_id = questionary.text("Enter VM ID (or press Enter for auto-generated):", default=f"script_{Path(file_path).stem}").ask() or f"script_{Path(file_path).stem}"
+                        manager.create_vm(vm_id, networked=False)
+                        result = manager.execute_script(vm_id, file_path)
+                        print(result.get('stdout', ''))
+                        if result.get('stderr'): print(f"STDERR: {result['stderr']}", file=sys.stderr)
+
+                    elif action == "manage":
+                        print("\n🖥️ VM Management")
+                        vms = manager.list_vms()
+                        if not vms:
+                            print("No active Lua VMs found.")
+                        else:
+                            print(f"Active VMs: {len(vms)}")
+                            for vm_info in vms:
+                                print(f"  • {vm_info}")
+                        mgmt_action = questionary.select(
+                            "VM Management Actions:",
+                            choices=[
+                                Choice("List all VMs", "list"),
+                                Choice("Stop a VM", "stop"),
+                                Choice("Stop all VMs", "stop_all"),
+                                Choice("Back", "back")
+                            ]
+                        ).ask()
+                        if mgmt_action == "list":
+                            for vm_info in manager.list_vms():
+                                print(f"  • {vm_info}")
+                        elif mgmt_action == "stop":
+                            vm_to_stop = questionary.text("Enter VM ID to stop:").ask()
+                            if vm_to_stop:
+                                manager.stop_vm(vm_to_stop)
+                                print(f"✅ Stopped VM: {vm_to_stop}")
+                        elif mgmt_action == "stop_all":
+                            confirm = questionary.confirm("Stop all active VMs?").ask()
+                            if confirm:
+                                manager.stop_all_vms()
+                                print("✅ Stopped all VMs")
+
+            except Exception as e:
+                print(f"❌ Error: {e}", file=sys.stderr)
+            questionary.press_any_key_to_continue().ask()
 
         genome_choices = []
         for genome_file in genome_dir.glob("*.genome"):
