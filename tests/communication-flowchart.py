@@ -61,6 +61,6 @@ ax.set_ylim(0, 1)
 ax.axis('off')
 
 # Save diagram
-plt.savefig('diagrams/ol_fi_communication_flow.png', dpi=300, bbox_inches='tight')
+plt.savefig('./diagrams/ol_fi_communication_flow.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("Diagram saved to diagrams/ol_fi_communication_flow.png")
