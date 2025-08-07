@@ -1,34 +1,25 @@
-# communication-flowchart.py
-#
-# Below is Python code using Matplotlib to generate a clear flowchart diagram illustrating the 
-# communication flow between the Cellular VM (via circuits.py), Redis Stream, and Lua VM 
-# (software-defined Ol-Fi modem) in the BioXen-jcvi project for MVOC data exchange. This will
-# produce a PNG file saved to the diagrams/ directory.
-
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.lines as mlines
 
 # Create figure and axis
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(12, 8))
 
 # Define positions for components (x, y coordinates)
 positions = {
-    'Cellular VM': (0.2, 0.8),
-    'OlFiNetworkCircuit': (0.2, 0.6),
-    'Redis Stream': (0.5, 0.7),
-    'Lua VM': (0.8, 0.8),
-    'Ol-Fi Modem': (0.8, 0.6)
+    'Cellular VM\n(circuits.py)': (0.2, 0.8),
+    'Redis Stream\n(olfi_stream)': (0.5, 0.7),
+    'Lua VM 1\n(ol_fi_visualizer.lua)': (0.8, 0.8),
+    'Lua VM 2\n(ol_fi_visualizer.lua)': (0.8, 0.4),
+    'GabbyLua\n(main.lua)': (0.65, 0.6)
 }
 
 # Colors for components
 colors = {
-    'Cellular VM': '#FF6B6B',
-    'OlFiNetworkCircuit': '#96CEB4',
-    'Redis Stream': '#4ECDC4',
-    'Lua VM': '#45B7D1',
-    'Ol-Fi Modem': '#FFEAA7'
+    'Cellular VM\n(circuits.py)': '#FF6B6B',
+    'Redis Stream\n(olfi_stream)': '#4ECDC4',
+    'Lua VM 1\n(ol_fi_visualizer.lua)': '#45B7D1',
+    'Lua VM 2\n(ol_fi_visualizer.lua)': '#96CEB4',
+    'GabbyLua\n(main.lua)': '#FFEAA7'
 }
 
 # Draw rectangles for components
@@ -37,14 +28,16 @@ for label, (x, y) in positions.items():
         (x - 0.1, y - 0.05), 0.2, 0.1,
         boxstyle="round,pad=0.02", facecolor=colors[label], edgecolor='black'
     ))
-    ax.text(x, y, label, ha='center', va='center', fontsize=10)
+    ax.text(x, y, label, ha='center', va='center', fontsize=10, wrap=True)
 
 # Draw arrows for data flow
 arrows = [
-    (('OlFiNetworkCircuit', 'Redis Stream'), 'Send MVOC\n& Frame Data', (0.3, 0.65, 0.4, 0.7)),
-    (('Redis Stream', 'Ol-Fi Modem'), 'Read MVOC\n& Frame', (0.6, 0.7, 0.7, 0.65)),
-    (('Cellular VM', 'OlFiNetworkCircuit'), 'Generate MVOC', (0.2, 0.75, 0.2, 0.65)),
-    (('Ol-Fi Modem', 'Lua VM'), 'Visualize Frame', (0.8, 0.65, 0.8, 0.75))
+    (('Cellular VM\n(circuits.py)', 'Redis Stream\n(olfi_stream)'), 'Push MVOC\n& Ol-Fi Frame', (0.3, 0.75, 0.4, 0.7)),
+    (('Redis Stream\n(olfi_stream)', 'Lua VM 1\n(ol_fi_visualizer.lua)'), 'Read MVOC\n& Frame', (0.6, 0.7, 0.7, 0.75)),
+    (('Redis Stream\n(olfi_stream)', 'Lua VM 2\n(ol_fi_visualizer.lua)'), 'Read MVOC\n& Frame', (0.6, 0.65, 0.7, 0.45)),
+    (('Lua VM 1\n(ol_fi_visualizer.lua)', 'GabbyLua\n(main.lua)'), 'Send Ol-Fi\nFrame (TCP)', (0.75, 0.75, 0.7, 0.65)),
+    (('Lua VM 2\n(ol_fi_visualizer.lua)', 'GabbyLua\n(main.lua)'), 'Receive Ol-Fi\nFrame (TCP)', (0.75, 0.45, 0.7, 0.55)),
+    (('Lua VM 1\n(ol_fi_visualizer.lua)', 'Lua VM 2\n(ol_fi_visualizer.lua)'), 'UDP Peer\nDiscovery', (0.8, 0.7, 0.8, 0.5))
 ]
 
 for (start, end), label, (x1, y1, x2, y2) in arrows:
@@ -61,6 +54,6 @@ ax.set_ylim(0, 1)
 ax.axis('off')
 
 # Save diagram
-plt.savefig('diagrams/ol_fi_communication_flow.png', dpi=300, bbox_inches='tight')
+plt.savefig('diagrams/lua_ol_fi_gabby_communication.png', dpi=300, bbox_inches='tight')
 plt.close()
-print("Diagram saved to diagrams/ol_fi_communication_flow.png")
+print("Diagram saved to diagrams/lua_ol_fi_gabby_communication.png")
