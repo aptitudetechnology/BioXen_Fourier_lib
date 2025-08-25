@@ -6,7 +6,12 @@ Fully integrated with pylua_bioxen_vm_lib v0.1.6 package management system.
 
 import sys
 import time
+import shutil
+import subprocess
 import logging
+from datetime import datetime
+from contextlib import contextmanager
+
 from pathlib import Path
 from typing import List, Dict, Optional, Union
 
@@ -23,11 +28,16 @@ except ImportError:
 # NEW v0.1.6 imports - UPDATED
 try:
     from pylua_bioxen_vm_lib import VMManager, InteractiveSession, SessionManager
+    from pylua_bioxen_vm_lib.vm_manager import VMCluster
+    from pylua_bioxen_vm_lib.networking import NetworkedLuaVM, validate_host, validate_port
+    from pylua_bioxen_vm_lib.lua_process import LuaProcess
     from pylua_bioxen_vm_lib.exceptions import (
         InteractiveSessionError, AttachError, DetachError, 
         SessionNotFoundError, SessionAlreadyExistsError, 
-        VMManagerError, LuaVMError
+        VMManagerError, ProcessRegistryError, LuaProcessError,
+        NetworkingError, LuaVMError
     )
+
     # REQUIRED: Full Package Management System
     from pylua_bioxen_vm_lib.utils.curator import (
         Curator, get_curator, bootstrap_lua_environment, Package,
@@ -66,7 +76,141 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class InteractiveBioXen:
-    """Interactive CLI for BioXen hypervisor and package management."""
+    def package_management_menu(self):
+        """Comprehensive package management menu"""
+        choices = [
+            Choice("🔍 Search Packages", "search_lua_packages"),
+            Choice("📋 List Installed", "list_installed_packages"),
+            Choice("⬇️  Install Package", "install_lua_package"),
+            Choice("⬆️  Update Package", "update_lua_package"),
+            Choice("🗑️  Remove Package", "remove_lua_package"),
+            Choice("📊 Package Info", "package_info"),
+            Choice("🔄 Update All Packages", "update_all_packages"),
+            Choice("🏗️  Bootstrap Environment", "bootstrap_lua_environment"),
+            Choice("🔧 Manage Environments", "manage_lua_environments"),
+            Choice("⚙️  Package Settings", "package_settings"),
+            Choice("🔙 Back to Main Menu", "main_menu")
+        ]
+        choice = questionary.select("📦 Package Management", choices=choices).ask()
+        if choice and choice != "main_menu":
+            getattr(self, choice)()
+
+    def search_lua_packages(self):
+        """Search for available Lua packages"""
+        query = questionary.text("🔍 Enter search query:").ask()
+        if not query:
+            return
+        try:
+            packages = search_packages(query)
+            if packages:
+                print(f"\n📦 Found {len(packages)} packages:")
+                for pkg in packages:
+                    print(f"  • {pkg.name} ({pkg.version}) - {pkg.description}")
+            else:
+                print("❌ No packages found")
+        except Exception as e:
+            print(f"❌ Search error: {e}")
+
+    def install_lua_package(self):
+        """Install a Lua package with dependency resolution"""
+        package_name = questionary.text("📦 Package name to install:").ask()
+        if not package_name:
+            return
+        version = questionary.text("🏷️  Version (leave empty for latest):").ask()
+        try:
+            if version:
+                success = self.package_installer.install_package(package_name, version=version)
+            else:
+                success = self.package_installer.install_package(package_name)
+            if success:
+                print(f"✅ Package '{package_name}' installed successfully!")
+            else:
+                print(f"❌ Failed to install package '{package_name}'")
+        except Exception as e:
+            print(f"❌ Installation error: {e}")
+
+    def list_installed_packages(self):
+        """List all installed packages"""
+        try:
+            packages = self.package_registry.get_installed_packages()
+            if packages:
+                print(f"\n📋 Installed Packages ({len(packages)}):")
+                for pkg in packages:
+                    print(f"  • {pkg.name} ({pkg.version}) - {pkg.description}")
+            else:
+                print("📦 No packages installed")
+        except Exception as e:
+            print(f"❌ Error listing packages: {e}")
+
+    def update_lua_package(self):
+        """Update a specific Lua package"""
+        try:
+            installed = self.package_registry.get_installed_packages()
+            if not installed:
+                print("📦 No packages installed")
+                return
+            choices = [Choice(f"{pkg.name} ({pkg.version})", pkg.name) for pkg in installed]
+            package_name = questionary.select("⬆️  Select package to update:", choices=choices).ask()
+            if not package_name:
+                return
+            try:
+                success = self.package_installer.update_package(package_name)
+                if success:
+                    print(f"✅ Package '{package_name}' updated successfully!")
+                else:
+                    print(f"❌ Failed to update package '{package_name}'")
+            except Exception as e:
+                print(f"❌ Update error: {e}")
+        except Exception as e:
+            print(f"❌ Error updating package: {e}")
+
+    def remove_lua_package(self):
+        """Remove an installed Lua package"""
+        try:
+            installed = self.package_registry.get_installed_packages()
+            if not installed:
+                print("📦 No packages installed")
+                return
+            choices = [Choice(f"{pkg.name} ({pkg.version})", pkg.name) for pkg in installed]
+            package_name = questionary.select("🗑️  Select package to remove:", choices=choices).ask()
+            if package_name:
+                success = self.package_installer.remove_package(package_name)
+                if success:
+                    print(f"✅ Package '{package_name}' removed successfully!")
+                else:
+                    print(f"❌ Failed to remove package '{package_name}'")
+        except Exception as e:
+            print(f"❌ Error removing package: {e}")
+
+    def bootstrap_lua_environment(self):
+        """Bootstrap a new Lua environment with essential packages"""
+        env_name = questionary.text("🏗️  Environment name:").ask()
+        if not env_name:
+            return
+        try:
+            success = bootstrap_lua_environment(env_name)
+            if success:
+                print(f"✅ Lua environment '{env_name}' bootstrapped successfully!")
+            else:
+                print(f"❌ Failed to bootstrap environment '{env_name}'")
+        except Exception as e:
+            print(f"❌ Bootstrap error: {e}")
+
+    def manage_lua_environments(self):
+        """Manage Lua environments"""
+        try:
+            environments = self.env_manager.list_environments()
+            choices = [
+                Choice("🆕 Create New Environment", "create_env"),
+                Choice("🔄 Switch Environment", "switch_env"),
+                Choice("📋 List Environments", "list_env"),
+                Choice("🗑️  Delete Environment", "delete_env"),
+                Choice("🔙 Back", "back")
+            ]
+            action = questionary.select("🔧 Environment Management:", choices=choices).ask()
+            # Implement environment management actions (create, switch, list, delete)
+        except Exception as e:
+            print(f"❌ Environment management error: {e}")
     def __init__(self):
         """Initialize the interactive BioXen interface with full package management."""
         self.validator = BioXenGenomeValidator()
@@ -99,14 +243,6 @@ class InteractiveBioXen:
         else:
             logger.warning("BioXen initialized without modern VM support")
 
-    def _check_hypervisor(self):
-        """Check if the hypervisor is initialized."""
-        if self.hypervisor is None:
-            print("❌ Hypervisor not initialized.")
-            print("💡 Please select 'Initialize Hypervisor' from the main menu.")
-            return False
-        return True
-
     def _suggest_unique_vm_id(self, base_name: str) -> str:
         """Suggest a unique VM ID based on existing VMs."""
         if not self.hypervisor or not self.hypervisor.vms:
@@ -126,6 +262,7 @@ class InteractiveBioXen:
                 return candidate
         
         # Fallback with timestamp
+        import time
         timestamp = int(time.time() % 10000)
         return f"vm_{base_name}_{timestamp}"
 
@@ -140,11 +277,12 @@ class InteractiveBioXen:
                 Choice("🔍 Browse Available Genomes", "browse_genomes"),
                 Choice("🧬 Load Genome for Analysis", "validate"),
                 Choice("🖥️  Initialize Hypervisor", "init_hypervisor"),
-                Choice("🌐 Download New Genomes", "download_new"),
+                Choice("📥 Download genomes", "download"),
                 Choice("⚡ Create Virtual Machine", "create_vm"),
                 Choice("📊 Manage Running VMs", "status"),
                 Choice("📺 Terminal DNA Visualization", "terminal_vis"),
-                Choice("🗑️ Destroy VM", "destroy_vm"),
+                Choice("📈 View System Status", "view_status"),
+                Choice("🌐 Download New Genomes", "download_new"),
             ]
             
             # Add Lua VM options if available
@@ -154,6 +292,13 @@ class InteractiveBioXen:
                     Choice("🖥️  Persistent Lua VM", "create_persistent_vm"),
                     Choice("🔗 Attach to Lua VM", "attach_lua_vm"),
                     Choice("📦 Package Management", "package_management_menu"),
+                    Choice("🔍 Search Lua Packages", "search_lua_packages"),
+                    Choice("📋 List Installed Packages", "list_installed_packages"),
+                    Choice("⬇️  Install Lua Package", "install_lua_package"),
+                    Choice("⬆️  Update Lua Package", "update_lua_package"),
+                    Choice("🗑️  Remove Lua Package", "remove_lua_package"),
+                    Choice("🔧 Manage Lua Environments", "manage_lua_environments"),
+                    Choice("🏗️  Bootstrap Lua Environment", "bootstrap_lua_environment"),
                 ])
             
             choices.append(Choice("❌ Exit", "exit"))
@@ -173,18 +318,23 @@ class InteractiveBioXen:
                     self.browse_available_genomes()
                 elif action == "init_hypervisor":
                     self.initialize_hypervisor()
-                elif action == "download_new":
+                elif action == "download":
                     self.download_genomes()
+                elif action == "download_new":
+                    self.download_genomes()  # Same as download for now
                 elif action == "validate":
                     self.validate_genomes()
                 elif action == "create_vm":
                     self.create_vm()
                 elif action == "status":
                     self.show_status()
+                elif action == "view_status":
+                    self.show_status()  # Same as status for now
                 elif action == "terminal_vis":
                     self.toggle_terminal_visualization()
                 elif action == "destroy_vm":
                     self.destroy_vm()
+                # NEW: Modern Lua VM and Package Management
                 elif action == "create_lua_vm" and MODERN_VM_AVAILABLE:
                     self.create_lua_vm()
                 elif action == "create_persistent_vm" and MODERN_VM_AVAILABLE:
@@ -193,6 +343,20 @@ class InteractiveBioXen:
                     self.attach_lua_vm()
                 elif action == "package_management_menu" and MODERN_VM_AVAILABLE:
                     self.package_management_menu()
+                elif action == "search_lua_packages" and MODERN_VM_AVAILABLE:
+                    self.search_lua_packages()
+                elif action == "list_installed_packages" and MODERN_VM_AVAILABLE:
+                    self.list_installed_packages()
+                elif action == "install_lua_package" and MODERN_VM_AVAILABLE:
+                    self.install_lua_package()
+                elif action == "update_lua_package" and MODERN_VM_AVAILABLE:
+                    self.update_lua_package()
+                elif action == "remove_lua_package" and MODERN_VM_AVAILABLE:
+                    self.remove_lua_package()
+                elif action == "manage_lua_environments" and MODERN_VM_AVAILABLE:
+                    self.manage_lua_environments()
+                elif action == "bootstrap_lua_environment" and MODERN_VM_AVAILABLE:
+                    self.bootstrap_lua_environment()
                 elif MODERN_VM_AVAILABLE is False:
                     print("❌ Modern VM features not available. Install pylua-bioxen-vm-lib")
             except KeyboardInterrupt:
@@ -203,8 +367,9 @@ class InteractiveBioXen:
                 print(f"\n❌ Error: {e}")
                 questionary.press_any_key_to_continue().ask()
 
+    # REQUIRED: Comprehensive Package Management Methods
     def package_management_menu(self):
-        """Comprehensive package management menu for Lua package operations."""
+        """Comprehensive package management menu"""
         while True:
             choices = [
                 Choice("🔍 Search Packages", "search_lua_packages"),
@@ -249,16 +414,13 @@ class InteractiveBioXen:
                     self.manage_lua_environments()
                 elif choice == "package_settings":
                     self.package_settings()
-            except KeyboardInterrupt:
-                print("\n⚠️ Operation cancelled by user")
-                continue
             except Exception as e:
                 logger.error(f"Package management error: {e}")
                 print(f"❌ Error: {e}")
                 questionary.press_any_key_to_continue().ask()
 
     def search_lua_packages(self):
-        """Search for available Lua packages."""
+        """Search for available Lua packages"""
         query = questionary.text("🔍 Enter search query:").ask()
         if not query:
             return
@@ -278,15 +440,17 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def install_lua_package(self):
-        """Install a Lua package with dependency resolution."""
+        """Install a Lua package with dependency resolution"""
         package_name = questionary.text("📦 Package name to install:").ask()
         if not package_name:
             return
         
+        # Optional version specification
         version = questionary.text("🏷️  Version (leave empty for latest):").ask()
         
         try:
             print(f"🔄 Installing package '{package_name}'...")
+            # Use the full package installation system
             if version:
                 success = self.package_installer.install_package(package_name, version=version)
             else:
@@ -303,7 +467,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def list_installed_packages(self):
-        """List all installed Lua packages."""
+        """List all installed packages"""
         try:
             packages = self.package_registry.get_installed_packages()
             if packages:
@@ -319,7 +483,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def update_lua_package(self):
-        """Update a specific Lua package."""
+        """Update a specific Lua package"""
         try:
             installed = self.package_registry.get_installed_packages()
             if not installed:
@@ -346,7 +510,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def remove_lua_package(self):
-        """Remove an installed Lua package."""
+        """Remove an installed Lua package"""
         try:
             installed = self.package_registry.get_installed_packages()
             if not installed:
@@ -377,13 +541,14 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def bootstrap_lua_environment(self):
-        """Bootstrap a new Lua environment with essential packages."""
+        """Bootstrap a new Lua environment with essential packages"""
         env_name = questionary.text("🏗️  Environment name:").ask()
         if not env_name:
             return
         
         try:
             print(f"🔄 Bootstrapping environment '{env_name}'...")
+            # Use the curator system to bootstrap
             success = bootstrap_lua_environment(env_name)
             if success:
                 print(f"✅ Lua environment '{env_name}' bootstrapped successfully!")
@@ -396,7 +561,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def manage_lua_environments(self):
-        """Manage Lua environments."""
+        """Manage Lua environments"""
         try:
             choices = [
                 Choice("🆕 Create New Environment", "create_env"),
@@ -455,30 +620,30 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def package_info(self):
-        """Display detailed package information."""
+        """Display detailed package information"""
         package_name = questionary.text("📊 Package name for info:").ask()
         if not package_name:
             return
             
         try:
+            # Try to get package info from registry
             package_info = self.package_registry.get_package_info(package_name)
-            if package_info is None:
+            if package_info:
+                print(f"\n📦 Package Information: {package_name}")
+                print(f"   Version: {package_info.version}")
+                print(f"   Description: {package_info.description}")
+                print(f"   Dependencies: {', '.join(package_info.dependencies) if package_info.dependencies else 'None'}")
+                print(f"   Author: {getattr(package_info, 'author', 'Unknown')}")
+                print(f"   License: {getattr(package_info, 'license', 'Unknown')}")
+            else:
                 print(f"❌ Package '{package_name}' not found")
-                return
-            print(f"\n📦 Package Information: {package_name}")
-            print(f"   Version: {package_info.version}")
-            print(f"   Description: {package_info.description}")
-            print(f"   Dependencies: {', '.join(package_info.dependencies) if package_info.dependencies else 'None'}")
-            print(f"   Author: {getattr(package_info, 'author', 'Unknown')}")
-            print(f"   License: {getattr(package_info, 'license', 'Unknown')}")
         except Exception as e:
-            logger.error(f"Error getting package info: {e}")
             print(f"❌ Error getting package info: {e}")
         
         questionary.press_any_key_to_continue().ask()
 
     def update_all_packages(self):
-        """Update all installed Lua packages."""
+        """Update all installed packages"""
         try:
             installed = self.package_registry.get_installed_packages()
             if not installed:
@@ -507,13 +672,12 @@ class InteractiveBioXen:
             
             print(f"✅ Updated {updated_count} out of {len(installed)} packages")
         except Exception as e:
-            logger.error(f"Error updating packages: {e}")
             print(f"❌ Error updating packages: {e}")
         
         questionary.press_any_key_to_continue().ask()
 
     def package_settings(self):
-        """Configure package management settings."""
+        """Configure package management settings"""
         try:
             choices = [
                 Choice("📝 View Current Settings", "view_settings"),
@@ -543,30 +707,34 @@ class InteractiveBioXen:
                 print("✅ Cache cleaned")
             elif action == "configure":
                 print("🔧 Package manager configuration")
+                # Add configuration options as needed
                 print("💡 Configuration options will be added here")
                 
         except Exception as e:
-            logger.error(f"Settings error: {e}")
             print(f"❌ Settings error: {e}")
         
         questionary.press_any_key_to_continue().ask()
 
+    # MODERNIZED: Lua VM Methods with Package Management
     def create_lua_vm(self):
-        """Create a one-shot interactive Lua VM with package management."""
+        """Create a one-shot interactive Lua VM with package management (modernized for v0.1.6)"""
         print("\n🌙 Interactive Lua VM (One-shot)")
         print("💡 Creates a temporary VM that exits when you're done")
         print("💡 For persistent VMs, use 'Persistent Lua VM' option")
         print("📦 All installed packages are available in this session")
         print("-" * 70)
         
+        # REQUIRED: Ask about package environment
         use_packages = questionary.confirm(
             "📦 Load installed packages in this VM?"
         ).ask()
         
         try:
             with self.vm_manager.create_interactive_session() as session:
+                # REQUIRED: Initialize package environment if requested
                 if use_packages:
                     try:
+                        # Load all installed packages into the VM
                         installed_packages = self.package_registry.get_installed_packages()
                         for package in installed_packages:
                             session.load_package(package.name)
@@ -596,23 +764,19 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def create_persistent_vm(self):
-        """Create a persistent Lua VM that can be attached to later."""
+        """Create a persistent Lua VM that can be attached to later"""
         print("\n🖥️  Persistent Lua VM")
         print("💡 Creates a persistent VM you can attach to multiple times")
         
         vm_id = questionary.text(
             "Enter VM ID:",
-            default=self._suggest_unique_vm_id("persistent_lua"),
-            validate=lambda x: x.strip() != "" or "VM ID cannot be empty"
+            default=self._suggest_unique_vm_id("persistent_lua")
         ).ask()
         
         if not vm_id:
             return
             
-        if self.vm_manager.list_sessions() and any(session.vm_id == vm_id for session in self.vm_manager.list_sessions()):
-            print(f"❌ VM ID '{vm_id}' already exists. Please choose a different ID.")
-            return
-        
+        # Ask about environment
         environments = self.env_manager.list_environments()
         env_choices = [Choice("Default Environment", None)]
         env_choices.extend([Choice(env.name, env.name) for env in environments])
@@ -642,10 +806,11 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def attach_lua_vm(self):
-        """Attach to an existing persistent Lua VM."""
+        """Attach to an existing persistent Lua VM"""
         print("\n🔗 Attach to Lua VM")
         
         try:
+            # Get list of available VMs
             sessions = self.vm_manager.list_sessions()
             if not sessions:
                 print("❌ No persistent VMs available")
@@ -681,6 +846,7 @@ class InteractiveBioXen:
         
         questionary.press_any_key_to_continue().ask()
 
+    # Existing BioXen methods remain unchanged
     def select_chassis(self):
         """Let user select biological chassis type."""
         print("\n🧬 Select Biological Chassis")
@@ -732,6 +898,7 @@ class InteractiveBioXen:
         
         print("\n🚀 Initializing BioXen Hypervisor")
         
+        # Let user select chassis
         selected_chassis = self.select_chassis()
         if selected_chassis is None:
             print("❌ Chassis selection cancelled")
@@ -756,6 +923,7 @@ class InteractiveBioXen:
             
             self.hypervisor = BioXenHypervisor(chassis_type=self.chassis_type)
             
+            # Show warning for placeholder/experimental implementations
             if self.chassis_type == ChassisType.YEAST:
                 print(f"\n⚠️  WARNING: Yeast chassis is currently a PLACEHOLDER implementation")
                 print(f"   This chassis provides basic functionality for testing but")
@@ -780,6 +948,7 @@ class InteractiveBioXen:
         print("\n🔍 Browse Available Genomes")
         print("📋 Scanning local genome collection...")
         
+        # Check for real genomes in genomes directory
         genome_dir = Path("genomes")
         if not genome_dir.exists():
             print("❌ No genomes directory found.")
@@ -787,6 +956,7 @@ class InteractiveBioXen:
             questionary.press_any_key_to_continue().ask()
             return
             
+        # Find all .genome files
         genome_files = list(genome_dir.glob("*.genome"))
         
         if not genome_files:
@@ -798,8 +968,10 @@ class InteractiveBioXen:
         print(f"✅ Found {len(genome_files)} real bacterial genomes")
         print("="*60)
         
+        # Display each genome with details
         for i, genome_file in enumerate(genome_files, 1):
             try:
+                # Try to get basic info about the genome
                 name = genome_file.stem
                 size_kb = genome_file.stat().st_size / 1024
                 
@@ -807,8 +979,9 @@ class InteractiveBioXen:
                 print(f"   📁 File: {genome_file.name}")
                 print(f"   💾 Size: {size_kb:.1f} KB")
                 
+                # Try to load more detailed info if possible
+                integrator = BioXenRealGenomeIntegrator(genome_file)
                 try:
-                    integrator = BioXenRealGenomeIntegrator(genome_file)
                     stats = integrator.get_genome_stats()
                     if stats:
                         print(f"   🔬 Genes: {stats.get('total_genes', 'Unknown')}")
@@ -817,16 +990,16 @@ class InteractiveBioXen:
                             print(f"   ⚡ Essential: {stats['essential_genes']} ({essential_pct:.1f}%)")
                         print(f"   🦠 Organism: {stats.get('organism', 'Unknown')}")
                         
+                        # Show VM requirements
                         template = integrator.create_vm_template()
                         if template:
                             print(f"   🖥️  VM Memory: {template.get('min_memory_kb', 'Unknown')} KB")
                             print(f"   ⏱️  Boot Time: {template.get('boot_time_ms', 'Unknown')} ms")
-                except Exception as e:
-                    logger.warning(f"Error reading genome details for {genome_file}: {e}")
+                except Exception:
                     print(f"   📊 Status: File available (details pending validation)")
                     
             except Exception as e:
-                logger.error(f"Error processing genome {genome_file}: {e}")
+                logger.warning(f"Error reading genome {genome_file}: {e}")
                 print(f"   ❌ Error reading genome: {e}")
                 
         print("\n" + "="*60)
@@ -846,6 +1019,7 @@ class InteractiveBioXen:
         print("📋 Current collection: 5 real minimal bacterial genomes available")
         print("🔄 Options: Download all real genomes, individual genomes, or create simulated data for testing.")
         
+        # Predefined interesting genomes with emojis and descriptions
         genome_options = [
             {
                 "display": "🌐 Download All Real Bacterial Genomes - Complete minimal genome collection",
@@ -909,7 +1083,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def _download_all_real_genomes(self):
-        """Download all real bacterial genomes."""
+        """Download all real bacterial genomes"""
         print("\n🌐 Downloading All Real Bacterial Genomes")
         print("🔄 Launching genome downloader for complete minimal genome collection...")
         print("📋 This will download: JCVI-Syn3A, M. genitalium, M. pneumoniae, C. ruddii, B. aphidicola")
@@ -922,7 +1096,9 @@ class InteractiveBioXen:
             return
             
         try:
-            import subprocess
+            print("\n🔄 Starting real genome download process...")
+            
+            # Run the download_genomes.py script with 'all' command
             result = subprocess.run([
                 sys.executable, 'download_genomes.py', 'all'
             ], capture_output=True, text=True, cwd=Path(__file__).parent)
@@ -946,7 +1122,7 @@ class InteractiveBioXen:
             print("💡 Try running 'python3 download_genomes.py all' manually")
 
     def _download_individual_genome(self, genome_choice):
-        """Download an individual genome."""
+        """Download an individual genome"""
         accession = genome_choice["accession"]
         name = genome_choice["name"]
         size = genome_choice["size"]
@@ -964,33 +1140,38 @@ class InteractiveBioXen:
             return
         
         try:
-            from genome_download_helper import GenomeDownloadHelper
+            print(f"\n🔄 Downloading {name} from NCBI...")
             
-            download_helper = GenomeDownloadHelper("genomes")
-            success, message = download_helper.download_genome(accession, name)
-            
-            genome_file = Path("genomes") / f"{name}.genome"
-            file_actually_downloaded = genome_file.exists() and genome_file.stat().st_size > 1000
-            
-            if file_actually_downloaded:
-                file_size_mb = genome_file.stat().st_size / (1024 * 1024)
-                print(f"✅ Successfully downloaded {name}!")
-                print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
-                print(f"   🧬 Ready for biological virtualization")
-                print(f"   📁 File: {genome_file}")
-            elif success:
-                print(f"✅ Download helper reported success: {message}")
-                print(f"   📊 Authentic NCBI data for {name}")
-                print(f"   🧬 Ready for biological virtualization")
-            else:
-                print(f"⚠️  Download helper returned: {message}")
+            # Use the genome download helper if available
+            try:
+                from genome_download_helper import GenomeDownloadHelper
+                
+                download_helper = GenomeDownloadHelper("genomes")
+                success, message = download_helper.download_genome(accession, name)
+                
+                # Verify if file was actually downloaded
+                genome_file = Path("genomes") / f"{name}.genome"
+                file_actually_downloaded = genome_file.exists() and genome_file.stat().st_size > 1000
+                
+                if file_actually_downloaded:
+                    file_size_mb = genome_file.stat().st_size / (1024 * 1024)
+                    print(f"✅ Successfully downloaded {name}!")
+                    print(f"   📊 Authentic NCBI data ({file_size_mb:.1f} MB)")
+                    print(f"   🧬 Ready for biological virtualization")
+                    print(f"   📁 File: {genome_file}")
+                elif success:
+                    print(f"✅ Download helper reported success: {message}")
+                    print(f"   📊 Authentic NCBI data for {name}")
+                    print(f"   🧬 Ready for biological virtualization")
+                else:
+                    print(f"⚠️  Download helper returned: {message}")
+                    print("🔄 Creating simulated genome for testing...")
+                    self._create_simulated_genome(accession, name, size)
+                    
+            except ImportError:
+                print("⚠️  Advanced download helper not available")
                 print("🔄 Creating simulated genome for testing...")
                 self._create_simulated_genome(accession, name, size)
-                
-        except ImportError:
-            print("⚠️  Advanced download helper not available")
-            print("🔄 Creating simulated genome for testing...")
-            self._create_simulated_genome(accession, name, size)
                 
         except Exception as e:
             logger.error(f"Individual genome download error: {e}")
@@ -999,14 +1180,14 @@ class InteractiveBioXen:
             self._create_simulated_genome(accession, name, size)
 
     def _download_custom_genome(self):
-        """Download a custom genome by accession."""
+        """Download a custom genome by accession"""
         accession = questionary.text("Enter NCBI accession number (e.g., NC_000913.3):").ask()
         if not accession:
             return
         name = questionary.text("Enter a name for this genome:").ask()
         if not name:
             name = accession.replace(".", "_")
-        size = 1000000
+        size = 1000000  # Default size for custom genomes
         
         genome_choice = {"accession": accession, "name": name, "size": size}
         self._download_individual_genome(genome_choice)
@@ -1017,11 +1198,13 @@ class InteractiveBioXen:
         print(f"💡 Creating simulated genome data for testing and development")
         
         try:
+            # Create simulated genome data (random DNA sequence)
             import random
             bases = ['A', 'T', 'G', 'C']
             genome_data = ''.join(random.choice(bases) for _ in range(size))
             
             if genome_data:
+                # Add to available genomes
                 self.available_genomes.append({
                     "accession": accession,
                     "name": name,
@@ -1045,6 +1228,7 @@ class InteractiveBioXen:
         print("\n🧬 Load Genome for Analysis")
         print("📋 Scanning for available genomes...")
         
+        # Check for real genomes in genomes directory
         genome_dir = Path("genomes")
         if not genome_dir.exists():
             print("❌ No genomes directory found.")
@@ -1052,6 +1236,7 @@ class InteractiveBioXen:
             questionary.press_any_key_to_continue().ask()
             return
             
+        # Find all .genome files
         genome_files = list(genome_dir.glob("*.genome"))
         
         if not genome_files:
@@ -1062,6 +1247,7 @@ class InteractiveBioXen:
             
         print(f"✅ Found {len(genome_files)} genome files")
         
+        # Create genome choices from actual files
         genome_choices = []
         valid_genomes = []
         
@@ -1070,6 +1256,7 @@ class InteractiveBioXen:
                 name = genome_file.stem
                 size_kb = genome_file.stat().st_size / 1024
                 
+                # Try to get basic stats
                 integrator = BioXenRealGenomeIntegrator(genome_file)
                 try:
                     stats = integrator.get_genome_stats()
@@ -1116,7 +1303,7 @@ class InteractiveBioXen:
         questionary.press_any_key_to_continue().ask()
 
     def _validate_all_genomes(self, valid_genomes):
-        """Validate all available genomes."""
+        """Validate all available genomes"""
         print("\n🔄 Validating all available genomes...")
         all_valid = True
         for genome_info in valid_genomes:
@@ -1141,7 +1328,7 @@ class InteractiveBioXen:
             print("\n⚠️  Some genomes failed validation. Check the logs above.")
 
     def _validate_single_genome(self, genome_choice):
-        """Validate a single genome."""
+        """Validate a single genome"""
         print(f"\n🔬 Validating {genome_choice['name']}...")
         try:
             is_valid, messages = self.validator.validate_genome(genome_choice['file_path'])
@@ -1150,7 +1337,7 @@ class InteractiveBioXen:
                 self.available_genomes.append({
                     "name": genome_choice['name'],
                     "file_path": genome_choice['file_path'],
-                    "data": None
+                    "data": None  # Data will be loaded when VM is created
                 })
                 print(f"💡 {genome_choice['name']} is now available for VM creation.")
             else:
@@ -1205,8 +1392,9 @@ class InteractiveBioXen:
 
         print(f"\n⚙️  Configuring VM for {genome_name}")
 
-        min_memory_kb = 1024
-        boot_time_ms = 100
+        # Resource allocation
+        min_memory_kb = 1024  # Default minimal memory
+        boot_time_ms = 100   # Default minimal boot time
         try:
             integrator = BioXenRealGenomeIntegrator(selected_genome_path)
             template = integrator.create_vm_template()
@@ -1220,6 +1408,7 @@ class InteractiveBioXen:
         print(f"   Suggested Minimum Memory: {min_memory_kb} KB")
         print(f"   Suggested Boot Time: {boot_time_ms} ms")
 
+        # Allow user to adjust resources
         mem_input = questionary.text(
             f"Enter memory allocation in KB (default: {min_memory_kb}):",
             default=str(min_memory_kb),
@@ -1277,6 +1466,7 @@ class InteractiveBioXen:
                 print(f"     Memory: {vm_instance.resources.memory_kb} KB")
                 print(f"     Boot Time: {vm_instance.resources.boot_time_ms} ms")
                 
+                # Add actions for running VMs
                 if state == VMState.RUNNING:
                     vm_actions = questionary.select(
                         f"Actions for VM '{vm_id}':",
@@ -1298,7 +1488,7 @@ class InteractiveBioXen:
                         self.hypervisor.destroy_vm(vm_id)
                         print(f"✅ VM '{vm_id}' destroyed.")
                     elif vm_actions == "back":
-                        pass
+                        pass  # Go back to main status loop
         
         questionary.press_any_key_to_continue().ask()
 
@@ -1329,39 +1519,3 @@ class InteractiveBioXen:
         if confirm:
             try:
                 self.hypervisor.destroy_vm(vm_to_destroy)
-                print(f"✅ VM '{vm_to_destroy}' destroyed.")
-            except Exception as e:
-                logger.error(f"VM destruction failed: {e}")
-                print(f"❌ Failed to destroy VM: {e}")
-        
-        questionary.press_any_key_to_continue().ask()
-
-    def toggle_terminal_visualization(self):
-        """Toggle terminal-based DNA visualization."""
-        if not self._check_hypervisor():
-            return
-            
-        if self.visualization_active:
-            print("\n📺 Stopping terminal visualization...")
-            self.visualization_active = False
-            if self.visualization_monitor:
-                self.visualization_monitor.stop()
-                self.visualization_monitor = None
-            print("✅ Terminal visualization stopped.")
-        else:
-            print("\n📺 Starting terminal visualization...")
-            try:
-                # Placeholder for visualization implementation
-                print("⚠️ Terminal visualization is not fully implemented yet.")
-                self.visualization_active = True
-                # self.visualization_monitor = SomeVisualizationClass()
-                print("✅ Terminal visualization started (placeholder).")
-            except Exception as e:
-                logger.error(f"Error starting visualization: {e}")
-                print(f"❌ Error starting visualization: {e}")
-        
-        questionary.press_any_key_to_continue().ask()
-
-if __name__ == "__main__":
-    bioxen = InteractiveBioXen()
-    bioxen.main_menu()
