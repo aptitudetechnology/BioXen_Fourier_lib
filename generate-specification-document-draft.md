@@ -1,7 +1,7 @@
 # GitHub Copilot Codebase Analysis Prompt
 
 ## Objective
-Analyze the existing BioXen_jcvi_vm_lib codebase to understand the current architecture and inform the development of a comprehensive specification document that aligns with the pylua_bioxen_vm_lib patterns.
+Analyze the existing BioXen_jcvi_vm_lib codebase to understand the current architecture and inform the development of a comprehensive specification document that aligns with the pylua_bioxen_vm_lib patterns (see `pylua_bioxen_vm_lib_specificationversion-0-1-22.markdown`).
 
 ## Analysis Request
 
@@ -52,7 +52,7 @@ Please examine the BioXen_jcvi_vm_lib codebase and provide a detailed report cov
 - How do existing workflows currently operate?
 
 ### 8. **Missing Components for MVP**
-- What components from pylua_bioxen_vm_lib patterns are missing?
+- What components from pylua_bioxen_vm_lib patterns (see `pylua_bioxen_vm_lib_specificationversion-0-1-22.markdown`) are missing?
 - What CLI infrastructure exists or needs to be created?
 - What session management capabilities need development?
 - What inter-VM communication infrastructure exists?
@@ -77,7 +77,7 @@ Please structure your analysis as a comprehensive report with:
 2. **Architecture Overview** - Current system design and components
 3. **API Assessment** - Existing interfaces and capabilities
 4. **Integration Readiness** - How prepared the code is for factory pattern implementation
-5. **Gap Analysis** - What needs to be developed for MVP alignment with pylua_bioxen_vm_lib
+5. **Gap Analysis** - What needs to be developed for MVP alignment with pylua_bioxen_vm_lib (see `pylua_bioxen_vm_lib_specificationversion-0-1-22.markdown`)
 6. **Implementation Recommendations** - Specific steps for achieving the architectural goals
 
 ## Context for Analysis
@@ -88,6 +88,6 @@ The goal is to transform BioXen_jcvi_vm_lib into a comprehensive biological VM m
 - Includes interactive CLI management
 - Supports biological resource allocation
 - Enables future inter-VM bio-communication protocols
-- Follows the successful architectural patterns of pylua_bioxen_vm_lib
+- Follows the successful architectural patterns of pylua_bioxen_vm_lib (see `pylua_bioxen_vm_lib_specificationversion-0-1-22.markdown`)
 
 This analysis will inform the creation of a detailed specification document that guides the development of a robust biological hypervisor system for computational biology workflows.
