@@ -31,25 +31,21 @@ BioXen_jcvi_vm_lib is a Python library forked from [BioXen-jcvi](https://github.
 
 ## Quickstart
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Create a Biological VM:**
+1. **Create a Biological VM:**
    ```python
    from src.api.factory import create_bio_vm
 
    vm = create_bio_vm(vm_id="demo1", vm_type="syn3a", config={"genome": "NC_000000"})
    # VM is registered with the hypervisor automatically
    ```
-3. **Manage Resources:**
+2. **Manage Resources:**
    ```python
    from src.api.resource_manager import BioResourceManager
 
    resource_mgr = BioResourceManager(vm)
    resource_mgr.allocate_atp(100)
    ```
-4. **Configure VM:**
+3. **Configure VM:**
    ```python
    from src.api.config_manager import ConfigManager
 
