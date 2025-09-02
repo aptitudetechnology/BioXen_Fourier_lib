@@ -1,0 +1,24 @@
+Perfect analysis! Based on your codebase findings, here's a refined GitHub Copilot prompt that works with your existing architecture:
+
+---
+
+**GitHub Copilot Prompt:**
+
+Refactor the existing BioXen-jcvi codebase to add an MVP factory pattern and unified API. Based on the existing `src/hypervisor/core.py`, `interactive_bioxen.py`, and genome integrator logic:
+
+1. Create a `BiologicalVM` abstract base class that wraps the existing VM functionality with methods:
+   - `start_transcription(genes)` - interface to existing transcription logic
+   - `allocate_ribosomes(count)` - wrap existing ribosome allocation 
+   - `get_atp_level()` - interface to existing ATP tracking
+   - `execute_metabolic_pathway(pathway)` - wrap existing pathway execution
+   - `get_vm_status()` - interface to existing state management
+
+2. Implement concrete `Syn3AVM` and `EColiVM` classes that inherit from `BiologicalVM` and integrate with the existing hypervisor and genome integrator systems
+
+3. Add a `create_bio_vm(vm_id, vm_type, config)` factory function that instantiates the appropriate VM class and connects it to the existing hypervisor infrastructure
+
+4. Create a `BioResourceManager` class that centralizes the existing ribosome, ATP, and memory management logic from the hypervisor
+
+5. Adapt the existing config dictionary patterns into a unified configuration management system
+
+Keep the existing hypervisor core functionality intact - this should be a wrapper/interface layer that provides a cleaner API on top of the current architecture.

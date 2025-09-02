@@ -1,0 +1,32 @@
+# Factory Pattern API Refactor Report (Prompt 2)
+
+## Refined Prompt Requirements
+
+1. Add a `BiologicalVM` abstract base class wrapping existing VM functionality:
+   - Methods: `start_transcription(genes)`, `allocate_ribosomes(count)`, `get_atp_level()`, `execute_metabolic_pathway(pathway)`, `get_vm_status()`
+2. Implement concrete `Syn3AVM` and `EColiVM` classes inheriting from `BiologicalVM`, integrating with hypervisor and genome integrator
+3. Add a `create_bio_vm(vm_id, vm_type, config)` factory function to instantiate and connect VMs to the hypervisor
+4. Create a `BioResourceManager` class centralizing ribosome, ATP, and memory management from the hypervisor
+5. Adapt config dictionary patterns into a unified configuration management system
+6. Preserve all existing hypervisor core functionality; refactor should be a wrapper/interface layer
+
+## Codebase Alignment & Recommendations
+
+- The codebase already has robust VM, resource, and genome management, but lacks a unified API and factory pattern.
+- VM logic is distributed across hypervisor, resource allocation, and genome integrator classes, not wrapped in a base class or unified interface.
+- No dedicated `BiologicalVM` base class or concrete VM subclasses; VMs are generic and genome-driven.
+- Resource management (ribosomes, ATP, memory) is present but not centralized in a `BioResourceManager` class.
+- Config management uses dictionaries/templates, but not a unified system.
+
+### Recommendations for Refactor
+
+- Implement the `BiologicalVM` base class as a wrapper/interface to existing VM logic.
+- Create `Syn3AVM` and `EColiVM` classes that use the base class and connect to the hypervisor and genome integrator.
+- Add a `create_bio_vm(vm_id, vm_type, config)` factory function for VM instantiation and registration.
+- Refactor resource management into a `BioResourceManager` class, moving logic from the hypervisor.
+- Centralize config management for VMs into a unified system/class.
+- Ensure all changes are additive and do not disrupt existing hypervisor functionality.
+
+## Summary
+
+The refined prompt is well-aligned with the current architecture and will provide a cleaner, unified API for biological VMs. The recommended refactor will improve maintainability and extensibility while preserving all core features.
