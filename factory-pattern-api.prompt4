@@ -1,0 +1,37 @@
+Note:
+
+This project is now a fork of BioXen-jcvi  https://github.com/aptitudetechnology/BioXen-jcvi
+and it's called BioXen_jcvi_vm_lib https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
+
+
+The new prompt to create the factory pattern and API as well as transform this codebase 
+into a Python library that can be used by BioXen-jcvi. 
+
+Excellent analysis! Here's a final, precise GitHub Copilot prompt that addresses your codebase structure:
+
+---
+
+**GitHub Copilot Prompt:**
+
+Add a factory pattern API layer to BioXen-jcvi as a **non-disruptive wrapper** over existing functionality. Based on the current hypervisor, resource allocation, and genome integrator architecture:
+
+1. **Create `src/api/biological_vm.py`** with:
+   - Abstract `BiologicalVM` base class that delegates to existing hypervisor methods
+   - Concrete `Syn3AVM` and `EColiVM` classes that wrap genome-specific logic
+   - Each class should maintain references to existing hypervisor and genome integrator instances
+
+2. **Create `src/api/factory.py`** with:
+   - `create_bio_vm(vm_id, vm_type, config)` that instantiates VM classes and registers with existing hypervisor
+   - VM type mapping: "syn3a" → `Syn3AVM`, "ecoli" → `EColiVM`, "minimal_cell" → `MinimalCellVM`
+
+3. **Create `src/api/resource_manager.py`** with:
+   - `BioResourceManager` class that wraps existing ribosome/ATP/memory management
+   - Should interface with current resource tracking without replacing it
+
+4. **Create `src/api/config_manager.py`** with:
+   - Unified config handling that works with existing dictionary patterns
+   - Config validation and defaults for different VM types
+
+5. **Add integration points** in existing files to register VMs created via factory with the current hypervisor system
+
+**Key constraint**: All existing functionality in `src/hypervisor/core.py` and `interactive_bioxen.py` must remain unchanged. This is purely an API layer addition.
