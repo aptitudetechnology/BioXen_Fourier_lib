@@ -1,0 +1,24 @@
+Here's a prompt for GitHub Copilot to create an MVP factory pattern and API for your BioXen-jcvi project:
+
+---
+
+**GitHub Copilot Prompt:**
+
+Create an MVP factory pattern and API for BioXen-jcvi biological virtual machines. Based on the existing codebase, implement:
+
+1. A `create_bio_vm()` factory function that supports vm_type parameters like "syn3a", "ecoli", "minimal_cell"
+
+2. A base `BiologicalVM` abstract class with methods for:
+   - `start_transcription(genes)`
+   - `allocate_ribosomes(count)`
+   - `get_atp_level()`
+   - `execute_metabolic_pathway(pathway)`
+   - `get_vm_status()`
+
+3. Concrete implementations for `Syn3AVM` and `EColiVM` classes that inherit from BiologicalVM
+
+4. A simple `BioResourceManager` class to handle resource allocation between VMs
+
+5. Configuration management similar to the pylua_bioxen_vm_lib pattern with config dictionaries
+
+Keep it minimal - focus on the core factory pattern and unified interface. Use the same architectural approach as the existing Lua VM factory but adapted for biological computation contexts.
