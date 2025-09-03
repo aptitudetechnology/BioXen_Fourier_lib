@@ -60,22 +60,21 @@ class BiologicalVM(ABC):
     Mirrors pylua_bioxen_vm_lib VM class hierarchy pattern.
     """
     
-    def __init__(self, vm_id: str, vm_type: str, hypervisor: BioXenHypervisor, config: Dict[str, Any]):
+    def __init__(self, vm_id: str, biological_type: str, hypervisor: BioXenHypervisor, config: Dict[str, Any]):
         self.vm_id = vm_id
-        self.vm_type = vm_type  # "basic" or "xcpng" following pylua pattern
+        self.biological_type = biological_type  # syn3a, ecoli, minimal_cell
         self.hypervisor = hypervisor  # Reference to existing hypervisor (delegation pattern)
         self.config = config
         self._vm_instance: Optional[VirtualMachine] = None
     
     @abstractmethod
     def get_vm_type(self) -> str:
-        """Return the VM type identifier - pylua pattern."""
+        """Return the VM infrastructure type (basic/xcpng) - pylua pattern."""
         pass
     
-    @abstractmethod
     def get_biological_type(self) -> str:
         """Return the biological organism type (syn3a, ecoli, minimal_cell)."""
-        pass
+        return self.biological_type
     
     # Common interface methods that delegate to hypervisor (pylua delegation pattern)
     def start(self) -> bool:
@@ -97,6 +96,35 @@ class BiologicalVM(ABC):
     def get_status(self) -> Dict[str, Any]:
         """Get current VM status - mirrors pylua VM.get_status()."""
         return self.hypervisor.get_vm_status(self.vm_id)
+    
+    # Biological-specific methods (same interface for all VM types)
+    def execute_biological_process(self, process_code: str) -> Dict[str, Any]:
+        """Execute biological process - equivalent to pylua execute_string()."""
+        return self._execute_biological_process_impl(process_code)
+    
+    def install_biological_package(self, package_name: str) -> Dict[str, Any]:
+        """Install biological analysis package."""
+        return self._install_biological_package_impl(package_name)
+    
+    def get_biological_metrics(self) -> Dict[str, Any]:
+        """Get biological metrics based on organism type."""
+        return self._get_biological_metrics_impl()
+    
+    # Abstract implementation methods - infrastructure-specific
+    @abstractmethod
+    def _execute_biological_process_impl(self, process_code: str) -> Dict[str, Any]:
+        """Implementation-specific biological process execution."""
+        pass
+    
+    @abstractmethod
+    def _install_biological_package_impl(self, package_name: str) -> Dict[str, Any]:
+        """Implementation-specific package installation."""
+        pass
+    
+    @abstractmethod
+    def _get_biological_metrics_impl(self) -> Dict[str, Any]:
+        """Implementation-specific metrics gathering."""
+        pass
     
     # Abstract methods for biological-specific operations
     @abstractmethod
@@ -209,87 +237,92 @@ class XCPngBiologicalVM(BiologicalVM):
 ```
 
 #### Day 3-4: Concrete VM Classes
-**Implement `Syn3AVM` class** (Following XCPngVM specialization pattern):
+#### Day 3-4: Concrete Implementation Classes Complete
+**BasicBiologicalVM and XCPngBiologicalVM Implementation Complete** (Following pylua infrastructure pattern):
+
+The two infrastructure VM classes handle all biological types through composition:
+
 ```python
-class Syn3AVM(BiologicalVM):
-    """
-    Syn3A minimal genome biological VM.
-    Mirrors XCPngVM specialization pattern from pylua_bioxen_vm_lib.
-    """
-    
-    def get_vm_type(self) -> str:
-        return "syn3a"
-    
-    def execute_biological_process(self, process_code: str) -> Dict[str, Any]:
-        """Execute biological process - mirrors pylua execute_string() pattern."""
-        # Delegate to existing hypervisor biological process execution
-        return self.hypervisor.execute_biological_process(self.vm_id, process_code)
-    
-    def start_transcription(self, gene_ids: List[str]) -> bool:
-        """
-        Start transcription of specific genes.
-        Biological equivalent of pylua XCPngVM.execute_string() specialization.
-        """
-        # Delegate to existing hypervisor gene expression logic
-        return self.hypervisor.start_gene_expression(self.vm_id, gene_ids)
-    
-    def get_essential_genes(self) -> List[str]:
-        """
-        Get list of essential genes for Syn3A.
-        Mirrors pylua VM-specific status methods.
-        """
-        vm = self.hypervisor.get_vm(self.vm_id)
-        return vm.genome.essential_genes if vm else []
-    
-    def get_atp_level(self) -> float:
-        """
-        Get current ATP percentage.
-        Biological resource monitoring - mirrors pylua resource tracking.
-        """
-        status = self.get_status()
-        return status.get('atp_percent', 0.0)
-    
-    def get_ribosome_allocation(self) -> int:
-        """Get current ribosome allocation - Syn3A specific method."""
-        status = self.get_status()
-        return status.get('allocated_ribosomes', 0)
-    
-    def optimize_minimal_metabolism(self) -> bool:
-        """Optimize for minimal genome metabolism - Syn3A specific."""
-        return self.hypervisor.optimize_minimal_metabolism(self.vm_id)
+# BasicBiologicalVM handles biological-specific methods based on biological_type
+def _execute_biological_process_impl(self, process_code: str) -> Dict[str, Any]:
+    """Execute biological process directly on hypervisor."""
+    return self.hypervisor.execute_biological_process(self.vm_id, process_code, self.biological_type)
+
+def _install_biological_package_impl(self, package_name: str) -> Dict[str, Any]:
+    """Install biological analysis package."""
+    return self.hypervisor.install_package(self.vm_id, package_name)
+
+def _get_biological_metrics_impl(self) -> Dict[str, Any]:
+    """Get biological metrics based on organism type."""
+    # Biological-specific metrics based on self.biological_type
+    if self.biological_type == "syn3a":
+        return self._get_syn3a_metrics()
+    elif self.biological_type == "ecoli":
+        return self._get_ecoli_metrics()
+    elif self.biological_type == "minimal_cell":
+        return self._get_minimal_cell_metrics()
+    else:
+        return {}
+
+def _get_syn3a_metrics(self) -> Dict[str, Any]:
+    """Get Syn3A-specific metrics."""
+    status = self.get_status()
+    return {
+        'atp_level': status.get('atp_percent', 0.0),
+        'essential_genes': status.get('essential_genes', []),
+        'ribosome_allocation': status.get('allocated_ribosomes', 0)
+    }
+
+def _get_ecoli_metrics(self) -> Dict[str, Any]:
+    """Get E.coli-specific metrics."""
+    status = self.get_status()
+    return {
+        'plasmid_count': status.get('plasmid_count', 0),
+        'growth_phase': status.get('growth_phase', 'stationary'),
+        'operon_status': status.get('operon_status', {})
+    }
+
+def _get_minimal_cell_metrics(self) -> Dict[str, Any]:
+    """Get minimal cell-specific metrics."""
+    status = self.get_status()
+    return {
+        'minimal_functions': ['dna_replication', 'protein_synthesis', 'energy_production'],
+        'function_status': status.get('function_status', {})
+    }
 ```
 
-#### Day 5-7: Testing and Validation
-- Create comprehensive test suite for wrapper pattern
-- Validate delegation to existing hypervisor methods
-- Test VM lifecycle management through new API
-- Performance testing to measure wrapper overhead
-
-### Phase 2: Core Implementation (Week 2)
-**Objective**: Complete VM class hierarchy and implement factory function
-
-#### Day 8-10: Additional VM Classes
-**`EColiVM` Implementation** (Following BasicLuaVM pattern):
+**Biological-Specific Helper Methods** (Added to BiologicalVM base class):
 ```python
-class EColiVM(BiologicalVM):
-    """
-    E.coli bacterial VM with prokaryotic features.
-    Mirrors BasicLuaVM pattern from pylua_bioxen_vm_lib.
-    """
-    
-    def get_vm_type(self) -> str:
-        return "ecoli"
-    
-    def execute_biological_process(self, process_code: str) -> Dict[str, Any]:
-        """Execute biological process - standard delegation pattern."""
-        return self.hypervisor.execute_biological_process(self.vm_id, process_code)
-    
-    def allocate_ribosomes(self, count: int) -> bool:
-        """
-        Allocate ribosomes for protein synthesis.
-        E.coli specific resource management - mirrors pylua resource allocation.
-        """
-        return self.hypervisor.allocate_ribosomes(self.vm_id, count)
+# Syn3A-specific methods
+def start_transcription(self, gene_ids: List[str]) -> bool:
+    """Start transcription - available for all VM types."""
+    if self.biological_type == "syn3a":
+        return self.hypervisor.start_gene_expression(self.vm_id, gene_ids)
+    else:
+        raise ValueError(f"Transcription not supported for {self.biological_type}")
+
+def get_essential_genes(self) -> List[str]:
+    """Get essential genes - Syn3A specific."""
+    if self.biological_type == "syn3a":
+        vm = self.hypervisor.get_vm(self.vm_id)
+        return vm.genome.essential_genes if vm else []
+    return []
+
+# E.coli-specific methods  
+def manage_operons(self, operon_ids: List[str], action: str) -> bool:
+    """Manage operons - E.coli specific."""
+    if self.biological_type == "ecoli":
+        return self.hypervisor.manage_operons(self.vm_id, operon_ids, action)
+    else:
+        raise ValueError(f"Operons not supported for {self.biological_type}")
+
+def get_plasmid_count(self) -> int:
+    """Get plasmid count - E.coli specific."""
+    if self.biological_type == "ecoli":
+        status = self.get_status()
+        return status.get('plasmid_count', 0)
+    return 0
+```
     
     def get_plasmid_count(self) -> int:
         """
@@ -314,46 +347,21 @@ class EColiVM(BiologicalVM):
 class MinimalCellVM(BiologicalVM):
     """
     Minimal cell VM with basic cellular functions.
-    Mirrors pylua minimal VM pattern.
-    """
-    
-    def get_vm_type(self) -> str:
-        return "minimal_cell"
-    
-    def execute_biological_process(self, process_code: str) -> Dict[str, Any]:
-        """Execute biological process with minimal cell constraints."""
-        # Add minimal cell specific validation
-        if not self._validate_minimal_process(process_code):
-            raise ValueError("Process not supported in minimal cell")
-        return self.hypervisor.execute_biological_process(self.vm_id, process_code)
-    
-    def get_minimal_functions(self) -> List[str]:
-        """
-        Get list of minimal cellular functions.
-        Equivalent to pylua basic feature enumeration.
-        """
-        return ['dna_replication', 'protein_synthesis', 'energy_production', 'membrane_maintenance']
-    
-    def _validate_minimal_process(self, process_code: str) -> bool:
-        """Validate process is compatible with minimal cell constraints."""
-        minimal_functions = self.get_minimal_functions()
-        # Implementation would check if process uses only minimal functions
-        return True  # Simplified for example
-```
+#### Day 5-7: Testing and Validation
+- Create comprehensive test suite for wrapper pattern
+- Validate delegation to existing hypervisor methods
+- Test VM lifecycle management through new API
+- Performance testing to measure wrapper overhead
 
-#### Day 11-12: Factory Function Implementation
+### Phase 2: Core Implementation (Week 2)
+**Objective**: Complete factory function and resource management
+
+#### Day 8-10: Factory Function Implementation
 **`src/api/factory.py`** (Following exact pylua_bioxen_vm_lib create_vm pattern):
 ```python
 from typing import Dict, Any, Optional
-from .biological_vm import BiologicalVM, Syn3AVM, EColiVM, MinimalCellVM
+from .biological_vm import BiologicalVM, BasicBiologicalVM, XCPngBiologicalVM
 from ..hypervisor.core import BioXenHypervisor, ChassisType
-
-# Biological type mapping - updated to separate biological types from VM infrastructure
-BIOLOGICAL_TYPE_MAPPING = {
-    "syn3a": Syn3AVM,
-    "ecoli": EColiVM, 
-    "minimal_cell": MinimalCellVM
-}
 
 def create_bio_vm(vm_id: str, biological_type: str, vm_type: str = "basic", config: Optional[Dict[str, Any]] = None) -> BiologicalVM:
     """
@@ -372,8 +380,9 @@ def create_bio_vm(vm_id: str, biological_type: str, vm_type: str = "basic", conf
     Raises:
         ValueError: If biological_type or vm_type is not supported
     """
-    if biological_type not in BIOLOGICAL_TYPE_MAPPING:
-        raise ValueError(f"Unsupported biological type: {biological_type}. Supported: {list(BIOLOGICAL_TYPE_MAPPING.keys())}")
+    supported_biological_types = ["syn3a", "ecoli", "minimal_cell"]
+    if biological_type not in supported_biological_types:
+        raise ValueError(f"Unsupported biological type: {biological_type}. Supported: {supported_biological_types}")
     
     if vm_type not in ["basic", "xcpng"]:
         raise ValueError(f"Unsupported VM type: {vm_type}. Supported: ['basic', 'xcpng']")
@@ -391,14 +400,12 @@ def create_bio_vm(vm_id: str, biological_type: str, vm_type: str = "basic", conf
     vm_template = _create_vm_template(biological_type, vm_type, config)
     hypervisor.create_vm(vm_id, template=vm_template)
     
-    # Create and return wrapper VM instance based on vm_type
+    # Create and return wrapper VM instance based on vm_type (infrastructure-focused)
     if vm_type == "basic":
-        # For basic VMs, use the specific biological class directly
-        biological_class = BIOLOGICAL_TYPE_MAPPING[biological_type]
-        return biological_class(vm_id, biological_type, hypervisor, config)
+        # For basic VMs, use BasicBiologicalVM with biological_type parameter
+        return BasicBiologicalVM(vm_id, biological_type, hypervisor, config)
     elif vm_type == "xcpng":
-        # For XCP-ng VMs, use the XCP-ng wrapper regardless of biological type
-        # The biological behavior is handled inside the XCP-ng VM
+        # For XCP-ng VMs, use XCPngBiologicalVM with biological_type parameter  
         return XCPngBiologicalVM(vm_id, biological_type, hypervisor, config)
 
 def _get_chassis_for_biological_type(biological_type: str) -> ChassisType:
@@ -452,13 +459,21 @@ def _create_vm_template(biological_type: str, vm_type: str, config: Dict[str, An
     return {"vm_type": vm_type, **config}
 
 # Additional factory functions following pylua pattern
+def get_supported_biological_types() -> List[str]:
+    """Get list of supported biological types."""
+    return ["syn3a", "ecoli", "minimal_cell"]
+
 def get_supported_vm_types() -> List[str]:
-    """Get list of supported VM types - mirrors pylua capability reporting."""
-    return list(VM_TYPE_MAPPING.keys())
+    """Get list of supported VM infrastructure types - mirrors pylua capability reporting."""
+    return ["basic", "xcpng"]
+
+def validate_biological_type(biological_type: str) -> bool:
+    """Validate biological type is supported."""
+    return biological_type in get_supported_biological_types()
 
 def validate_vm_type(vm_type: str) -> bool:
-    """Validate VM type is supported - pylua validation pattern."""
-    return vm_type in VM_TYPE_MAPPING
+    """Validate VM infrastructure type is supported - pylua validation pattern."""
+    return vm_type in get_supported_vm_types()
 ```
 
 #### Day 13-14: Integration Testing
@@ -797,27 +812,48 @@ class ConfigManager:
 ```python
 # tests/test_api/test_factory.py
 import pytest
-from src.api.factory import create_bio_vm, VM_TYPE_MAPPING
-from src.api.biological_vm import Syn3AVM, EColiVM, MinimalCellVM
+from src.api.factory import create_bio_vm, get_supported_biological_types, get_supported_vm_types
+from src.api.biological_vm import BasicBiologicalVM, XCPngBiologicalVM
 
 class TestFactoryPattern:
-    def test_create_syn3a_vm(self):
-        vm = create_bio_vm("test_syn3a", "syn3a")
-        assert isinstance(vm, Syn3AVM)
+    def test_create_basic_syn3a_vm(self):
+        vm = create_bio_vm("test_syn3a", "syn3a", "basic")
+        assert isinstance(vm, BasicBiologicalVM)
         assert vm.vm_id == "test_syn3a"
-        assert vm.get_vm_type() == "syn3a"
+        assert vm.get_vm_type() == "basic"
+        assert vm.get_biological_type() == "syn3a"
     
-    def test_create_ecoli_vm(self):
-        vm = create_bio_vm("test_ecoli", "ecoli")
-        assert isinstance(vm, EColiVM)
-        assert vm.get_vm_type() == "ecoli"
+    def test_create_basic_ecoli_vm(self):
+        vm = create_bio_vm("test_ecoli", "ecoli", "basic")
+        assert isinstance(vm, BasicBiologicalVM)
+        assert vm.get_vm_type() == "basic" 
+        assert vm.get_biological_type() == "ecoli"
+    
+    def test_create_xcpng_vm(self):
+        xcpng_config = {"xcpng_config": {"xapi_url": "https://test:443"}}
+        vm = create_bio_vm("test_xcpng", "syn3a", "xcpng", xcpng_config)
+        assert isinstance(vm, XCPngBiologicalVM)
+        assert vm.get_vm_type() == "xcpng"
+        assert vm.get_biological_type() == "syn3a"
+    
+    def test_unsupported_biological_type(self):
+        with pytest.raises(ValueError, match="Unsupported biological type"):
+            create_bio_vm("test", "unsupported_bio_type", "basic")
     
     def test_unsupported_vm_type(self):
         with pytest.raises(ValueError, match="Unsupported VM type"):
-            create_bio_vm("test", "unsupported_type")
+            create_bio_vm("test", "syn3a", "unsupported_vm_type")
+    
+    def test_xcpng_requires_config(self):
+        with pytest.raises(ValueError, match="XCP-ng VM type requires config"):
+            create_bio_vm("test", "syn3a", "xcpng")
     
     def test_vm_lifecycle(self):
-        vm = create_bio_vm("lifecycle_test", "syn3a")
+        vm = create_bio_vm("lifecycle_test", "syn3a", "basic")
+        assert vm.start()
+        assert vm.pause()
+        assert vm.resume()
+        assert vm.destroy()
         assert vm.start()
         assert vm.pause()
         assert vm.resume()
@@ -1064,8 +1100,8 @@ VMManager = BioVMManager   # Alias for consistency
 - [ ] Initial test suite passing
 
 ### Week 2 Deliverables
-- [ ] All VM classes implemented (`EColiVM`, `MinimalCellVM`)
-- [ ] Factory function with type mapping complete
+- [ ] BasicBiologicalVM and XCPngBiologicalVM classes implemented
+- [ ] Factory function with infrastructure type mapping complete
 - [ ] VM creation and registration working
 - [ ] Integration with existing hypervisor validated
 - [ ] Config validation implemented
@@ -1088,30 +1124,34 @@ VMManager = BioVMManager   # Alias for consistency
 
 ## Critical Implementation Insights (From pylua_bioxen_vm_lib Alignment)
 
-### 1. **Delegation Pattern** (Key Learning from pylua)
+### 1. **Infrastructure-Focused Class Hierarchy** (Key Learning from pylua)
+Following pylua's pattern exactly, the primary distinction is infrastructure type:
+- `BasicBiologicalVM` → mirrors `BasicLuaVM` (direct execution)
+- `XCPngBiologicalVM` → mirrors `XCPngVM` (virtualized execution)
+- Biological organism type is handled as a parameter, not separate classes
+
+### 2. **Delegation Pattern** (Key Learning from pylua)
 The pylua VMs don't replace underlying functionality - they **delegate** to it:
 - `XCPngVM.execute_string()` → delegates to SSH session
 - `BiologicalVM.start()` → delegates to `hypervisor.start_vm()`
 - **Critical**: Our VM classes should be **wrappers**, not replacements
 
-### 2. **Type-Specific Behavior** (pylua Specialization Pattern)
-Each VM type has specialized methods following pylua patterns:
-- `XCPngVM` has XAPI-specific methods (`start()`, `get_status()`, `install_package()`)
-- `Syn3AVM` should have biology-specific methods (`start_transcription()`, `get_atp_level()`, `optimize_minimal_metabolism()`)
-- `EColiVM` should have prokaryotic methods (`manage_operons()`, `get_plasmid_count()`)
-
 ### 3. **Factory Pattern Implementation** (Exact pylua Approach)
 ```python
-# pylua pattern that we must follow exactly:
-VM_TYPE_MAPPING = {
-    "syn3a": Syn3AVM,      # mirrors "xcpng": XCPngVM
-    "ecoli": EColiVM,      # mirrors "basic": BasicLuaVM  
-    "minimal_cell": MinimalCellVM
-}
-
+# Infrastructure-focused factory following pylua pattern exactly:
 def create_bio_vm(vm_id: str, biological_type: str, vm_type: str = "basic", config: Optional[Dict] = None) -> BiologicalVM:
     """Mirrors pylua create_vm() function signature and behavior exactly with vm_type support."""
+    if vm_type == "basic":
+        return BasicBiologicalVM(vm_id, biological_type, hypervisor, config)
+    elif vm_type == "xcpng":
+        return XCPngBiologicalVM(vm_id, biological_type, hypervisor, config)
 ```
+
+### 4. **Biological-Specific Behavior via Composition**
+Instead of organism-specific classes, behavior is determined by `biological_type` parameter:
+- `vm.get_biological_type()` returns "syn3a", "ecoli", or "minimal_cell"
+- Methods like `start_transcription()` check biological_type internally
+- Both BasicBiologicalVM and XCPngBiologicalVM support all biological types
 
 ### 4. **Configuration Management** (pylua ConfigManager Pattern)
 - File-based configs with JSON support (mirrors pylua xcpng_config.json)
