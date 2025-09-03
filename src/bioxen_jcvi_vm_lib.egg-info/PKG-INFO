@@ -1,0 +1,122 @@
+Metadata-Version: 2.4
+Name: bioxen-jcvi-vm-lib
+Version: 0.0.1
+Summary: BioXen Factory Pattern API for biological VM management
+Home-page: https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
+Author: aptitudetechnology
+Author-email: 
+License: MIT
+Project-URL: Bug Reports, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib/issues
+Project-URL: Source, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
+Keywords: lua,virtual-machine,bioinformatics,distributed-computing,xcp-ng
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Distributed Computing
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Lua
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.25.0
+Requires-Dist: paramiko>=2.7.0
+Requires-Dist: urllib3>=1.26.0
+Requires-Dist: questionary>=1.10.0
+Requires-Dist: typing_extensions>=3.7.4
+Requires-Dist: pytest>=6.0.0
+Requires-Dist: pytest-cov>=2.10.0
+Requires-Dist: black>=21.0.0
+Requires-Dist: flake8>=3.8.0
+Requires-Dist: mypy>=0.800
+Requires-Dist: sphinx>=3.0.0
+Requires-Dist: sphinx-rtd-theme>=0.5.0
+Dynamic: license-file
+
+# BioXen_jcvi_vm_lib
+
+**Interactive Biological Hypervisor Library for Real Bacterial Genomes**
+
+---
+
+## Project Overview
+
+BioXen_jcvi_vm_lib is a Python library forked from [BioXen-jcvi](https://github.com/aptitudetechnology/BioXen-jcvi), designed to provide an interactive biological hypervisor for virtualizing real bacterial genomes. This project introduces a modular API layer using the factory pattern, enabling seamless integration and extension of biological VM types.
+
+> **Educational Sandbox:** This library is for educational use only. Results are not biologically validated and should not be used for professional research.
+
+---
+
+## Key Features
+
+- **Factory Pattern API Layer:**
+  - Non-disruptive wrapper over existing hypervisor and genome integrator logic
+  - Easily instantiate and register biological VMs
+- **Modular VM Classes:**
+  - Abstract `BiologicalVM` base class
+  - Concrete implementations: `Syn3AVM`, `EColiVM`, `MinimalCellVM`
+- **Resource Management:**
+  - `BioResourceManager` wraps ribosome/ATP/memory management
+- **Unified Configuration:**
+  - Centralized config manager for VM types
+- **Backward Compatibility:**
+  - All existing functionality remains unchanged
+
+---
+
+## Quickstart
+
+1. **Create a Biological VM:**
+   ```python
+   from src.api.factory import create_bio_vm
+
+   vm = create_bio_vm(vm_id="demo1", vm_type="syn3a", config={"genome": "NC_000000"})
+   # VM is registered with the hypervisor automatically
+   ```
+2. **Manage Resources:**
+   ```python
+   from src.api.resource_manager import BioResourceManager
+
+   resource_mgr = BioResourceManager(vm)
+   resource_mgr.allocate_atp(100)
+   ```
+3. **Configure VM:**
+   ```python
+   from src.api.config_manager import ConfigManager
+
+   config = ConfigManager.load_defaults(vm_type="syn3a")
+   ```
+
+---
+
+## Architecture
+
+- `src/api/biological_vm.py`: Abstract and concrete VM classes
+- `src/api/factory.py`: Factory function for VM instantiation
+- `src/api/resource_manager.py`: Resource management wrapper
+- `src/api/config_manager.py`: Unified config handling
+
+---
+
+## Status & Roadmap
+
+- [x] MVP API design
+- [ ] Implement all core API modules
+- [ ] Integrate with existing hypervisor
+- [ ] Add documentation and usage examples
+
+---
+
+## License
+
+MIT License
+
+---
+
+For more details, see `factory-pattern-api-prompt4-report.md` and `factory-pattern-api.prompt4`.
