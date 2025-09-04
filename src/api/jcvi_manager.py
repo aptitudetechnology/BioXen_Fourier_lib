@@ -19,11 +19,14 @@ try:
     from bioxen_jcvi_integration import BioXenJCVIIntegration
     from phase4_jcvi_cli_integration import JCVICLIIntegrator
     from bioxen_to_jcvi_converter import BioXenToJCVIConverter
+    from download_genomes import download_genome, MINIMAL_GENOMES
 except ImportError as e:
     print(f"Warning: Could not import JCVI integration modules: {e}")
     BioXenJCVIIntegration = None
     JCVICLIIntegrator = None
     BioXenToJCVIConverter = None
+    download_genome = None
+    MINIMAL_GENOMES = {}
 
 
 class JCVIManager:
@@ -291,6 +294,197 @@ class JCVIManager:
                 
         except Exception as e:
             print(f"Warning: JCVI cleanup failed: {e}")
+    
+    # Enhanced v0.0.03: Genome Acquisition Integration
+    def list_available_genomes(self) -> Dict[str, Dict]:
+        """List genomes available for download through existing infrastructure."""
+        if download_genome and MINIMAL_GENOMES:
+            return MINIMAL_GENOMES.copy()
+        return {}
+    
+    def acquire_genome(self, genome_key: str, output_dir: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Acquire genome using existing proven download infrastructure.
+        
+        Args:
+            genome_key: Key from MINIMAL_GENOMES or custom identifier
+            output_dir: Optional output directory
+            
+        Returns:
+            Dictionary with acquisition results
+        """
+        if not download_genome:
+            return {
+                'status': 'failed',
+                'error': 'Genome download functionality not available'
+            }
+        
+        try:
+            from pathlib import Path
+            
+            # Use existing proven download function
+            download_dir = Path(output_dir) if output_dir else Path("genomes")
+            download_dir.mkdir(exist_ok=True)
+            
+            success = download_genome(genome_key, download_dir)
+            
+            if success:
+                # Find downloaded files and prepare for JCVI
+                genome_files = []
+                for pattern in ["*.fasta", "*.fa", "*.fna"]:
+                    genome_files.extend(download_dir.glob(pattern))
+                
+                if genome_files:
+                    # Use existing converter if available for JCVI preparation
+                    jcvi_ready_files = []
+                    for genome_file in genome_files:
+                        if self.converter_available:
+                            try:
+                                # Convert to JCVI-compatible format using existing converter
+                                jcvi_file = self._prepare_for_jcvi(genome_file)
+                                if jcvi_file:
+                                    jcvi_ready_files.append(str(jcvi_file))
+                            except Exception as e:
+                                print(f"Warning: JCVI preparation failed for {genome_file}: {e}")
+                                jcvi_ready_files.append(str(genome_file))  # Use original
+                        else:
+                            jcvi_ready_files.append(str(genome_file))
+                    
+                    return {
+                        'status': 'success',
+                        'genome_key': genome_key,
+                        'files': [str(f) for f in genome_files],
+                        'jcvi_ready_files': jcvi_ready_files,
+                        'output_dir': str(download_dir)
+                    }
+                else:
+                    return {
+                        'status': 'failed',
+                        'error': 'No genome files found after download'
+                    }
+            else:
+                return {
+                    'status': 'failed', 
+                    'error': f'Download failed for genome: {genome_key}'
+                }
+                
+        except Exception as e:
+            return {
+                'status': 'failed',
+                'error': f'Acquisition error: {str(e)}'
+            }
+    
+    def _prepare_for_jcvi(self, genome_file: Path) -> Optional[Path]:
+        """Prepare genome file for JCVI analysis using existing infrastructure."""
+        try:
+            # Create JCVI-optimized filename
+            jcvi_file = genome_file.parent / f"{genome_file.stem}.jcvi.fasta"
+            
+            # Simple preparation: ensure clean sequence IDs for JCVI compatibility
+            with open(genome_file, 'r') as infile, open(jcvi_file, 'w') as outfile:
+                for line in infile:
+                    if line.startswith('>'):
+                        # Clean header for JCVI compatibility
+                        header = line.strip()
+                        clean_id = header.split()[0].replace('|', '_').replace(' ', '_')
+                        outfile.write(f"{clean_id}\n")
+                    else:
+                        outfile.write(line)
+            
+            return jcvi_file
+            
+        except Exception as e:
+            print(f"Warning: JCVI preparation failed: {e}")
+            return None
+    
+    def run_complete_workflow(self, genome_keys: List[str], 
+                            analysis_type: str = 'synteny') -> Dict[str, Any]:
+        """
+        Run complete workflow from acquisition to analysis using existing infrastructure.
+        
+        Args:
+            genome_keys: List of genome identifiers to acquire and analyze
+            analysis_type: Type of analysis ('synteny', 'phylogenetic', 'comprehensive')
+            
+        Returns:
+            Complete workflow results
+        """
+        if not self.cli_available:
+            return {
+                'status': 'failed',
+                'error': 'JCVI CLI integration not available for analysis'
+            }
+        
+        workflow_results = {
+            'status': 'running',
+            'acquisition_results': [],
+            'analysis_results': {},
+            'start_time': str(Path(__file__).stat().st_mtime)  # Simple timestamp
+        }
+        
+        try:
+            # Phase 1: Acquire genomes using existing proven method
+            print(f"🧬 Phase 1: Acquiring {len(genome_keys)} genomes...")
+            acquired_genomes = {}
+            
+            for genome_key in genome_keys:
+                print(f"  📥 Acquiring {genome_key}...")
+                result = self.acquire_genome(genome_key)
+                workflow_results['acquisition_results'].append(result)
+                
+                if result['status'] == 'success':
+                    # Prepare genome data for existing JCVI CLI integrator
+                    if result['jcvi_ready_files']:
+                        fasta_file = Path(result['jcvi_ready_files'][0])
+                        acquired_genomes[genome_key] = {
+                            'fasta_path': fasta_file,
+                            'size_mb': fasta_file.stat().st_size / (1024 * 1024),
+                            'source': 'acquired'
+                        }
+            
+            successful_count = len(acquired_genomes)
+            print(f"  ✅ Successfully acquired {successful_count}/{len(genome_keys)} genomes")
+            
+            if successful_count < 2:
+                return {
+                    'status': 'failed',
+                    'error': 'Need at least 2 genomes for comparative analysis',
+                    'acquisition_results': workflow_results['acquisition_results']
+                }
+            
+            # Phase 2: Run analysis using existing CLI integrator
+            print(f"🔬 Phase 2: Running {analysis_type} analysis...")
+            
+            if analysis_type == 'synteny':
+                analysis_result = self._cli_integrator.run_real_synteny_analysis(acquired_genomes)
+            elif analysis_type == 'phylogenetic':
+                analysis_result = self._cli_integrator.generate_phylogenetic_tree(acquired_genomes)
+            elif analysis_type == 'comprehensive':
+                # Run multiple analyses using existing methods
+                synteny_result = self._cli_integrator.run_real_synteny_analysis(acquired_genomes)
+                phylo_result = self._cli_integrator.generate_phylogenetic_tree(acquired_genomes)
+                analysis_result = {
+                    'type': 'comprehensive',
+                    'synteny': synteny_result,
+                    'phylogenetic': phylo_result
+                }
+            else:
+                return {
+                    'status': 'failed',
+                    'error': f'Unknown analysis type: {analysis_type}'
+                }
+            
+            workflow_results['analysis_results'] = analysis_result
+            workflow_results['status'] = 'completed'
+            
+            print(f"✅ Complete workflow finished successfully")
+            return workflow_results
+            
+        except Exception as e:
+            workflow_results['status'] = 'failed'
+            workflow_results['error'] = str(e)
+            print(f"❌ Workflow failed: {e}")
+            return workflow_results
 
 
 def create_jcvi_manager(config: Optional[Dict[str, Any]] = None) -> JCVIManager:
