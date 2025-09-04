@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="bioxen-jcvi-vm-lib",
-    version="0.0.03",
+    version="0.0.4",
     author="aptitudetechnology",
     author_email="support@aptitudetechnology.com",
     description="BioXen Factory Pattern API for biological VM management with JCVI integration",

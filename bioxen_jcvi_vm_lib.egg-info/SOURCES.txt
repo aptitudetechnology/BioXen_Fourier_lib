@@ -48,6 +48,10 @@ src/genome/schema.py
 src/genome/syn3a.py
 src/hypervisor/__init__.py
 src/hypervisor/core.py
+src/jcvi_integration/__init__.py
+src/jcvi_integration/acquisition_cli.py
+src/jcvi_integration/analysis_coordinator.py
+src/jcvi_integration/genome_acquisition.py
 src/monitoring/__init__.py
 src/monitoring/profiler.py
 tests/__init__.py
