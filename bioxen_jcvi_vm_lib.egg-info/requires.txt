@@ -1,0 +1,4 @@
+questionary
+setuptools
+wheel
+twine

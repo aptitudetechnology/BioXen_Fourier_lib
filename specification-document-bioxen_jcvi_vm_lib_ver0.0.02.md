@@ -128,7 +128,9 @@ Multi-Chassis Platforms (E.coli, Yeast)
 ### **Preserved Existing Functionality**
 
 All existing capabilities remain fully functional with JCVI enhancement:
-- ✅ Interactive CLI (`interactive_bioxen.py`) - ready for library integration
+- ✅ Enhanced Interactive CLI (`interactive-bioxen-jcvi-api.py`) - with chassis selection and JCVI integration
+- ✅ Chassis Selection Support (`ChassisType.ECOLI`, `ChassisType.YEAST`, `ChassisType.ORTHOGONAL`)
+- ✅ Questionary-based CLI Interface - aligned with original BioXen menu structure
 - ✅ Hypervisor core operations with JCVI format support
 - ✅ Chassis management systems
 - ✅ Genome integration pipelines with JCVI conversion
@@ -144,7 +146,7 @@ All existing capabilities remain fully functional with JCVI enhancement:
 ### **Core Factory Function with JCVI Integration**
 
 ```python
-from src.api import create_bio_vm, create_biological_vm
+from src.api import create_bio_vm, create_biological_vm, quick_start_vm, quick_start_jcvi_vm
 
 # Basic VM creation with JCVI integration (fully functional)
 vm = create_bio_vm("my_vm", "syn3a", "basic")
@@ -156,10 +158,14 @@ if vm.jcvi_available:
     stats = vm.jcvi.get_genome_statistics("genomes/syn3a.genome")
     print(f"Enhanced JCVI analysis: {stats}")
 
-# Simplified factory function (Phase 1.1)
+# Simplified factory functions (Phase 1.1)
 vm = create_biological_vm(vm_type="jcvi_optimized")
 analysis = vm.analyze_genome("genomes/syn3a.genome")  # Uses JCVI if available
 vm.destroy()
+
+# Convenience functions for quick setup
+vm = quick_start_vm("syn3a")  # Quick basic VM
+jcvi_vm = quick_start_jcvi_vm("ecoli")  # Quick JCVI-optimized VM
 
 # XCP-ng VM creation (Phase 2)
 xcpng_config = {
@@ -387,9 +393,41 @@ Phase 1.1 includes comprehensive testing:
 - ✅ Comparative analysis workflows
 - ✅ Convenience function validation
 - ✅ Graceful fallback when JCVI unavailable (5/5 tests passing)
-vm_types = get_supported_vm_types()           # ["basic", "xcpng"]
 
-# Validation
+### **Testing Files and Coverage**
+
+**Primary Test Files:**
+- `test_phase1_1_jcvi_integration.py` - Comprehensive Phase 1.1 JCVI integration tests
+- `tests/test_api/test_phase1.py` - Core API functionality tests  
+- `interactive-bioxen-jcvi-api.py` - Enhanced CLI with chassis selection and menu alignment
+
+**Test Coverage:**
+- JCVI Manager functionality and status reporting
+- Basic and JCVI-optimized VM creation and lifecycle
+- Graceful fallback mechanisms when JCVI unavailable
+- Comparative genomics and format conversion workflows
+- Chassis selection integration (`ChassisType.ECOLI`, `ChassisType.YEAST`, `ChassisType.ORTHOGONAL`)
+
+## Package Distribution (PyPI Test)
+
+### **Successful Upload Status**
+The package has been successfully uploaded to PyPI Test repository with dual version support:
+
+**Available Versions:**
+- [Version 0.0.1](https://test.pypi.org/project/bioxen-jcvi-vm-lib/0.0.1/) - Initial factory pattern implementation
+- [Version 0.0.2](https://test.pypi.org/project/bioxen-jcvi-vm-lib/0.0.2/) - Phase 1.1 JCVI integration complete
+
+**Installation Command:**
+```bash
+pip install -i https://test.pypi.org/simple/ bioxen-jcvi-vm-lib==0.0.2
+```
+
+**Version Normalization:**
+During the build process, version "0.0.02" is automatically normalized to "0.0.2" following PEP 440 standards.
+
+vm_types = get_supported_vm_types()           # ["basic", "xcpng", "jcvi_optimized"]
+
+# Validation  
 assert validate_biological_type("syn3a") == True
 assert validate_vm_type("basic") == True
 ```
