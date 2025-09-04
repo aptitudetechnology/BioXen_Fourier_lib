@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from ..hypervisor.core import BioXenHypervisor, VirtualMachine
+from .jcvi_manager import JCVIManager
 
 class BiologicalVM(ABC):
     """
@@ -14,6 +15,15 @@ class BiologicalVM(ABC):
         self.hypervisor = hypervisor  # Reference to existing hypervisor (delegation pattern)
         self.config = config
         self._vm_instance: Optional[VirtualMachine] = None
+        
+        # Initialize JCVI Manager if enabled
+        self.jcvi: Optional[JCVIManager] = None
+        if config.get('enable_jcvi', True):
+            try:
+                self.jcvi = JCVIManager(config)
+            except Exception as e:
+                print(f"Warning: JCVI Manager initialization failed: {e}")
+                self.jcvi = None
     
     @abstractmethod
     def get_vm_type(self) -> str:
@@ -23,6 +33,17 @@ class BiologicalVM(ABC):
     def get_biological_type(self) -> str:
         """Return the biological organism type (syn3a, ecoli, minimal_cell)."""
         return self.biological_type
+    
+    @property
+    def jcvi_available(self) -> bool:
+        """Check if JCVI functionality is available for this VM."""
+        return self.jcvi is not None and self.jcvi.available
+    
+    def get_jcvi_status(self) -> Dict[str, Any]:
+        """Get JCVI integration status for this VM."""
+        if self.jcvi is None:
+            return {'enabled': False, 'reason': 'JCVI not initialized'}
+        return self.jcvi.get_status()
     
     # Common interface methods that delegate to hypervisor (pylua delegation pattern)
     def start(self) -> bool:
@@ -160,6 +181,62 @@ class BasicBiologicalVM(BiologicalVM):
             'minimal_functions': ['dna_replication', 'protein_synthesis', 'energy_production'],
             'function_status': status.get('function_status', {})
         }
+    
+    # JCVI-Enhanced Methods for BasicBiologicalVM
+    def analyze_genome(self, genome_path: str) -> Dict[str, Any]:
+        """Enhanced genome analysis with optional JCVI integration."""
+        if self.jcvi_available:
+            jcvi_stats = self.jcvi.get_genome_statistics(genome_path)
+            if 'error' not in jcvi_stats:
+                return {
+                    'analysis_type': 'jcvi_enhanced',
+                    'vm_type': self.get_vm_type(),
+                    'biological_type': self.biological_type,
+                    'jcvi_stats': jcvi_stats,
+                    'basic_stats': self._basic_genome_analysis(genome_path)
+                }
+        
+        # Fallback to basic analysis
+        return {
+            'analysis_type': 'basic_fallback',
+            'vm_type': self.get_vm_type(),
+            'biological_type': self.biological_type,
+            'stats': self._basic_genome_analysis(genome_path),
+            'jcvi_available': False
+        }
+    
+    def _basic_genome_analysis(self, genome_path: str) -> Dict[str, Any]:
+        """Basic genome analysis without JCVI."""
+        try:
+            # Simple file-based analysis
+            with open(genome_path, 'r') as f:
+                content = f.read()
+                return {
+                    'file_size': len(content),
+                    'line_count': content.count('\n'),
+                    'contains_fasta': content.startswith('>'),
+                    'source': 'basic_bioxen_analysis'
+                }
+        except Exception as e:
+            return {'error': f'Basic analysis failed: {str(e)}'}
+    
+    def convert_genome_format(self, input_path: str, output_path: str) -> Dict[str, Any]:
+        """Convert genome format using JCVI converter if available."""
+        if self.jcvi_available and self.jcvi.converter_available:
+            success = self.jcvi.convert_format(input_path, output_path)
+            return {
+                'success': success,
+                'method': 'jcvi_converter',
+                'input_path': input_path,
+                'output_path': output_path
+            }
+        
+        return {
+            'success': False,
+            'method': 'fallback',
+            'error': 'JCVI converter not available',
+            'suggestion': 'Use manual format conversion'
+        }
 
 
 class XCPngBiologicalVM(BiologicalVM):
@@ -248,3 +325,82 @@ class XCPngBiologicalVM(BiologicalVM):
         """Parse SSH result into biological metrics based on organism type."""
         # Phase 1 placeholder - full implementation in Phase 2
         raise NotImplementedError("SSH metrics parsing will be implemented in Phase 2")
+    
+    # JCVI-Enhanced Methods for XCPngBiologicalVM
+    def run_comparative_analysis(self, genome1: str, genome2: str, **kwargs) -> Dict[str, Any]:
+        """Comparative analysis with JCVI synteny tools."""
+        if self.jcvi_available and self.jcvi.cli_available:
+            result = self.jcvi.run_synteny_analysis(genome1, genome2, **kwargs)
+            return {
+                'analysis_type': 'jcvi_synteny',
+                'vm_type': self.get_vm_type(),
+                'biological_type': self.biological_type,
+                'synteny_result': result,
+                'hardware_optimized': self.config.get('hardware_optimization', False)
+            }
+        
+        # Fallback to basic comparative analysis
+        return {
+            'analysis_type': 'basic_comparative',
+            'vm_type': self.get_vm_type(),
+            'biological_type': self.biological_type,
+            'result': self._basic_comparative_analysis(genome1, genome2),
+            'jcvi_available': False
+        }
+    
+    def run_multi_genome_analysis(self, genomes: List[str], **kwargs) -> Dict[str, Any]:
+        """Multi-genome comparative analysis using JCVI."""
+        if self.jcvi_available and self.jcvi.cli_available:
+            result = self.jcvi.run_comparative_genomics(genomes, **kwargs)
+            return {
+                'analysis_type': 'jcvi_multi_genome',
+                'vm_type': self.get_vm_type(),
+                'biological_type': self.biological_type,
+                'genome_count': len(genomes),
+                'comparative_result': result,
+                'hardware_info': self.jcvi.get_hardware_info()
+            }
+        
+        return {
+            'analysis_type': 'basic_multi_genome_fallback',
+            'vm_type': self.get_vm_type(),
+            'error': 'JCVI CLI integration required for multi-genome analysis',
+            'genome_count': len(genomes),
+            'suggestion': 'Use pairwise basic comparison instead'
+        }
+    
+    def _basic_comparative_analysis(self, genome1: str, genome2: str) -> Dict[str, Any]:
+        """Basic comparative analysis without JCVI."""
+        try:
+            # Simple file comparison
+            with open(genome1, 'r') as f1, open(genome2, 'r') as f2:
+                content1 = f1.read()
+                content2 = f2.read()
+                
+                return {
+                    'genome1_size': len(content1),
+                    'genome2_size': len(content2),
+                    'size_ratio': len(content1) / len(content2) if len(content2) > 0 else 0,
+                    'identical': content1 == content2,
+                    'source': 'basic_bioxen_comparison'
+                }
+        except Exception as e:
+            return {'error': f'Basic comparison failed: {str(e)}'}
+    
+    def get_hardware_optimization_status(self) -> Dict[str, Any]:
+        """Get hardware optimization status for JCVI operations."""
+        if self.jcvi_available and self.jcvi.cli_available:
+            hardware_info = self.jcvi.get_hardware_info()
+            return {
+                'vm_type': self.get_vm_type(),
+                'optimization_enabled': self.config.get('hardware_optimization', False),
+                'jcvi_hardware_info': hardware_info,
+                'xcpng_config': self.xapi_config
+            }
+        
+        return {
+            'vm_type': self.get_vm_type(),
+            'optimization_enabled': False,
+            'error': 'JCVI CLI integration not available',
+            'xcpng_config': self.xapi_config
+        }

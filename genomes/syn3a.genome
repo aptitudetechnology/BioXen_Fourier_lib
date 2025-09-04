@@ -1,0 +1,20 @@
+# BioXen Genome File - Syn3A Test Genome
+# Simple test genome for Phase 1.1 testing
+organism: JCVI-Syn3A
+genes: 438
+genome_size: 531560
+gc_content: 29.9
+
+# Essential genes (simplified for testing)
+gene_001 100 500 +1 1 essential ribosomal
+gene_002 600 1000 +1 1 essential translation  
+gene_003 1100 1500 -1 1 essential metabolism
+gene_004 1600 2000 +1 1 non_essential transport
+gene_005 2100 2500 +1 1 essential replication
+
+# Additional genes
+gene_006 2600 3000 +1 1 non_essential hypothetical
+gene_007 3100 3500 -1 1 non_essential membrane
+gene_008 3600 4000 +1 1 essential transcription
+gene_009 4100 4500 +1 1 non_essential stress_response
+gene_010 4600 5000 -1 1 essential cell_division

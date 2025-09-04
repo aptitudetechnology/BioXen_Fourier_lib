@@ -1,0 +1,13 @@
+# BioXen Genome File - Minimal Cell Test Genome
+# Simple test genome for Phase 1.1 testing
+organism: Minimal Cell
+genes: 200
+genome_size: 200000
+gc_content: 35.0
+
+# Essential genes (simplified for testing)
+gene_001 100 500 +1 1 essential ribosomal
+gene_002 600 1000 +1 1 essential translation  
+gene_003 1100 1500 -1 1 essential metabolism
+gene_004 1600 2000 +1 1 essential replication
+gene_005 2100 2500 +1 1 essential transcription

@@ -182,8 +182,13 @@ class RealGenomeParser:
 class BioXenRealGenomeIntegrator:
     """Integrates real genome data with BioXen virtualization system."""
     
-    def __init__(self, genome_path: Path):
-        self.genome_path = genome_path
+    def __init__(self, genome_path):
+        # Convert to Path object if string is passed
+        from pathlib import Path
+        if isinstance(genome_path, str):
+            self.genome_path = Path(genome_path)
+        else:
+            self.genome_path = genome_path
         self.real_genome = None
         self.bioxen_template = None
     
