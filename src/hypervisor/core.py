@@ -354,6 +354,67 @@ class BioXenHypervisor:
         # Load next VM state  
         next_vm_obj = self.vms[next_vm]
         next_vm_obj.last_context_switch = time.time()
+    
+    def allocate_vm_resources(self, vm_id: str, resources: Dict[str, Any]) -> bool:
+        """Allocate resources to a specific VM."""
+        if vm_id not in self.vms:
+            self.logger.error(f"VM {vm_id} not found for resource allocation")
+            return False
+        
+        vm = self.vms[vm_id]
+        try:
+            # Update VM resources
+            if 'atp' in resources:
+                vm.resources.atp_percentage = min(100.0, max(0.0, float(resources['atp'])))
+            if 'ribosomes' in resources:
+                vm.resources.ribosomes = max(0, int(resources['ribosomes']))
+            if 'memory_kb' in resources:
+                vm.resources.memory_kb = max(0, int(resources['memory_kb']))
+            
+            self.logger.info(f"Resources allocated to VM {vm_id}: {resources}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to allocate resources to VM {vm_id}: {e}")
+            return False
+    
+    def get_vm_resource_usage(self, vm_id: str) -> Dict[str, Any]:
+        """Get current resource usage for a specific VM."""
+        if vm_id not in self.vms:
+            return {"error": f"VM {vm_id} not found"}
+        
+        vm = self.vms[vm_id]
+        return {
+            "vm_id": vm_id,
+            "ribosomes": vm.resources.ribosomes,
+            "atp_percentage": vm.resources.atp_percentage,
+            "memory_kb": vm.resources.memory_kb,
+            "priority": vm.resources.priority,
+            "state": vm.state.value,
+            "cpu_time_used": getattr(vm, 'cpu_time_used', 0.0),
+            "last_context_switch": getattr(vm, 'last_context_switch', None)
+        }
+    
+    def execute_process(self, vm_id: str, process_code: str) -> Dict[str, Any]:
+        """Execute a biological process in the specified VM."""
+        if vm_id not in self.vms:
+            return {"error": f"VM {vm_id} not found"}
+        
+        vm = self.vms[vm_id]
+        if vm.state != VMState.RUNNING:
+            return {"error": f"VM {vm_id} is not running (state: {vm.state.value})"}
+        
+        # Simulate biological process execution
+        try:
+            self.logger.info(f"Executing biological process in VM {vm_id}: {process_code[:50]}...")
+            return {
+                "status": "success",
+                "vm_id": vm_id,
+                "process_code": process_code,
+                "execution_time": 0.1,  # Simulated execution time
+                "biological_output": f"Process executed in {vm.genome_template} context"
+            }
+        except Exception as e:
+            return {"error": f"Process execution failed: {e}"}
 
 
 class ResourceMonitor:

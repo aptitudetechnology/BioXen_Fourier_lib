@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="bioxen-jcvi-vm-lib",
-    version="0.0.4",
+    name="bioxen_jcvi_vm_lib",
+    version="0.0.5",
     author="aptitudetechnology",
     author_email="support@aptitudetechnology.com",
-    description="BioXen Factory Pattern API for biological VM management with JCVI integration",
+    description="BioXen Hypervisor-focused biological VM management library",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib",
@@ -14,12 +14,13 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: System :: Virtualization",
     ],
     python_requires=">=3.6",
     install_requires=[
-        "questionary",
-        "setuptools",
-        "wheel",
-        "twine",
+        "pylua-bioxen-vm-lib>=0.1.22",
+        "questionary>=2.1.0",
+        "rich>=13.0.0",
     ],
 )
