@@ -248,7 +248,7 @@ cp ~/BioXen_jcvi_vm_lib/interactive_bioxen.py ./             # Full interface
 Created `bioxen-working-client.py` with:
 - ✅ Real NCBI genome downloads (4+ minimal genomes)
 - ✅ JCVI integration and format conversion
-- ✅ VM management via library (keeping hypervisor in library as requested)
+- ✅ VM management via library (keeping hypeervisor in library as requested)
 - ✅ Interactive questionary-based UI
 - ✅ System status monitoring
 - ✅ Graceful fallback mechanisms

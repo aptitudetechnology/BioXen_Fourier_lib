@@ -10,10 +10,9 @@ Project-URL: Bug Reports, https://github.com/aptitudetechnology/BioXen_jcvi_vm_l
 Project-URL: Source, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
 Keywords: lua,virtual-machine,bioinformatics,distributed-computing,xcp-ng
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
-Classifier: Topic :: System :: Virtualization
+Classifier: Topic :: System :: Distributed Computing
 Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE

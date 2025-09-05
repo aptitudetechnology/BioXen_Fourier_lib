@@ -14,7 +14,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
-        "Topic :: System :: Virtualization",
+        "Topic :: System :: Distributed Computing",
     ],
     python_requires=">=3.6",
     install_requires=[
