@@ -1,4 +1,3 @@
-questionary
-setuptools
-twine
-wheel
+pylua-bioxen-vm-lib>=0.1.22
+questionary>=2.1.0
+rich>=13.0.0

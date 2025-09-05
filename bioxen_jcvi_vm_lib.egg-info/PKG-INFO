@@ -1,7 +1,7 @@
-Metadata-Version: 2.1
-Name: bioxen-jcvi-vm-lib
-Version: 0.0.4
-Summary: BioXen Factory Pattern API for biological VM management with JCVI integration
+Metadata-Version: 2.4
+Name: bioxen_jcvi_vm_lib
+Version: 0.0.5
+Summary: BioXen Hypervisor-focused biological VM management library
 Home-page: https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
 Author: aptitudetechnology
 Author-email: support@aptitudetechnology.com
@@ -9,13 +9,27 @@ License: MIT
 Project-URL: Bug Reports, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib/issues
 Project-URL: Source, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
 Keywords: lua,virtual-machine,bioinformatics,distributed-computing,xcp-ng
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: System :: Virtualization
 Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: pylua-bioxen-vm-lib>=0.1.22
+Requires-Dist: questionary>=2.1.0
+Requires-Dist: rich>=13.0.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
 
 # BioXen_jcvi_vm_lib
 
@@ -217,5 +231,3 @@ MIT License
 - [PyPI Test Package](https://test.pypi.org/project/bioxen-jcvi-vm-lib/0.0.2/)
 - [Technical Specification](specification-document-bioxen_jcvi_vm_lib_ver0.0.02.md)
 - [Development Repository](https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib)
-
-
