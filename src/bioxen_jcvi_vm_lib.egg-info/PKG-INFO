@@ -1,53 +1,34 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: bioxen-jcvi-vm-lib
-Version: 0.0.1
-Summary: BioXen Factory Pattern API for biological VM management
+Version: 0.0.6
+Summary: BioXen Hypervisor-focused biological VM management library
 Home-page: https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
 Author: aptitudetechnology
-Author-email: 
+Author-email: support@aptitudetechnology.com
 License: MIT
 Project-URL: Bug Reports, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib/issues
 Project-URL: Source, https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib
 Keywords: lua,virtual-machine,bioinformatics,distributed-computing,xcp-ng
-Classifier: Development Status :: 4 - Beta
-Classifier: Intended Audience :: Developers
-Classifier: Intended Audience :: Science/Research
-Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
-Classifier: Topic :: Software Development :: Libraries :: Python Modules
-Classifier: Topic :: System :: Distributed Computing
+Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.7
-Classifier: Programming Language :: Python :: 3.8
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
-Classifier: Programming Language :: Lua
-Requires-Python: >=3.7
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: System :: Distributed Computing
+Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: requests>=2.25.0
-Requires-Dist: paramiko>=2.7.0
-Requires-Dist: urllib3>=1.26.0
-Requires-Dist: questionary>=1.10.0
-Requires-Dist: typing_extensions>=3.7.4
-Requires-Dist: pytest>=6.0.0
-Requires-Dist: pytest-cov>=2.10.0
-Requires-Dist: black>=21.0.0
-Requires-Dist: flake8>=3.8.0
-Requires-Dist: mypy>=0.800
-Requires-Dist: sphinx>=3.0.0
-Requires-Dist: sphinx-rtd-theme>=0.5.0
-Dynamic: license-file
 
 # BioXen_jcvi_vm_lib
 
-**Interactive Biological Hypervisor Library for Real Bacterial Genomes**
+**Factory Pattern API for Biological Virtual Machines with JCVI Integration**
+
+[![PyPI Test](https://img.shields.io/badge/PyPI%20Test-0.0.2-blue)](https://test.pypi.org/project/bioxen-jcvi-vm-lib/0.0.2/)
 
 ---
 
 ## Project Overview
 
-BioXen_jcvi_vm_lib is a Python library forked from [BioXen-jcvi](https://github.com/aptitudetechnology/BioXen-jcvi), designed to provide an interactive biological hypervisor for virtualizing real bacterial genomes. This project introduces a modular API layer using the factory pattern, enabling seamless integration and extension of biological VM types.
+BioXen_jcvi_vm_lib provides a factory pattern API for creating and managing biological virtual machines with integrated JCVI (Joint Center for Viral Initiative) toolkit capabilities. The library follows infrastructure-focused design patterns, enabling seamless creation of biological VMs across different execution environments with graceful fallback mechanisms.
 
 > **Educational Sandbox:** This library is for educational use only. Results are not biologically validated and should not be used for professional research.
 
@@ -55,61 +36,174 @@ BioXen_jcvi_vm_lib is a Python library forked from [BioXen-jcvi](https://github.
 
 ## Key Features
 
-- **Factory Pattern API Layer:**
-  - Non-disruptive wrapper over existing hypervisor and genome integrator logic
-  - Easily instantiate and register biological VMs
-- **Modular VM Classes:**
-  - Abstract `BiologicalVM` base class
-  - Concrete implementations: `Syn3AVM`, `EColiVM`, `MinimalCellVM`
-- **Resource Management:**
-  - `BioResourceManager` wraps ribosome/ATP/memory management
-- **Unified Configuration:**
-  - Centralized config manager for VM types
-- **Backward Compatibility:**
-  - All existing functionality remains unchanged
+### **Phase 1.1 - JCVI Integration Complete**
+- **🧬 JCVI Toolkit Integration:**
+  - Unified API access to extensive JCVI functionality
+  - Graceful fallback when JCVI unavailable
+  - Enhanced genome analysis and comparative genomics
+  - Automatic format conversion (.genome ↔ .fasta)
+
+- **🏭 Factory Pattern API:**
+  - Infrastructure-focused VM types (`basic`, `xcpng`, `jcvi_optimized`)
+  - Biological type composition (`syn3a`, `ecoli`, `minimal_cell`)
+  - Non-disruptive wrapper over existing hypervisor
+  - pylua_bioxen_vm_lib architectural alignment
+
+- **⚙️ Advanced Management:**
+  - Chassis selection support (`ECOLI`, `YEAST`, `ORTHOGONAL`)
+  - Enhanced interactive CLI with questionary interface
+  - Unified resource and configuration management
+  - Comprehensive testing with 5/5 tests passing
 
 ---
 
-## Quickstart
+## Installation
 
-1. **Create a Biological VM:**
-   ```python
-   from src.api.factory import create_bio_vm
+### From PyPI Test
+```bash
+pip install -i https://test.pypi.org/simple/ bioxen-jcvi-vm-lib==0.0.2
+```
 
-   vm = create_bio_vm(vm_id="demo1", vm_type="syn3a", config={"genome": "NC_000000"})
-   # VM is registered with the hypervisor automatically
-   ```
-2. **Manage Resources:**
-   ```python
-   from src.api.resource_manager import BioResourceManager
+### From Source
+```bash
+git clone https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib.git
+cd BioXen_jcvi_vm_lib
+pip install -e .
+```
 
-   resource_mgr = BioResourceManager(vm)
-   resource_mgr.allocate_atp(100)
-   ```
-3. **Configure VM:**
-   ```python
-   from src.api.config_manager import ConfigManager
+---
 
-   config = ConfigManager.load_defaults(vm_type="syn3a")
-   ```
+## Quick Start
+
+### **1. Basic VM Creation with JCVI Integration**
+```python
+from src.api import create_bio_vm, create_biological_vm
+
+# Create basic VM with JCVI capabilities
+vm = create_bio_vm("demo_vm", "syn3a", "basic")
+vm.start()
+
+# JCVI-enhanced genome analysis
+if vm.jcvi_available:
+    stats = vm.analyze_genome("genomes/syn3a.genome")
+    print(f"Enhanced analysis: {stats}")
+```
+
+### **2. JCVI-Optimized VM**
+```python
+# Quick JCVI-optimized VM with hardware optimization
+vm = create_biological_vm(vm_type="jcvi_optimized")
+analysis = vm.analyze_genome("genomes/syn3a.genome")
+comparative = vm.run_comparative_analysis("genome1.fasta", "genome2.fasta")
+```
+
+### **3. Convenience Functions**
+```python
+from src.api import quick_start_vm, quick_start_jcvi_vm
+
+# Quick basic VM
+basic_vm = quick_start_vm("ecoli")
+
+# Quick JCVI-optimized VM  
+jcvi_vm = quick_start_jcvi_vm("syn3a", "custom_id")
+```
+
+### **4. Interactive CLI with Chassis Selection**
+```bash
+python interactive-bioxen-jcvi-api.py
+```
+
+Features:
+- Chassis selection (`ECOLI`, `YEAST`, `ORTHOGONAL`)
+- JCVI integration status and capabilities
+- Original BioXen menu structure alignment
+- Real-time VM management and monitoring
 
 ---
 
 ## Architecture
 
-- `src/api/biological_vm.py`: Abstract and concrete VM classes
-- `src/api/factory.py`: Factory function for VM instantiation
+### **Infrastructure-Focused Design**
+```
+VM Types (Execution Method):
+├── BasicBiologicalVM     # Direct hypervisor execution
+├── XCPngBiologicalVM     # VM-in-VM for isolation  
+└── JCVIOptimizedVM       # Enhanced JCVI integration
+
+Biological Types (Organism):
+├── syn3a                 # Minimal synthetic organism
+├── ecoli                 # Prokaryotic model organism
+└── minimal_cell          # Essential cellular functions
+```
+
+### **JCVI Integration Layer**
+```
+Factory API (src/api/)
+    ↓ delegates to
+JCVI Manager (jcvi_manager.py)
+    ↓ wraps
+BioXen JCVI Integration (bioxen_jcvi_integration.py)
+    ↓ uses
+JCVI CLI Integration (phase4_jcvi_cli_integration.py)
+```
+
+### **Core Components**
+- `src/api/biological_vm.py`: Abstract base class with JCVI integration
+- `src/api/factory.py`: Factory functions for VM instantiation  
+- `src/api/jcvi_manager.py`: Unified JCVI functionality wrapper
 - `src/api/resource_manager.py`: Resource management wrapper
-- `src/api/config_manager.py`: Unified config handling
+- `src/api/config_manager.py`: Configuration management and validation
+- `interactive-bioxen-jcvi-api.py`: Enhanced CLI with chassis selection
+
+---
+
+## Testing & Validation
+
+### **Comprehensive Test Suite**
+```bash
+# Run JCVI integration tests
+python test_phase1_1_jcvi_integration.py
+
+# Run API tests  
+python -m pytest tests/test_api/
+
+# Interactive CLI testing
+python interactive-bioxen-jcvi-api.py
+```
+
+**Test Coverage:**
+- ✅ JCVI Manager functionality and graceful fallback
+- ✅ All VM types with JCVI integration (5/5 tests passing)
+- ✅ Chassis selection and biological type validation
+- ✅ Resource management and configuration systems
+- ✅ Format conversion and comparative genomics workflows
 
 ---
 
 ## Status & Roadmap
 
-- [x] MVP API design
-- [ ] Implement all core API modules
-- [ ] Integrate with existing hypervisor
-- [ ] Add documentation and usage examples
+### **✅ Phase 1.1 Complete (Current)**
+- [x] JCVI toolkit integration with graceful fallback
+- [x] Enhanced genome analysis and comparative genomics
+- [x] Infrastructure-focused factory pattern API
+- [x] Interactive CLI with chassis selection support
+- [x] PyPI Test package distribution (v0.0.2)
+
+### **🔄 Phase 1.2 (Next - Sept 7, 2025)**
+- [ ] Enhanced JCVI configuration management
+- [ ] Hardware detection and optimization settings
+- [ ] Advanced fallback configuration options
+
+### **🔄 Phase 2 (Sept 21, 2025)**
+- [ ] Complete XCP-ng VM implementation
+- [ ] XAPI client integration and SSH session management
+- [ ] Advanced resource monitoring
+
+---
+
+## Contributing
+
+See `specification-document-bioxen_jcvi_vm_lib_ver0.0.02.md` for detailed technical specifications and implementation guidelines.
 
 ---
 
@@ -119,4 +213,10 @@ MIT License
 
 ---
 
-For more details, see `factory-pattern-api-prompt4-report.md` and `factory-pattern-api.prompt4`.
+## Links
+
+- [PyPI Test Package](https://test.pypi.org/project/bioxen-jcvi-vm-lib/0.0.2/)
+- [Technical Specification](specification-document-bioxen_jcvi_vm_lib_ver0.0.02.md)
+- [Development Repository](https://github.com/aptitudetechnology/BioXen_jcvi_vm_lib)
+
+

@@ -1,0 +1,3 @@
+[console_scripts]
+bioxen = cli.main:main
+
