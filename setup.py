@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="bioxen_jcvi_vm_lib",
-    version="0.0.06.1",
+    version="0.0.07",
     author="aptitudetechnology",
     author_email="support@aptitudetechnology.com",
     description="BioXen Hypervisor-focused biological VM management library",
@@ -25,6 +25,10 @@ setup(
         "pylua-bioxen-vm-lib>=0.1.22",
         "questionary>=2.1.0",
         "rich>=13.0.0",
+        "PyYAML>=6.0",
+        "paramiko>=2.7.0",
+        "urllib3>=1.26.0",
+        "requests>=2.25.0",
     ],
     entry_points={
         "console_scripts": [

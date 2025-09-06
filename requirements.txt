@@ -1,5 +1,5 @@
 # BioXen Project Requirements
-pylua-bioxen-vm-lib==0.1.15  # Python library for managing Lua VMs via subprocess
+pylua-bioxen-vm-lib==0.1.22  # Python library for managing Lua VMs via subprocess
 
 ## Core Dependencies
 # Core dependencies for modular circuits system
@@ -14,6 +14,21 @@ rich>=13.0.0
 
 lupa>=2.5.0 # Updated: For direct embedding of Lua VM in Python
 # Required for direct interaction with Lua runtime from Python
+
+PyYAML>=6.0
+# Required for production configuration management
+
+paramiko>=2.7.0
+# Required for SSH connections and secure communication
+
+urllib3>=1.26.0
+# Required for HTTP client functionality
+
+requests>=2.25.0
+# Required for API calls and web requests
+
+scipy>=1.7.0
+# Required by JCVI for scientific computing and advanced algorithms
 
 ## Development Dependencies  
 pytest>=6.0
