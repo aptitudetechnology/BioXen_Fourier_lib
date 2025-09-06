@@ -1,0 +1,39 @@
+# Python build and environment files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# IDE and editor files
+.vscode/
+.idea/
+.DS_Store
+
+# System files
+Thumbs.db
+
+# Test outputs
+*.coverage
+
+# Misc
+*.bak
+*.swp
+
+# Exclude large data and generated files
+*.tar.gz
+*.whl
+
+# Add more patterns as needed for your workflow
