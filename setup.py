@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="bioxen_jcvi_vm_lib",
-    version="0.0.6",
+    version="0.0.06.1",
     author="aptitudetechnology",
     author_email="support@aptitudetechnology.com",
     description="BioXen Hypervisor-focused biological VM management library",
@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "bioxen=cli.main:main",
+            "bioxen=bioxen_jcvi_vm_lib.cli.main:main",
         ],
     },
 )
