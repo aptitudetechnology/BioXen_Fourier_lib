@@ -15,3 +15,13 @@
 2025-09-05 21:47:48,602 - src.hypervisor.core - INFO - VM vm_syn3a_5267 created successfully with syn3a on ecoli chassis
 2025-09-05 21:47:52,105 - src.hypervisor.core - INFO - Booting VM vm_syn3a_5267...
 2025-09-05 21:47:52,105 - src.hypervisor.core - INFO - Started VM vm_syn3a_5267
+2025-09-06 08:52:11,065 - __main__ - INFO - BioXen Factory API initialized - Bio types: ['syn3a', 'ecoli', 'minimal_cell'], VM types: ['basic', 'xcpng']
+2025-09-06 08:52:54,022 - src.chassis.ecoli - INFO - E. coli chassis ecoli_primary initialized successfully
+2025-09-06 08:52:54,023 - src.hypervisor.core - INFO - BioXen Hypervisor initialized with ecoli chassis
+2025-09-06 08:52:54,088 - src.chassis.ecoli - INFO - Resources allocated to VM vm_syn3a_5172: 17 ribosomes, 25.0% ATP, 120KB memory
+2025-09-06 08:52:54,088 - src.chassis.ecoli - INFO - Isolation environment created for VM vm_syn3a_5172
+2025-09-06 08:52:54,088 - src.hypervisor.core - INFO - VM vm_syn3a_5172 created successfully with syn3a on ecoli chassis
+2025-09-06 08:52:57,343 - src.hypervisor.core - INFO - Booting VM vm_syn3a_5172...
+2025-09-06 08:52:57,344 - src.hypervisor.core - INFO - Started VM vm_syn3a_5172
+2025-09-06 09:08:13,763 - __main__ - INFO - BioXen Factory API initialized - Bio types: ['syn3a', 'ecoli', 'minimal_cell'], VM types: ['basic', 'xcpng']
+2025-09-06 09:13:14,311 - __main__ - INFO - BioXen Factory API initialized - Bio types: ['syn3a', 'ecoli', 'minimal_cell'], VM types: ['basic', 'xcpng']
