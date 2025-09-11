@@ -19,6 +19,8 @@ This document surveys existing open-source programs and platforms that can be le
 | libSBML              | SBML Manipulation       | Yes         | SBML parsing, validation, conversion               | High                                   | Python/C++/Java API |
 | BioPython            | Bioinformatics          | Yes         | Sequence analysis, file parsing, genome annotation | Medium                                 | Python API, not simulation-focused |
 | PySB                 | Systems Biology         | Yes         | Programmatic model construction, ODE simulation    | Medium                                 | Python API, SBML export |
+| rbio                 | Biologically-Informed Reasoning | Yes         | LLM trained with virtual cell models, soft/hard verification, integrates experimental data, GO, ML models | Medium-High                            | Python, integrates with VCell, supports reasoning over biological models |
+| Transcriptformer     | Transcriptomics Foundation Model| Yes         | Deep learning model for transcriptomics, PMI scoring, soft verification, biological reasoning | Medium-High                            | Python, integrates with rbio, supports transcriptome-based reasoning |
 | Jupyter Notebooks    | Interactive Computing   | Yes         | Interactive analysis, visualization                | High                                   | Python, integrates with all above |
 
 ## Program Suitability Criteria
