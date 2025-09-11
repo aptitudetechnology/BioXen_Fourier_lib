@@ -44,6 +44,7 @@ src/execution_modal/
 from typing import Dict, Any, Optional
 import cobra
 import tellurium as te
+from ..chassis import get_chassis_config
 
 class MVPToolIntegrator:
     """Minimal viable tool integration for biological processes"""
@@ -51,11 +52,16 @@ class MVPToolIntegrator:
     def __init__(self):
         self.cobra_models = {}
         self.tellurium_models = {}
+        self.chassis_configs = {}
     
-    def load_cobra_model(self, model_id: str, sbml_file: str):
-        """Load metabolic model using COBRApy"""
-        model = cobra.io.read_sbml_model(sbml_file)
+    def load_chassis_model(self, chassis_type: str, model_id: str = "current"):
+        """Load chassis-specific metabolic model using COBRApy"""
+        chassis_config = get_chassis_config(chassis_type)
+        model_file = chassis_config.get("metabolic_model", f"models/{chassis_type}_chassis.xml")
+        
+        model = cobra.io.read_sbml_model(model_file)
         self.cobra_models[model_id] = model
+        self.chassis_configs[model_id] = chassis_config
         return model
     
     def run_fba(self, model_id: str) -> Dict[str, Any]:
@@ -113,16 +119,20 @@ class MVPProcessExecutor:
     
     def _execute_metabolic_process(self, process_code: str, vm_context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute metabolic processes using COBRApy"""
-        organism_type = vm_context.get("biological_type", "generic")
+        chassis_type = vm_context.get("biological_type", "generic")
         
-        # Load appropriate model based on organism
-        if organism_type == "ecoli":
-            model_file = "models/e_coli_core.xml"  # Standard E. coli model
+        # Load appropriate chassis model based on existing chassis system
+        if chassis_type == "ecoli":
+            model_file = "models/ecoli_chassis.xml"  # E. coli chassis model
+        elif chassis_type == "yeast":
+            model_file = "models/yeast_chassis.xml"  # Yeast chassis model
+        elif chassis_type == "orthogonal":
+            model_file = "models/orthogonal_chassis.xml"  # Orthogonal chassis model
         else:
-            model_file = "models/generic_core.xml"  # Generic minimal model
+            model_file = "models/base_chassis.xml"  # Base chassis model (fallback)
         
         try:
-            self.integrator.load_cobra_model("current", model_file)
+            self.integrator.load_chassis_model(chassis_type, "current")
             result = self.integrator.run_fba("current")
             
             return {
