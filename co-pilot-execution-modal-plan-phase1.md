@@ -6,7 +6,7 @@
 
 **Duration**: 2 weeks  
 **Priority**: MVP Foundation - Prove concept viability  
-**Dependencies**: Completion of API upgrade plan (co-pilot-api-plan-phase1.md)  
+**Dependencies**: Completion of API upgrade plan (co-pilot-api-plan-phase3.md)  
 
 ---
 
