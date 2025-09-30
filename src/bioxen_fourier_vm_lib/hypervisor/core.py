@@ -21,6 +21,9 @@ except ImportError:
     sys.path.append(str(Path(__file__).parent.parent))
     from chassis import ChassisType, BaseChassis, EcoliChassis, YeastChassis
 
+# Import time simulation
+from .TimeSimulator import TimeSimulator, TemporalState, CyclePhase
+
 class VMState(Enum):
     """Virtual Machine states"""
     CREATED = "created"
@@ -116,6 +119,9 @@ class BioXenHypervisor:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"BioXen Hypervisor initialized with {chassis_type.value} chassis")
+        
+        # Initialize time simulator for circadian rhythm modeling
+        self.time_simulator = TimeSimulator()
     
     def _initialize_chassis(self) -> Optional[BaseChassis]:
         """Initialize the appropriate chassis based on type"""
@@ -322,6 +328,14 @@ class BioXenHypervisor:
             "hypervisor_overhead": self.hypervisor_overhead,
             "active_vms": len([vm for vm in self.vms.values() if vm.state == VMState.RUNNING])
         }
+        
+    def get_environmental_state(self) -> TemporalState:
+        """Get current environmental state for circadian rhythm modeling
+        
+        Returns the current temporal state including light intensity, seasonal factors,
+        and astronomical cycle information for biological process timing.
+        """
+        return self.time_simulator.get_current_state()
         
     def _boot_vm(self, vm: VirtualMachine) -> None:
         """Simulate the VM boot sequence"""
