@@ -1,2 +1,0 @@
-[console_scripts]
-bioxen = bioxen_jcvi_vm_lib.cli.main:main
