@@ -1,0 +1,1 @@
+Help me implement a three-lens system analyzer for biological time series in Python. I need Fourier transforms for frequency analysis, Laplace transforms for system dynamics, and wavelet transforms for time-frequency localization. The data comes from circadian rhythm simulations in virtual cells. Show me how to integrate scipy.signal methods and visualize the results.
