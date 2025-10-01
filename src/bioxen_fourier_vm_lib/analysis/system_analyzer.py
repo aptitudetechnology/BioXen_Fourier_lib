@@ -78,6 +78,9 @@ class WaveletResult:
         wavelet_used: Name of mother wavelet used (Phase 1)
         selection_score: Quality score for wavelet selection (Phase 1)
         alternative_wavelets: Other good wavelet options (Phase 1)
+        mra_components: Multi-resolution decomposition components (Phase 1.5)
+        denoised_signal: Signal with noise removed via MRA (Phase 1.5)
+        reconstruction_error: Error between original and reconstructed (Phase 1.5)
     
     Example:
         >>> result = analyzer.wavelet_lens(atp_data)
@@ -85,6 +88,10 @@ class WaveletResult:
         >>> # Phase 1: Automatic wavelet selection
         >>> print(f"Optimal wavelet: {result.wavelet_used}")
         >>> print(f"Selection score: {result.selection_score:.3f}")
+        >>> # Phase 1.5: Multi-resolution analysis
+        >>> if result.mra_components:
+        ...     print(f"Denoised signal available: {len(result.denoised_signal)} samples")
+        ...     print(f"Reconstruction error: {result.reconstruction_error:.3f}")
     """
     scales: np.ndarray
     coefficients: np.ndarray
@@ -94,6 +101,10 @@ class WaveletResult:
     wavelet_used: Optional[str] = None
     selection_score: Optional[Dict[str, float]] = None
     alternative_wavelets: Optional[List[Tuple[str, Dict[str, float]]]] = None
+    # Phase 1.5: Multi-resolution analysis
+    mra_components: Optional[Dict[str, np.ndarray]] = None
+    denoised_signal: Optional[np.ndarray] = None
+    reconstruction_error: Optional[float] = None
 
 
 @dataclass
@@ -508,7 +519,9 @@ class SystemAnalyzer:
         self,
         time_series: np.ndarray,
         wavelet_name: Optional[str] = None,
-        auto_select: bool = False
+        auto_select: bool = False,
+        enable_mra: bool = False,
+        mra_levels: int = 5
     ) -> WaveletResult:
         """
         Lens 2: Time-frequency analysis for non-stationary signals.
@@ -538,10 +551,15 @@ class SystemAnalyzer:
                          Default: 'morl' (Morlet) if auto_select=False
             auto_select: Enable automatic optimal wavelet selection (Phase 1 Feature 2)
                         If True, ignores wavelet_name and picks best wavelet
+            enable_mra: Enable Multi-Resolution Analysis (Phase 1.5 Feature)
+                       If True, performs wavelet decomposition and denoising
+            mra_levels: Number of decomposition levels for MRA (default: 5)
+                       Higher levels = more detailed decomposition
         
         Returns:
             WaveletResult with time-frequency map and detected transients
             Phase 1: Also includes wavelet_used, selection_score, alternatives
+            Phase 1.5: Also includes mra_components, denoised_signal if enable_mra=True
         
         Example:
             >>> # MVP mode: Manual wavelet selection
@@ -552,9 +570,15 @@ class SystemAnalyzer:
             >>> print(f"Optimal wavelet: {result.wavelet_used}")
             >>> print(f"Score: {result.selection_score['total_score']:.3f}")
             >>> 
-            >>> # See alternative options
-            >>> for name, scores in result.alternative_wavelets[:3]:
-            ...     print(f"{name}: {scores['total_score']:.3f}")
+            >>> # Phase 1.5: Multi-resolution analysis with denoising
+            >>> result = analyzer.wavelet_lens(atp_levels, auto_select=True, enable_mra=True)
+            >>> print(f"Original noise level: {atp_levels.std():.2f}")
+            >>> print(f"Denoised noise level: {result.denoised_signal.std():.2f}")
+            >>> print(f"Reconstruction error: {result.reconstruction_error:.4f}")
+            >>> 
+            >>> # See decomposition components
+            >>> print(f"MRA components: {list(result.mra_components.keys())}")
+            >>> # ['approximation', 'detail_1', 'detail_2', 'detail_3', 'detail_4', 'detail_5']
         """
         # Ensure time_series is numpy array
         time_series = np.asarray(time_series)
@@ -589,6 +613,17 @@ class SystemAnalyzer:
         # Detect transient events (simple threshold for MVP)
         transients = self._detect_transients_mvp(coefficients)
         
+        # Phase 1.5: Multi-Resolution Analysis (MRA)
+        mra_components = None
+        denoised_signal = None
+        reconstruction_error = None
+        
+        if enable_mra:
+            mra_components, denoised_signal, reconstruction_error = \
+                self._perform_multi_resolution_analysis(
+                    time_series, wavelet_name, mra_levels
+                )
+        
         return WaveletResult(
             scales=scales,
             coefficients=coefficients,
@@ -597,7 +632,11 @@ class SystemAnalyzer:
             # Phase 1 Feature 2: Wavelet selection info
             wavelet_used=wavelet_name,
             selection_score=selection_score,
-            alternative_wavelets=alternative_wavelets
+            alternative_wavelets=alternative_wavelets,
+            # Phase 1.5: Multi-resolution analysis
+            mra_components=mra_components,
+            denoised_signal=denoised_signal,
+            reconstruction_error=reconstruction_error
         )
     
     def _detect_transients_mvp(self, cwt_matrix: np.ndarray) -> List[Dict[str, Any]]:
@@ -883,6 +922,163 @@ class SystemAnalyzer:
         score = 1.0 / (1.0 + ratio)
         
         return score
+    
+    def _perform_multi_resolution_analysis(
+        self,
+        time_series: np.ndarray,
+        wavelet: str,
+        levels: int
+    ) -> Tuple[Dict[str, np.ndarray], np.ndarray, float]:
+        """
+        Phase 1.5: Perform Multi-Resolution Analysis (MRA) using discrete wavelet transform.
+        
+        Decomposes signal into approximation (low-frequency trend) and details
+        (high-frequency components) at multiple scales. Useful for:
+        - Signal denoising (remove high-frequency noise)
+        - Trend extraction (get smooth approximation)
+        - Multi-scale feature detection
+        - Signal compression
+        
+        Algorithm:
+        1. Decompose signal using discrete wavelet transform (DWT)
+        2. Extract approximation and detail coefficients at each level
+        3. Reconstruct components separately
+        4. Create denoised version by removing high-frequency details
+        5. Calculate reconstruction error
+        
+        Args:
+            time_series: Input signal
+            wavelet: Wavelet name (must be orthogonal: 'db4', 'db8', 'sym4', 'coif2')
+            levels: Number of decomposition levels
+        
+        Returns:
+            Tuple of (components_dict, denoised_signal, reconstruction_error)
+            - components_dict: Dict with 'approximation' and 'detail_X' arrays
+            - denoised_signal: Signal with high-freq noise removed
+            - reconstruction_error: RMS error between original and reconstructed
+        
+        Biological Applications:
+            - Remove measurement noise from ATP readings
+            - Separate circadian trend from ultradian oscillations
+            - Extract slow metabolic changes from fast fluctuations
+            - Identify multi-timescale biological processes
+        
+        Example:
+            >>> components, denoised, error = analyzer._perform_multi_resolution_analysis(
+            ...     atp_signal, 'db4', 5
+            ... )
+            >>> print(f"Components: {list(components.keys())}")
+            >>> # ['approximation', 'detail_1', 'detail_2', 'detail_3', 'detail_4', 'detail_5']
+            >>> print(f"Noise reduction: {error:.3f}")
+        """
+        # Ensure we have an orthogonal wavelet for DWT
+        # CWT wavelets like 'morl' don't work with DWT
+        if wavelet in ['morl', 'mexh', 'gaus4']:
+            # Map to appropriate orthogonal wavelet
+            wavelet_map = {
+                'morl': 'db4',   # Smooth → Daubechies
+                'mexh': 'sym4',  # Peak detection → Symlet
+                'gaus4': 'coif2' # Smooth → Coiflet
+            }
+            wavelet = wavelet_map[wavelet]
+        
+        # Perform discrete wavelet decomposition
+        coeffs = pywt.wavedec(time_series, wavelet, level=levels)
+        
+        # coeffs[0] = approximation (low-freq trend)
+        # coeffs[1:] = details (high-freq components, finest to coarsest)
+        
+        # Reconstruct components at full length
+        components = {}
+        
+        # Approximation (smoothed trend)
+        approximation = pywt.upcoef('a', coeffs[0], wavelet, level=levels)
+        # Trim to original length (DWT can extend signal slightly)
+        approximation = approximation[:len(time_series)]
+        components['approximation'] = approximation
+        
+        # Detail components (from highest to lowest frequency)
+        detail_sum = np.zeros(len(time_series))
+        for i, detail_coeffs in enumerate(coeffs[1:], 1):
+            # Reconstruct this detail level
+            detail = pywt.upcoef('d', detail_coeffs, wavelet, level=levels-i+1)
+            detail = detail[:len(time_series)]
+            components[f'detail_{i}'] = detail
+            detail_sum += detail
+        
+        # Create denoised signal by removing highest frequency details
+        # Strategy: Keep approximation + lower frequency details, remove noise
+        # Rule of thumb: Remove top 1-2 detail levels (highest frequencies)
+        levels_to_keep = max(1, levels - 2)  # Keep at least 1 detail level
+        
+        denoised = approximation.copy()
+        for i in range(levels_to_keep):
+            if f'detail_{levels-i}' in components:  # Start from coarsest details
+                denoised += components[f'detail_{levels-i}']
+        
+        # Calculate reconstruction error
+        full_reconstruction = approximation + detail_sum
+        reconstruction_error = np.sqrt(np.mean((time_series - full_reconstruction)**2))
+        
+        return components, denoised, reconstruction_error
+    
+    def get_mra_summary(
+        self,
+        mra_components: Dict[str, np.ndarray]
+    ) -> Dict[str, Dict[str, float]]:
+        """
+        Phase 1.5: Generate summary statistics for MRA components.
+        
+        Analyzes each component (approximation, details) to understand
+        signal decomposition and identify dominant scales.
+        
+        Args:
+            mra_components: Components from _perform_multi_resolution_analysis
+        
+        Returns:
+            Dictionary with statistics for each component:
+            - energy: Relative energy content (% of total)
+            - rms: Root mean square amplitude
+            - peak_to_peak: Max - min value
+            - frequency_estimate: Approximate dominant frequency (Hz)
+        
+        Example:
+            >>> summary = analyzer.get_mra_summary(components)
+            >>> for name, stats in summary.items():
+            ...     print(f"{name}: {stats['energy']:.1f}% energy, "
+            ...           f"RMS={stats['rms']:.2f}")
+        """
+        summary = {}
+        
+        # Calculate total energy across all components
+        total_energy = sum(np.sum(comp**2) for comp in mra_components.values())
+        
+        for name, component in mra_components.items():
+            # Energy content
+            energy = np.sum(component**2)
+            energy_percent = (energy / total_energy * 100) if total_energy > 0 else 0.0
+            
+            # Amplitude statistics
+            rms = np.sqrt(np.mean(component**2))
+            peak_to_peak = np.max(component) - np.min(component)
+            
+            # Rough frequency estimate using zero crossings
+            zero_crossings = np.where(np.diff(np.sign(component)))[0]
+            if len(zero_crossings) > 1:
+                # Estimate frequency from zero crossing rate
+                avg_half_period = len(component) / len(zero_crossings)
+                freq_estimate = self.sampling_rate / (2 * avg_half_period)
+            else:
+                freq_estimate = 0.0
+            
+            summary[name] = {
+                'energy': energy_percent,
+                'rms': rms,
+                'peak_to_peak': peak_to_peak,
+                'frequency_estimate': freq_estimate
+            }
+        
+        return summary
     
     # ========== LENS 3: LAPLACE (STABILITY) ==========
     
