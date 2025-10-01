@@ -491,14 +491,17 @@ class SystemAnalyzer:
     # ========== LENS 2: WAVELET ==========
     
     # Phase 1 Feature 2: Available wavelets for auto-selection
+    # Phase 1 Feature 2: Continuous wavelets for CWT analysis
+    # Note: Only continuous wavelets work with pywt.cwt()
+    # Discrete wavelets (db*, sym*, coif*) require DWT (future enhancement)
     AVAILABLE_WAVELETS = {
         'morl': 'Morlet - Good for smooth oscillations',
         'mexh': 'Mexican Hat - Good for peak detection',
         'gaus4': 'Gaussian 4 - Sharp features, smooth signal',
-        'db4': 'Daubechies 4 - Balanced time-frequency',
-        'db8': 'Daubechies 8 - Smoother than db4',
-        'sym4': 'Symlet 4 - Nearly symmetric, good for signals',
-        'coif2': 'Coiflet 2 - Smooth, orthogonal'
+        'gaus8': 'Gaussian 8 - Very smooth, good for gradual changes',
+        'cgau4': 'Complex Gaussian 4 - Phase information preserved',
+        'shan': 'Shannon - Good frequency localization',
+        'fbsp': 'Frequency B-Spline - Flexible bandwidth'
     }
     
     def wavelet_lens(
