@@ -44,17 +44,25 @@ class FourierResult:
         dominant_frequency: Frequency with highest power (Hz)
         dominant_period: Period of dominant frequency (hours)
         significance: Statistical significance (1 - false alarm probability)
+        harmonics: List of detected harmonic components (Phase 1)
+        harmonic_power: Total power in all harmonics (Phase 1)
     
     Example:
         >>> result = analyzer.fourier_lens(atp_data, timestamps)
         >>> if 20 < result.dominant_period < 28:
         ...     print("Circadian rhythm detected!")
+        >>> # Phase 1: Multi-harmonic detection
+        >>> for h in result.harmonics:
+        ...     print(f"Period: {h['period']:.1f}h, Power: {h['power']:.3f}")
     """
     frequencies: np.ndarray
     power_spectrum: np.ndarray
     dominant_frequency: float
     dominant_period: float
     significance: Optional[float] = None  # False alarm probability
+    # Phase 1: Multi-harmonic detection
+    harmonics: Optional[List[Dict[str, float]]] = None
+    harmonic_power: Optional[float] = None
 
 
 @dataclass
@@ -67,15 +75,25 @@ class WaveletResult:
         coefficients: Complex wavelet coefficients [scales x time]
         transient_events: List of detected transient events
         time_frequency_map: Absolute values of coefficients (power map)
+        wavelet_used: Name of mother wavelet used (Phase 1)
+        selection_score: Quality score for wavelet selection (Phase 1)
+        alternative_wavelets: Other good wavelet options (Phase 1)
     
     Example:
         >>> result = analyzer.wavelet_lens(atp_data)
         >>> print(f"Detected {len(result.transient_events)} stress responses")
+        >>> # Phase 1: Automatic wavelet selection
+        >>> print(f"Optimal wavelet: {result.wavelet_used}")
+        >>> print(f"Selection score: {result.selection_score:.3f}")
     """
     scales: np.ndarray
     coefficients: np.ndarray
     transient_events: List[Dict[str, Any]]
     time_frequency_map: np.ndarray
+    # Phase 1: Automatic wavelet selection
+    wavelet_used: Optional[str] = None
+    selection_score: Optional[Dict[str, float]] = None
+    alternative_wavelets: Optional[List[Tuple[str, Dict[str, float]]]] = None
 
 
 @dataclass
