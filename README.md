@@ -5,17 +5,18 @@
 
 A Python library for virtualizing biological cells using a factory pattern, enabling programmatic creation and management of biological virtual machines (VMs) for research and simulation. Features advanced time simulation for circadian rhythm studies and Fourier analysis of metabolic oscillations.
 
-## 🌟 Features
+## ✨ Features
 
-- **Factory Pattern API**: Create and manage biological VMs with simple, consistent interfaces
-- **Multiple Biological Types**: Support for syn3a, ecoli, yeast, orthogonal, and future mammalian/plant chassis
-- **VM Infrastructures**: Basic and XCP-ng virtualization options
-- **Genome Schema**: Standardized format for biological genome files with validation
-- **Resource Management**: Allocate and monitor biological resources (ATP, ribosomes, etc.)
-- **Hypervisor Control**: Full lifecycle management of biological VMs
-- **Time Simulation**: Pure Earth astronomical cycles for circadian rhythm modeling
-- **Fourier Analysis**: Frequency domain analysis of metabolic oscillations and gene expression
-- **Extensible Architecture**: Modular design for adding new chassis and capabilities
+- **Biological VM Virtualization**: Create synthetic cell simulations
+- **Four-Lens Analysis System**: Multi-method frequency domain analysis optimized for biological signals
+  - **Fourier (Lomb-Scargle)**: Industry standard for irregular sampling in biology
+  - **Wavelet**: Essential for non-stationary signals and time-frequency localization
+  - **Laplace**: Control theory and system stability analysis
+  - **Z-Transform**: Digital signal processing for sampled data
+- **Time Simulation**: Accurate solar/lunar cycles for circadian studies
+- **Hypervisor System**: Manage multiple biological VMs
+- **Factory Pattern API**: Clean, extensible architecture
+- **Interactive Learning Tools**: Web-based demos with decision trees and validation
 
 ## 📦 Installation
 
@@ -89,16 +90,46 @@ vm.destroy()
 - `hypervisor.start_vm(vm_id)`: Start VM through hypervisor
 - `hypervisor.get_system_resources()`: Monitor system-wide resource usage
 
+### Four-Lens Analysis
+
+```python
+from astropy.timeseries import LombScargle
+import pywt
+import numpy as np
+
+# Example: Analyze circadian gene expression with irregular sampling
+time = np.array([0, 1, 3, 6, 10, 15, 21, 28])  # Irregular hours
+expression = np.array([1.0, 1.5, 0.8, 0.3, 0.5, 1.2, 1.8, 1.3])
+
+# Lens 1: Lomb-Scargle (handles irregular sampling - biology standard)
+frequency, power = LombScargle(time, expression).autopower()
+dominant_freq = frequency[np.argmax(power)]
+print(f"Dominant period: {1/dominant_freq:.2f} hours")
+
+# Lens 2: Wavelet (for time-frequency localization)
+coefficients, frequencies = pywt.cwt(expression, scales=np.arange(1,10), wavelet='morl')
+
+# See research/interactive-fourier-series/lenses/ for interactive web demos
+# - bioxen-lenses.html: Four-lens comparison with decision tree
+# - bio-signal.html: Method selection guide for 5 signal types
+```
+
+## 🏗️ Architecture
+
 ## 🏗️ Architecture
 
 ```
 src/bioxen_fourier_vm_lib/
-├── api/                    # Factory API and VM classes
-├── chassis/               # Cellular chassis implementations
-├── genome/                # Genome schema and parsing
-├── hypervisor/            # VM lifecycle management
+├── api/                   # Public API layer
+│   └── factory.py         # Factory pattern implementation
+├── hypervisor/            # Hypervisor layer
 │   ├── core.py           # Main hypervisor logic
 │   └── TimeSimulator.py  # Astronomical time cycles
+├── analysis/              # Four-lens frequency domain analysis
+│   ├── fourier.py        # Lomb-Scargle periodogram
+│   ├── wavelet.py        # Wavelet transforms
+│   ├── laplace.py        # Transfer functions
+│   └── ztransform.py     # Digital signal processing
 ├── genetics/              # Genetic circuits
 ├── monitoring/            # Performance monitoring
 └── visualization/         # Terminal interfaces
@@ -148,16 +179,35 @@ tide_factor = state.gravitational_tide_factor  # 0.95-1.05
 
 ## 🧪 Research Foundation
 
-This library builds on frequency domain analysis techniques for biological systems:
+This library builds on peer-reviewed frequency domain analysis techniques for biological systems:
 
-- Spectral dynamics in systems biology
-- Fourier analysis of gene regulatory networks
-- Wavelet analysis for non-stationary signals
-- Higher-order spectral analysis for nonlinear interactions
+### Four-Lens Analysis System
+
+BioXen uses a **research-backed four-lens approach** for comprehensive biological signal analysis:
+
+| Lens | Primary Use | Key Library | Biology Application |
+|------|-------------|-------------|---------------------|
+| **Fourier (Lomb-Scargle)** | Irregular sampling, dominant frequencies | `astropy.timeseries.LombScargle` | Circadian rhythms, gene expression cycles |
+| **Wavelet** | Non-stationary signals, time-frequency | `pywt` (PyWavelets) | Transient responses, cell cycle analysis |
+| **Laplace** | Stability, control theory | `scipy.signal.TransferFunction` | Metabolic pathway control, system stability |
+| **Z-Transform** | Discrete sampling, digital filters | `python-control` | Experimental time-series, sampled data |
+
+**Why Four Lenses?**
+- Biological signals are **non-stationary** (conditions change over time) → Wavelet essential
+- Biological sampling is **irregular** (real-world constraints) → Lomb-Scargle is the standard
+- Different biological questions require different analytical approaches
+- Multi-lens validation increases confidence in findings
+
+### Research Background
+
+- **Spectral dynamics** in systems biology (Van Dongen 1999, Hughes et al. 2009)
+- **Lomb-Scargle Periodogram**: Gold standard for biological rhythms (Scargle 1982, Ruf 1999)
+- **Wavelet analysis**: Essential for non-stationary biological signals (Wu et al. 2016)
+- **Higher-order spectral analysis**: Nonlinear interactions (Nikias & Petropulu 1993)
 - **Circadian Rhythm Modeling**: Astronomical time cycles for accurate biological timing
 - **Metabolic Oscillation Analysis**: Frequency domain studies of cellular processes
 
-See `research/Frequency Domain Analysis in Biology.md` for detailed research background.
+See `research/Frequency Domain Analysis in Biology.md` and interactive demos in `research/interactive-fourier-series/lenses/` for detailed research background.
 
 ## 🔧 Development
 
