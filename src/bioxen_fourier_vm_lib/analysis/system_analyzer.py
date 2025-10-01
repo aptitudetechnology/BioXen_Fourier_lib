@@ -490,10 +490,22 @@ class SystemAnalyzer:
     
     # ========== LENS 2: WAVELET ==========
     
+    # Phase 1 Feature 2: Available wavelets for auto-selection
+    AVAILABLE_WAVELETS = {
+        'morl': 'Morlet - Good for smooth oscillations',
+        'mexh': 'Mexican Hat - Good for peak detection',
+        'gaus4': 'Gaussian 4 - Sharp features, smooth signal',
+        'db4': 'Daubechies 4 - Balanced time-frequency',
+        'db8': 'Daubechies 8 - Smoother than db4',
+        'sym4': 'Symlet 4 - Nearly symmetric, good for signals',
+        'coif2': 'Coiflet 2 - Smooth, orthogonal'
+    }
+    
     def wavelet_lens(
         self,
         time_series: np.ndarray,
-        wavelet_name: str = 'morl'
+        wavelet_name: Optional[str] = None,
+        auto_select: bool = False
     ) -> WaveletResult:
         """
         Lens 2: Time-frequency analysis for non-stationary signals.
@@ -518,21 +530,43 @@ class SystemAnalyzer:
         
         Args:
             time_series: Signal values
-            wavelet_name: Mother wavelet ('morl', 'db4', 'mexh', 'cgau5')
-                         'morl' (Morlet) is good default for biological signals
+            wavelet_name: Mother wavelet or None for auto-selection
+                         Options: 'morl', 'mexh', 'gaus4', 'db4', 'db8', 'sym4', 'coif2'
+                         Default: 'morl' (Morlet) if auto_select=False
+            auto_select: Enable automatic optimal wavelet selection (Phase 1 Feature 2)
+                        If True, ignores wavelet_name and picks best wavelet
         
         Returns:
             WaveletResult with time-frequency map and detected transients
+            Phase 1: Also includes wavelet_used, selection_score, alternatives
         
         Example:
-            >>> # Detect stress responses in ATP levels
-            >>> result = analyzer.wavelet_lens(atp_levels)
-            >>> for event in result.transient_events:
-            ...     time_point = event['time_index'] * 5  # 5-second intervals
-            ...     print(f"Stress event at {time_point}s")
+            >>> # MVP mode: Manual wavelet selection
+            >>> result = analyzer.wavelet_lens(atp_levels, wavelet_name='morl')
+            >>> 
+            >>> # Phase 1: Automatic wavelet selection
+            >>> result = analyzer.wavelet_lens(atp_levels, auto_select=True)
+            >>> print(f"Optimal wavelet: {result.wavelet_used}")
+            >>> print(f"Score: {result.selection_score['total_score']:.3f}")
+            >>> 
+            >>> # See alternative options
+            >>> for name, scores in result.alternative_wavelets[:3]:
+            ...     print(f"{name}: {scores['total_score']:.3f}")
         """
         # Ensure time_series is numpy array
         time_series = np.asarray(time_series)
+        
+        # Phase 1 Feature 2: Automatic wavelet selection
+        selection_score = None
+        alternative_wavelets = None
+        
+        if auto_select:
+            # Auto-select optimal wavelet
+            wavelet_name, selection_score, alternative_wavelets = \
+                self._select_optimal_wavelet(time_series)
+        elif wavelet_name is None:
+            # Default to Morlet if not specified
+            wavelet_name = 'morl'
         
         # Continuous Wavelet Transform (CWT)
         # Scales: smaller scales detect high-frequency (short-duration) events
@@ -556,7 +590,11 @@ class SystemAnalyzer:
             scales=scales,
             coefficients=coefficients,
             transient_events=transients,
-            time_frequency_map=np.abs(coefficients)  # Power map
+            time_frequency_map=np.abs(coefficients),  # Power map
+            # Phase 1 Feature 2: Wavelet selection info
+            wavelet_used=wavelet_name,
+            selection_score=selection_score,
+            alternative_wavelets=alternative_wavelets
         )
     
     def _detect_transients_mvp(self, cwt_matrix: np.ndarray) -> List[Dict[str, Any]]:
@@ -603,6 +641,245 @@ class SystemAnalyzer:
                     })
         
         return events
+    
+    def _select_optimal_wavelet(
+        self,
+        time_series: np.ndarray
+    ) -> Tuple[str, Dict[str, float], List[Tuple[str, Dict[str, float]]]]:
+        """
+        Phase 1 Feature 2: Automatically select optimal mother wavelet for signal.
+        
+        Selection Strategy:
+        Tests all available wavelets and scores each based on 4 criteria:
+        1. Energy Concentration (30%): How focused is the signal energy?
+        2. Time Localization (25%): Can we pinpoint events precisely?
+        3. Frequency Localization (25%): Can we identify specific frequencies?
+        4. Edge Quality (20%): How clean are the boundaries?
+        
+        Higher scores = better wavelet for this signal.
+        
+        Biological Intuition:
+        - Smooth oscillations (circadian) → Morlet, Mexican Hat
+        - Sharp spikes (stress) → Daubechies, Haar
+        - Complex mixed signals → Symlets, Coiflets
+        
+        Args:
+            time_series: Signal to analyze
+        
+        Returns:
+            Tuple of (best_wavelet_name, selection_scores, alternatives_list)
+            - best_wavelet_name: Name of optimal wavelet
+            - selection_scores: Dict with all metric scores
+            - alternatives_list: List of (name, scores) for other wavelets, sorted
+        
+        Example:
+            >>> name, scores, alts = self._select_optimal_wavelet(atp_signal)
+            >>> print(f"Best: {name} (score: {scores['total_score']:.3f})")
+            >>> print(f"Energy: {scores['energy_concentration']:.3f}")
+        """
+        scores_all = {}
+        max_scale = min(128, len(time_series)//4)
+        scales = np.arange(1, max_scale)
+        
+        # Test each available wavelet
+        for wavelet_name in self.AVAILABLE_WAVELETS.keys():
+            try:
+                # Perform CWT
+                coeffs, _ = pywt.cwt(
+                    time_series, scales, wavelet_name,
+                    sampling_period=1.0/self.sampling_rate
+                )
+                
+                # Calculate selection metrics
+                energy_conc = self._calculate_energy_concentration(coeffs)
+                time_loc = self._calculate_time_localization(coeffs)
+                freq_loc = self._calculate_frequency_localization(coeffs)
+                edge_qual = self._calculate_edge_quality(coeffs)
+                
+                # Weighted composite score
+                total = (0.30 * energy_conc +
+                        0.25 * time_loc +
+                        0.25 * freq_loc +
+                        0.20 * edge_qual)
+                
+                scores_all[wavelet_name] = {
+                    'total_score': total,
+                    'energy_concentration': energy_conc,
+                    'time_localization': time_loc,
+                    'frequency_localization': freq_loc,
+                    'edge_quality': edge_qual
+                }
+                
+            except Exception:
+                # Some wavelets may fail for certain signals
+                # Give them a very low score
+                scores_all[wavelet_name] = {
+                    'total_score': 0.0,
+                    'energy_concentration': 0.0,
+                    'time_localization': 0.0,
+                    'frequency_localization': 0.0,
+                    'edge_quality': 0.0
+                }
+        
+        # Find best wavelet
+        best_wavelet = max(scores_all.items(), key=lambda x: x[1]['total_score'])
+        best_name = best_wavelet[0]
+        best_scores = best_wavelet[1]
+        
+        # Sort alternatives by score
+        alternatives = sorted(
+            scores_all.items(),
+            key=lambda x: x[1]['total_score'],
+            reverse=True
+        )
+        
+        return best_name, best_scores, alternatives
+    
+    def _calculate_energy_concentration(self, coeffs: np.ndarray) -> float:
+        """
+        Calculate how concentrated the signal energy is in wavelet domain.
+        
+        Higher concentration = signal has well-defined features
+        Lower concentration = signal is noise-like or diffuse
+        
+        Uses Gini coefficient: measures inequality in energy distribution.
+        Score of 1.0 = perfect concentration, 0.0 = uniform distribution.
+        
+        Args:
+            coeffs: Wavelet coefficients [scales x time]
+        
+        Returns:
+            Energy concentration score [0, 1]
+        """
+        # Calculate power (energy density)
+        power = np.abs(coeffs)**2
+        power_flat = power.flatten()
+        power_flat = np.sort(power_flat)
+        
+        # Gini coefficient (adapted for our use)
+        n = len(power_flat)
+        if n == 0 or power_flat.sum() == 0:
+            return 0.0
+        
+        cumsum = np.cumsum(power_flat)
+        gini = (2 * np.sum((np.arange(1, n+1) * power_flat))) / (n * cumsum[-1]) - (n + 1) / n
+        
+        # Normalize to [0, 1] where 1 is best
+        return max(0.0, min(1.0, gini))
+    
+    def _calculate_time_localization(self, coeffs: np.ndarray) -> float:
+        """
+        Calculate how well events are localized in time.
+        
+        Good time localization = sharp, well-defined events
+        Poor time localization = smeared, unclear timing
+        
+        Measures the sharpness of peaks in time domain by looking at
+        the concentration of power at specific time points.
+        
+        Args:
+            coeffs: Wavelet coefficients [scales x time]
+        
+        Returns:
+            Time localization score [0, 1]
+        """
+        # Sum power across scales for each time point
+        time_power = np.sum(np.abs(coeffs)**2, axis=0)
+        
+        if time_power.sum() == 0:
+            return 0.0
+        
+        # Normalize
+        time_power = time_power / time_power.sum()
+        
+        # Calculate entropy (lower entropy = better localization)
+        # Remove zeros to avoid log(0)
+        time_power = time_power[time_power > 0]
+        entropy = -np.sum(time_power * np.log2(time_power))
+        
+        # Normalize by maximum possible entropy
+        max_entropy = np.log2(len(time_power)) if len(time_power) > 1 else 1.0
+        normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+        
+        # Convert to score (lower entropy = higher score)
+        return 1.0 - normalized_entropy
+    
+    def _calculate_frequency_localization(self, coeffs: np.ndarray) -> float:
+        """
+        Calculate how well frequency components are separated.
+        
+        Good frequency localization = distinct frequency bands
+        Poor frequency localization = blurred frequency content
+        
+        Measures the concentration of power at specific scales (frequencies).
+        
+        Args:
+            coeffs: Wavelet coefficients [scales x time]
+        
+        Returns:
+            Frequency localization score [0, 1]
+        """
+        # Sum power across time for each scale
+        scale_power = np.sum(np.abs(coeffs)**2, axis=1)
+        
+        if scale_power.sum() == 0:
+            return 0.0
+        
+        # Normalize
+        scale_power = scale_power / scale_power.sum()
+        
+        # Calculate entropy (lower entropy = better localization)
+        scale_power = scale_power[scale_power > 0]
+        entropy = -np.sum(scale_power * np.log2(scale_power))
+        
+        # Normalize by maximum possible entropy
+        max_entropy = np.log2(len(scale_power)) if len(scale_power) > 1 else 1.0
+        normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+        
+        # Convert to score
+        return 1.0 - normalized_entropy
+    
+    def _calculate_edge_quality(self, coeffs: np.ndarray) -> float:
+        """
+        Calculate quality of signal at edges (boundary effects).
+        
+        Wavelet transforms can have artifacts at signal boundaries.
+        Good edge quality = minimal boundary distortion
+        Poor edge quality = strong edge artifacts
+        
+        Compares power at edges vs center of signal.
+        
+        Args:
+            coeffs: Wavelet coefficients [scales x time]
+        
+        Returns:
+            Edge quality score [0, 1]
+        """
+        power = np.abs(coeffs)**2
+        
+        # Define edge regions (10% on each side) and center (middle 80%)
+        n_time = power.shape[1]
+        edge_size = max(1, n_time // 10)
+        
+        left_edge = power[:, :edge_size]
+        right_edge = power[:, -edge_size:]
+        center = power[:, edge_size:-edge_size] if n_time > 2*edge_size else power
+        
+        # Calculate mean power in each region
+        edge_power = (left_edge.mean() + right_edge.mean()) / 2
+        center_power = center.mean()
+        
+        if center_power == 0:
+            return 0.0
+        
+        # Ratio: lower edge/center ratio = better edge quality
+        ratio = edge_power / center_power
+        
+        # Convert to score (lower ratio = higher score)
+        # Use sigmoid-like function to map [0, ∞) → [1, 0]
+        score = 1.0 / (1.0 + ratio)
+        
+        return score
     
     # ========== LENS 3: LAPLACE (STABILITY) ==========
     

@@ -615,7 +615,7 @@ Next steps:
 
 ---
 
-### Step 10: Phase 1 Success Checklist
+### Step 10: Phase 1 Feature 1 Success Checklist
 
 Mark these off as you complete them:
 
@@ -627,7 +627,7 @@ Mark these off as you complete them:
   - [ ] Edge cases handled
   - [ ] Biological realism validated
   - [ ] Integration tests passed
-- [ ] Step 9: Phase 1 demo completed successfully
+- [ ] Step 9: Phase 1 harmonics demo completed successfully
   - [ ] 3 harmonics detected
   - [ ] Amplitudes accurate (<10% error)
   - [ ] Phases accurate (<15% error)
@@ -635,7 +635,7 @@ Mark these off as you complete them:
 
 ---
 
-### Phase 1 Troubleshooting
+### Phase 1 Feature 1 Troubleshooting
 
 **Demo shows high errors (>20%) in amplitude/phase**
 - Check: Is noise level too high? Demo uses 2% noise.
@@ -653,6 +653,186 @@ Mark these off as you complete them:
 - Check: Did demo generate signal correctly?
 - Check: Is `detect_harmonics=True` parameter set?
 - Solution: Review demo script output - should show 3 components in generation phase.
+
+---
+
+## 🌊 Phase 1 Feature 2 Testing - Wavelet Optimization
+
+**Continue here to test Phase 1 Feature 2 (Week 2).**
+
+### What's New in Phase 1 Feature 2?
+
+The **Automatic Wavelet Selection** enhancement adds:
+- **AI-powered wavelet selection** - system picks the best wavelet for your signal
+- **7 available wavelets** - Morlet, Mexican Hat, Gaussian, Daubechies (4 & 8), Symlet, Coiflet
+- **4 selection metrics** - Energy concentration, time localization, frequency localization, edge quality
+- **Transparent scoring** - see why each wavelet was chosen
+- **Alternative recommendations** - explore other good options
+- 100% backward compatible - MVP behavior unchanged unless you opt-in
+
+### Step 11: Run Phase 1 Wavelet Optimization Tests
+
+```bash
+# Run Phase 1 wavelet optimization tests
+pytest tests/test_phase1_wavelet_optimization.py -v
+
+# OR with more detail
+pytest tests/test_phase1_wavelet_optimization.py -v -s
+
+# OR with coverage
+pytest tests/test_phase1_wavelet_optimization.py --cov=bioxen_fourier_vm_lib.analysis --cov-report=term-missing
+```
+
+**Expected output:**
+```
+tests/test_phase1_wavelet_optimization.py::TestBackwardCompatibility::test_mvp_behavior_preserved PASSED
+tests/test_phase1_wavelet_optimization.py::TestBackwardCompatibility::test_default_parameters_no_breaking_changes PASSED
+tests/test_phase1_wavelet_optimization.py::TestAutomaticWaveletSelection::test_auto_select_picks_wavelet PASSED
+tests/test_phase1_wavelet_optimization.py::TestAutomaticWaveletSelection::test_alternatives_provided PASSED
+tests/test_phase1_wavelet_optimization.py::TestAutomaticWaveletSelection::test_auto_select_overrides_wavelet_name PASSED
+tests/test_phase1_wavelet_optimization.py::TestSelectionMetrics::test_energy_concentration_metric PASSED
+tests/test_phase1_wavelet_optimization.py::TestSelectionMetrics::test_time_localization_metric PASSED
+tests/test_phase1_wavelet_optimization.py::TestSelectionMetrics::test_frequency_localization_metric PASSED
+tests/test_phase1_wavelet_optimization.py::TestSelectionMetrics::test_edge_quality_metric PASSED
+tests/test_phase1_wavelet_optimization.py::TestSignalTypeMatching::test_smooth_oscillation_prefers_morlet_or_mexh PASSED
+tests/test_phase1_wavelet_optimization.py::TestSignalTypeMatching::test_sharp_transient_selection PASSED
+tests/test_phase1_wavelet_optimization.py::TestEdgeCases::test_constant_signal PASSED
+tests/test_phase1_wavelet_optimization.py::TestEdgeCases::test_very_short_signal PASSED
+tests/test_phase1_wavelet_optimization.py::TestEdgeCases::test_noisy_signal PASSED
+tests/test_phase1_wavelet_optimization.py::TestBiologicalRealism::test_circadian_rhythm_with_noise PASSED
+tests/test_phase1_wavelet_optimization.py::TestBiologicalRealism::test_stress_response_signal PASSED
+tests/test_phase1_wavelet_optimization.py::TestIntegration::test_works_with_validation PASSED
+tests/test_phase1_wavelet_optimization.py::TestIntegration::test_consistent_results PASSED
+tests/test_phase1_wavelet_optimization.py::TestIntegration::test_all_wavelets_available PASSED
+tests/test_phase1_wavelet_optimization.py::TestPerformance::test_auto_select_completes_quickly PASSED
+tests/test_phase1_wavelet_optimization.py::TestPerformance::test_scales_with_signal_length PASSED
+
+======================== 21 passed in X.XXs ============================
+```
+
+**Success criteria:**
+- ✅ All 21 tests pass
+- ✅ Backward compatibility verified
+- ✅ Auto-selection algorithm works
+- ✅ All 4 metrics calculate correctly
+- ✅ Signal type matching works
+- ✅ Edge cases handled
+- ✅ Biological realism validated
+- ✅ Performance acceptable (<5s for medium signals)
+
+---
+
+### Step 12: Run Phase 1 Wavelet Optimization Demo
+
+This demo shows automatic wavelet selection on different signal types.
+
+```bash
+python examples/demo_phase1_wavelet_optimization.py
+```
+
+**Expected output:**
+```
+======================================================================
+Phase 1 Feature 2: Automatic Wavelet Selection Demo
+======================================================================
+
+[... intro text ...]
+
+Press Enter to start Demo 1 (Smooth Oscillation)...
+
+======================================================================
+DEMO 1: Smooth Circadian Oscillation (ATP Levels)
+======================================================================
+
+[Signal generation details...]
+
+MVP Mode: Manual Wavelet Selection
+-------------------------------------------------------------------
+   Wavelet used: morl
+   Transient events detected: X
+
+Phase 1 Mode: Automatic Wavelet Selection
+-------------------------------------------------------------------
+
+✅ Optimal wavelet selected: morl (or mexh/gaus4)
+   Description: [wavelet description]
+
+📊 Selection Scores:
+   Total Score:            0.XXX
+   Energy Concentration:   0.XXX
+   Time Localization:      0.XXX
+   Frequency Localization: 0.XXX
+   Edge Quality:           0.XXX
+
+🎯 Top 3 Alternative Wavelets:
+   1. [wavelet] - Score: 0.XXX - [description]
+   2. [wavelet] - Score: 0.XXX - [description]
+   3. [wavelet] - Score: 0.XXX - [description]
+
+💡 Interpretation:
+   [explanation of why this wavelet was chosen]
+
+[... similar output for Demos 2, 3, 4 ...]
+
+======================================================================
+✅ PHASE 1 FEATURE 2 DEMO COMPLETE!
+======================================================================
+
+Summary:
+  ✅ Automatic wavelet selection works
+  ✅ Different signals get different wavelets
+  ✅ Selection metrics provide transparency
+  ✅ Alternative wavelets available for exploration
+  ✅ Backward compatible (MVP mode still works)
+```
+
+**Success criteria:**
+- ✅ Demo runs without errors
+- ✅ Different signals get different optimal wavelets
+- ✅ All 4 selection metrics in range [0, 1]
+- ✅ Alternative wavelets list is sorted by score
+- ✅ Smooth signals prefer smooth wavelets (morl, mexh, gaus4)
+- ✅ Sharp signals get reasonable wavelet selection
+- ✅ Comparison demo shows all 7 wavelets
+
+---
+
+### Step 13: Phase 1 Feature 2 Success Checklist
+
+Mark these off as you complete them:
+
+- [ ] Step 11: Phase 1 wavelet tests passed (21 tests)
+  - [ ] Backward compatibility verified
+  - [ ] Auto-selection picks valid wavelets
+  - [ ] All metrics calculate correctly
+  - [ ] Signal type matching works
+  - [ ] Edge cases handled
+  - [ ] Biological realism validated
+  - [ ] Performance acceptable
+- [ ] Step 12: Phase 1 wavelet demo completed successfully
+  - [ ] Demo 1: Smooth oscillation (circadian)
+  - [ ] Demo 2: Sharp transient (stress)
+  - [ ] Demo 3: Complex signal (mixed)
+  - [ ] Demo 4: Comparison across all wavelets
+
+---
+
+### Phase 1 Feature 2 Troubleshooting
+
+**All wavelets get same score**
+- Check: Is signal too simple (constant or pure noise)?
+- Solution: This is expected for some signals - algorithm picks first one alphabetically.
+
+**Auto-selection is slow (>5 seconds)**
+- Check: Signal length - very long signals (>1000 samples) take more time
+- Solution: This is expected - testing 7 wavelets requires computation. Still should be <5s.
+
+**Unexpected wavelet selected**
+- Check: Look at the selection scores - understand why it was chosen
+- Solution: Not a bug - different signals prefer different wavelets. Review metrics.
+
+**Import error for 'pywt'**
+- Solution: Make sure PyWavelets is installed: `pip install PyWavelets>=1.4.0`
 
 ---
 
