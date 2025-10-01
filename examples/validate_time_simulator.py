@@ -60,7 +60,7 @@ def validate_time_simulator():
     print(f"   Expected samples: {duration_hours * samples_per_hour}")
     
     samples = []
-    timestamps_hours = []
+    timestamps_seconds = []
     
     print("\n   Progress: ", end='', flush=True)
     for hour in range(duration_hours):
@@ -70,14 +70,23 @@ def validate_time_simulator():
         for minute in range(0, 60, sampling_interval_minutes):
             state = sim.get_current_state()
             samples.append(state.light_intensity)
-            timestamps_hours.append(hour + minute/60.0)
+            # Use actual simulation time from the state
+            timestamps_seconds.append(state.simulation_time_elapsed)
+            
+            # Advance simulation time by sampling interval
+            sim.advance_time(sampling_interval_minutes * 60)  # Convert minutes to seconds
     
     print("Done!")
     
     samples = np.array(samples)
-    timestamps_hours = np.array(timestamps_hours)
+    timestamps_seconds = np.array(timestamps_seconds)
+    timestamps_hours = timestamps_seconds / 3600.0  # For display purposes
     
     print(f"\n   ✓ Collected {len(samples)} samples over {duration_hours} hours")
+    print(f"   Debug: First 5 timestamps (sec): {timestamps_seconds[:5]}")
+    print(f"   Debug: Last 5 timestamps (sec): {timestamps_seconds[-5:]}")
+    print(f"   Debug: Timestamp range: {timestamps_seconds[0]} to {timestamps_seconds[-1]} seconds")
+    print(f"   Debug: Timestamp spacing (first 5 intervals): {np.diff(timestamps_seconds[:6])}")
     print(f"   Light intensity range: {samples.min():.3f} - {samples.max():.3f}")
     print(f"   Mean intensity: {samples.mean():.3f}")
     print(f"   Std deviation: {samples.std():.3f}")
@@ -89,9 +98,6 @@ def validate_time_simulator():
     # Calculate sampling rate
     sampling_rate = samples_per_hour / 3600.0  # samples per second
     analyzer = SystemAnalyzer(sampling_rate=sampling_rate)
-    
-    # Convert timestamps to seconds for analyzer
-    timestamps_seconds = timestamps_hours * 3600.0
     
     # Validate signal quality first
     validation = analyzer.validate_signal(samples)

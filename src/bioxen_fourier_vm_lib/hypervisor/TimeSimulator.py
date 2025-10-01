@@ -49,8 +49,8 @@ class TimeSimulator:
     """
 
     # Astronomical constants (in seconds)
-    SOLAR_DAY_LENGTH = 86164.0905    # Mean solar day (23h 56m 4.0905s)
-    SIDEREAL_DAY_LENGTH = 86164.0905  # Same as solar for simplicity
+    SOLAR_DAY_LENGTH = 86400.0        # Mean solar day (24 hours exactly)
+    SIDEREAL_DAY_LENGTH = 86164.0905  # Sidereal day (23h 56m 4.0905s)
     LUNAR_SYNODIC_MONTH = 2551442.8   # Synodic month (~29.53 days)
     TROPICAL_YEAR = 31556925.445     # Tropical year (~365.242 days)
 
@@ -147,13 +147,15 @@ class TimeSimulator:
         Calculate solar irradiance based on time of day and latitude.
 
         Uses simplified sinusoidal model with latitude correction.
+        Solar noon (peak intensity) occurs at solar_fraction = 0.5 (12 hours)
         """
         solar_fraction = (elapsed % self.SOLAR_DAY_LENGTH) / self.SOLAR_DAY_LENGTH
 
-        # Base sinusoidal light curve - shift to start at sunrise (6am = 0.25)
-        # sin(π * (fraction - 0.25)) shifted to positive values
-        phase_shifted = (solar_fraction + 0.75) % 1.0  # Shift so peak is at noon
-        base_intensity = max(0.0, math.sin(2 * math.pi * phase_shifted - math.pi/2))
+        # Base sinusoidal light curve
+        # Shift by -0.25 so: sunrise ~0.25 (6am), peak ~0.5 (noon), sunset ~0.75 (6pm)
+        # sin(0) = 0 at midnight, sin(π) = 0 at midnight next day, sin(π/2) = 1 at noon
+        angle = 2 * math.pi * (solar_fraction - 0.25)
+        base_intensity = max(0.0, math.sin(angle))
 
         # Latitude correction (simplified - polar regions have extremes)
         latitude_factor = math.cos(self.latitude)
