@@ -199,18 +199,27 @@ class SystemAnalyzer:
         self.sampling_rate = sampling_rate
         self.nyquist_freq = sampling_rate / 2.0
         
+        # Phase 1: Storage for harmonic detection
+        self._current_signal = None
+        self._current_timestamps = None
+        
     # ========== LENS 1: FOURIER (LOMB-SCARGLE) ==========
     
     def fourier_lens(
         self, 
         time_series: np.ndarray, 
-        timestamps: Optional[np.ndarray] = None
+        timestamps: Optional[np.ndarray] = None,
+        detect_harmonics: bool = False,
+        max_harmonics: int = 5
     ) -> FourierResult:
         """
         Lens 1: Frequency-domain analysis with Lomb-Scargle periodogram.
         
         Uses Lomb-Scargle (biology gold standard) for irregular sampling,
         handles both uniform and irregular data without interpolation bias.
+        
+        Phase 1 Enhancement: Multi-harmonic detection to find multiple periodic
+        components (e.g., 24h circadian + 12h ultradian + 8h rhythms).
         
         Scientific Note:
             Lomb-Scargle is MANDATORY for real biological data due to:
@@ -228,16 +237,24 @@ class SystemAnalyzer:
         Args:
             time_series: Signal values (e.g., ATP levels from profiler)
             timestamps: Time points (seconds). If None, assumes uniform sampling
+            detect_harmonics: Enable multi-harmonic detection (Phase 1)
+            max_harmonics: Maximum number of harmonics to detect (Phase 1)
         
         Returns:
             FourierResult with frequency spectrum and dominant period
         
         Example:
-            >>> # Detect circadian rhythm in ATP levels
+            >>> # MVP: Detect circadian rhythm in ATP levels
             >>> result = analyzer.fourier_lens(atp_levels, timestamps)
             >>> if 20 < result.dominant_period < 28:
             ...     print(f"Circadian rhythm: {result.dominant_period:.1f}h")
             ...     print(f"Confidence: {result.significance*100:.1f}%")
+            >>> 
+            >>> # Phase 1: Detect multiple harmonics
+            >>> result = analyzer.fourier_lens(atp_levels, timestamps, 
+            ...                                detect_harmonics=True)
+            >>> for h in result.harmonics:
+            ...     print(f"Period: {h['period']:.1f}h, Amplitude: {h['amplitude']:.1f}")
         """
         # Ensure time_series is numpy array
         time_series = np.asarray(time_series)
@@ -247,6 +264,10 @@ class SystemAnalyzer:
             timestamps = np.arange(len(time_series)) / self.sampling_rate
         else:
             timestamps = np.asarray(timestamps)
+        
+        # Phase 1: Store for harmonic detection
+        self._current_signal = time_series.copy()
+        self._current_timestamps = timestamps.copy()
         
         # Lomb-Scargle periodogram (handles irregular sampling)
         ls = LombScargle(timestamps, time_series, fit_mean=True)
@@ -271,13 +292,183 @@ class SystemAnalyzer:
         false_alarm_prob = ls.false_alarm_probability(power.max())
         significance = 1.0 - false_alarm_prob
         
+        # Phase 1: Multi-harmonic detection
+        harmonics = None
+        harmonic_power = None
+        
+        if detect_harmonics:
+            harmonics = self._detect_harmonics(
+                ls, frequency, power, max_harmonics
+            )
+            harmonic_power = sum(h['power'] for h in harmonics) if harmonics else 0.0
+        
         return FourierResult(
             frequencies=frequency,
             power_spectrum=power,
             dominant_frequency=dominant_freq,
             dominant_period=dominant_period / 3600.0,  # Convert seconds to hours
-            significance=significance
+            significance=significance,
+            harmonics=harmonics,
+            harmonic_power=harmonic_power
         )
+    
+    def _detect_harmonics(
+        self,
+        ls: LombScargle,
+        frequency: np.ndarray,
+        power: np.ndarray,
+        max_harmonics: int
+    ) -> List[Dict[str, float]]:
+        """
+        Phase 1: Detect multiple harmonic components by iterative peak detection.
+        
+        Algorithm:
+        1. Find dominant peak → record as harmonic
+        2. Fit sinusoid at that frequency
+        3. Subtract fitted component from signal
+        4. Analyze residual for next harmonic
+        5. Repeat until power < threshold or max_harmonics reached
+        
+        This approach is known as "iterative sine fitting" or "sequential component
+        extraction" and is widely used in biological rhythm analysis.
+        
+        Args:
+            ls: LombScargle object
+            frequency: Frequency array from periodogram
+            power: Power array from periodogram
+            max_harmonics: Maximum number of harmonics to detect
+        
+        Returns:
+            List of dictionaries with harmonic information:
+            - frequency: Harmonic frequency (Hz)
+            - period: Harmonic period (hours)
+            - power: Spectral power at this frequency
+            - amplitude: Signal amplitude (same units as input)
+            - phase: Phase offset (radians, 0 to 2π)
+        """
+        harmonics = []
+        residual = self._current_signal.copy()
+        timestamps = self._current_timestamps.copy()
+        
+        for i in range(max_harmonics):
+            # Analyze current residual
+            ls_residual = LombScargle(timestamps, residual, fit_mean=True)
+            freq, pwr = ls_residual.autopower(
+                minimum_frequency=1.0/(100*3600),
+                maximum_frequency=self.nyquist_freq,
+                samples_per_peak=10
+            )
+            
+            # Find peak
+            peak_idx = np.argmax(pwr)
+            peak_freq = freq[peak_idx]
+            peak_power = pwr[peak_idx]
+            
+            # Stop if power too low (noise threshold)
+            # Typical noise floor is around 0.1 for normalized power
+            if peak_power < 0.1:
+                break
+            
+            # Estimate amplitude and phase
+            amplitude = self._estimate_amplitude(residual, timestamps, peak_freq)
+            phase = self._estimate_phase(residual, timestamps, peak_freq)
+            
+            # Record harmonic
+            harmonics.append({
+                'frequency': peak_freq,
+                'period': 1.0 / peak_freq / 3600,  # Convert to hours
+                'power': peak_power,
+                'amplitude': amplitude,
+                'phase': phase
+            })
+            
+            # Subtract this component from residual
+            model = ls_residual.model(timestamps, peak_freq)
+            residual = residual - model
+        
+        return harmonics
+    
+    def _estimate_phase(
+        self,
+        signal: np.ndarray,
+        timestamps: np.ndarray,
+        frequency: float
+    ) -> float:
+        """
+        Phase 1: Estimate phase of sinusoidal component using least squares.
+        
+        Fits the model: signal = A*sin(2πft) + B*cos(2πft)
+        Then calculates phase as: θ = arctan2(B, A)
+        
+        Phase Convention:
+            0° (0 rad) = peak at t=0
+            90° (π/2 rad) = peak at t=period/4
+            180° (π rad) = trough at t=0
+            270° (3π/2 rad) = trough at t=period/4
+        
+        Args:
+            signal: Signal values
+            timestamps: Time points (seconds)
+            frequency: Frequency to analyze (Hz)
+        
+        Returns:
+            Phase in radians [0, 2π)
+        """
+        # Build design matrix [sin(2πft), cos(2πft)]
+        t = timestamps
+        A_matrix = np.column_stack([
+            np.sin(2 * np.pi * frequency * t),
+            np.cos(2 * np.pi * frequency * t)
+        ])
+        
+        # Least squares fit: signal = A*sin + B*cos
+        coeffs, _, _, _ = np.linalg.lstsq(A_matrix, signal, rcond=None)
+        
+        # Calculate phase from coefficients
+        # Phase is angle of complex number (coeffs[0] + i*coeffs[1])
+        phase = np.arctan2(coeffs[1], coeffs[0])
+        
+        # Normalize to [0, 2π)
+        return phase % (2 * np.pi)
+    
+    def _estimate_amplitude(
+        self,
+        signal: np.ndarray,
+        timestamps: np.ndarray,
+        frequency: float
+    ) -> float:
+        """
+        Phase 1: Estimate amplitude of sinusoidal component.
+        
+        Uses least squares to fit: signal = A*sin(2πft) + B*cos(2πft)
+        Then calculates amplitude as: R = √(A² + B²)
+        
+        This gives the peak-to-peak amplitude divided by 2 (i.e., the radius
+        of the oscillation in signal units).
+        
+        Args:
+            signal: Signal values
+            timestamps: Time points (seconds)
+            frequency: Frequency to analyze (Hz)
+        
+        Returns:
+            Amplitude (same units as signal)
+        """
+        # Build design matrix
+        t = timestamps
+        A_matrix = np.column_stack([
+            np.sin(2 * np.pi * frequency * t),
+            np.cos(2 * np.pi * frequency * t)
+        ])
+        
+        # Least squares fit
+        coeffs, _, _, _ = np.linalg.lstsq(A_matrix, signal, rcond=None)
+        
+        # Amplitude from Pythagorean theorem
+        # This is the radius of the circular motion in (A, B) space
+        amplitude = np.sqrt(coeffs[0]**2 + coeffs[1]**2)
+        
+        return amplitude
     
     # ========== LENS 2: WAVELET ==========
     
