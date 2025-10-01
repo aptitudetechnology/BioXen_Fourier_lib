@@ -50,12 +50,13 @@ def validate_time_simulator():
     print(f"   Solar day constant: {TimeSimulator.SOLAR_DAY_LENGTH:.2f} seconds")
     print(f"   Time acceleration: 1.0x (real-time)")
     
-    # Collect light intensity over 72 hours (3 days)
-    duration_hours = 72
+    # Collect light intensity over 2 years for maximum accuracy
+    duration_hours = 2 * 365 * 24  # 17520 hours = 730 days = 2 years
     sampling_interval_minutes = 5
     samples_per_hour = 60 // sampling_interval_minutes  # 12 samples/hour
     
     print(f"\n📊 Collecting {duration_hours} hours of light intensity data...")
+    print(f"   That's {duration_hours / 24:.0f} days = {duration_hours / 24 / 365:.2f} years")
     print(f"   Sampling every {sampling_interval_minutes} minutes")
     print(f"   Expected samples: {duration_hours * samples_per_hour}")
     
@@ -63,9 +64,11 @@ def validate_time_simulator():
     timestamps_seconds = []
     
     print("\n   Progress: ", end='', flush=True)
+    progress_interval = max(1, duration_hours // 20)  # Show ~20 progress markers
     for hour in range(duration_hours):
-        if hour % 12 == 0:
-            print(f"{hour}h ", end='', flush=True)
+        if hour % progress_interval == 0:
+            days = hour / 24
+            print(f"{days:.0f}d ", end='', flush=True)
         
         for minute in range(0, 60, sampling_interval_minutes):
             state = sim.get_current_state()

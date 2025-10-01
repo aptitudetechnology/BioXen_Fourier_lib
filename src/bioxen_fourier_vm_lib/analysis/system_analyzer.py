@@ -272,14 +272,32 @@ class SystemAnalyzer:
         # Lomb-Scargle periodogram (handles irregular sampling)
         ls = LombScargle(timestamps, time_series, fit_mean=True)
         
+        # Calculate actual Nyquist frequency from timestamps
+        # For irregular sampling, use median interval
+        intervals = np.diff(timestamps)
+        median_interval = np.median(intervals)
+        actual_sampling_rate = 1.0 / median_interval
+        actual_nyquist = actual_sampling_rate / 2.0
+        
         # Auto-detect frequency range suitable for biological data
         # For biological data: look for periods from 10 seconds to ~100 hours
         # Minimum frequency = 1/(100 hours) = 2.78e-6 Hz
         # Maximum frequency = Nyquist frequency
+        
+        # Adaptive frequency resolution based on data duration
+        # Longer signals need higher resolution for accurate period detection
+        duration_hours = (timestamps[-1] - timestamps[0]) / 3600.0
+        if duration_hours > 720:  # More than 30 days
+            samples_per_peak = 50  # High resolution for long-term data
+        elif duration_hours > 168:  # More than 7 days
+            samples_per_peak = 30  # Medium-high resolution
+        else:  # Short-term data (< 7 days)
+            samples_per_peak = 10  # Standard resolution
+        
         frequency, power = ls.autopower(
             minimum_frequency=1.0/(100*3600),  # Max period: 100 hours
-            maximum_frequency=self.nyquist_freq,
-            samples_per_peak=10  # Good frequency resolution
+            maximum_frequency=actual_nyquist,   # Use actual Nyquist from data
+            samples_per_peak=samples_per_peak
         )
         
         # Find dominant frequency
@@ -356,7 +374,7 @@ class SystemAnalyzer:
             freq, pwr = ls_residual.autopower(
                 minimum_frequency=1.0/(100*3600),
                 maximum_frequency=self.nyquist_freq,
-                samples_per_peak=10
+                samples_per_peak=50  # High frequency resolution
             )
             
             # Find peak

@@ -26,7 +26,8 @@ def analyzer():
 @pytest.fixture
 def synthetic_signal():
     """Generate 24-hour circadian rhythm signal"""
-    t = np.linspace(0, 48, 200)  # 48 hours, 200 samples
+    # Use 3 days of data with good sampling
+    t = np.linspace(0, 72, 864)  # 72 hours (3 days), 12 samples/hour  
     signal = 100 + 30*np.sin(2*np.pi*t/24)  # 24-hour rhythm
     return t, signal
 
