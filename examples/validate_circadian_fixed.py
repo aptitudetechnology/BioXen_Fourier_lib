@@ -119,7 +119,7 @@ def validate_circadian_detection():
             print("   ❌ Fourier analysis returned no results")
             return False
             
-        detected_period_hours = fourier_result.dominant_period / 3600.0 if fourier_result.dominant_period else 0
+        detected_period_hours = fourier_result.dominant_period if fourier_result.dominant_period else 0
         significance = fourier_result.significance or 0
         
         print(f"\n   ✓ Fourier analysis completed")
