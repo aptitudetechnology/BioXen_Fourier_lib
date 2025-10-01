@@ -150,14 +150,17 @@ class TimeSimulator:
         """
         solar_fraction = (elapsed % self.SOLAR_DAY_LENGTH) / self.SOLAR_DAY_LENGTH
 
-        # Base sinusoidal light curve
-        base_intensity = math.sin(math.pi * solar_fraction) if solar_fraction < 1.0 else 0.0
+        # Base sinusoidal light curve - shift to start at sunrise (6am = 0.25)
+        # sin(π * (fraction - 0.25)) shifted to positive values
+        phase_shifted = (solar_fraction + 0.75) % 1.0  # Shift so peak is at noon
+        base_intensity = max(0.0, math.sin(2 * math.pi * phase_shifted - math.pi/2))
 
         # Latitude correction (simplified - polar regions have extremes)
         latitude_factor = math.cos(self.latitude)
 
         # Ensure non-negative and scale to 0-1
-        return max(0.0, min(1.0, base_intensity * latitude_factor))
+        result = max(0.0, min(1.0, base_intensity * latitude_factor))
+        return result
 
     def _calculate_lunar_illumination(self, elapsed: float) -> float:
         """Calculate moonlight intensity based on lunar phase."""
