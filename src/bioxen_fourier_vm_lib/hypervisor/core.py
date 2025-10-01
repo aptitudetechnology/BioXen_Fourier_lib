@@ -122,6 +122,10 @@ class BioXenHypervisor:
         
         # Initialize time simulator for circadian rhythm modeling
         self.time_simulator = TimeSimulator()
+        
+        # ✅ NEW: Analysis capabilities (optional profiler integration) (v2.1)
+        self.profiler: Optional['PerformanceProfiler'] = None
+        self._analysis_enabled = False
     
     def _initialize_chassis(self) -> Optional[BaseChassis]:
         """Initialize the appropriate chassis based on type"""
@@ -429,6 +433,172 @@ class BioXenHypervisor:
             }
         except Exception as e:
             return {"error": f"Process execution failed: {e}"}
+    
+    # ========== FOUR-LENS ANALYSIS METHODS (v2.1) ==========
+    
+    def enable_performance_analysis(self, profiler) -> None:
+        """
+        Enable four-lens analysis by connecting to PerformanceProfiler.
+        
+        This establishes the link between the hypervisor and the profiler's
+        SystemAnalyzer, enabling analysis of system dynamics.
+        
+        Args:
+            profiler: PerformanceProfiler instance with analyzer
+        
+        Raises:
+            TypeError: If profiler is not a PerformanceProfiler instance
+        
+        Example:
+            >>> hypervisor = BioXenHypervisor(chassis_type=ChassisType.ECOLI)
+            >>> profiler = PerformanceProfiler(hypervisor, monitoring_interval=5.0)
+            >>> hypervisor.enable_performance_analysis(profiler)
+            >>> # Now can use analyze_system_dynamics()
+        """
+        # Avoid circular import by checking at runtime
+        from ..monitoring.profiler import PerformanceProfiler
+        if not isinstance(profiler, PerformanceProfiler):
+            raise TypeError("profiler must be PerformanceProfiler instance")
+        
+        self.profiler = profiler
+        self._analysis_enabled = True
+        self.logger.info("Four-lens analysis enabled via PerformanceProfiler")
+    
+    def analyze_system_dynamics(
+        self,
+        metric_name: str = 'atp_level',
+        lens: str = 'all'
+    ) -> Dict[str, Any]:
+        """
+        Analyze system-wide temporal dynamics using four-lens system.
+        
+        Provides access to sophisticated time-series analysis of biological
+        metrics through the profiler's SystemAnalyzer.
+        
+        Args:
+            metric_name: Which metric to analyze:
+                        'atp_level' - ATP energy levels (0-100%)
+                        'ribosome_utilization' - Ribosome usage (0-100%)
+                        'memory_usage' - DNA/RNA memory (0-100%)
+                        'active_vms' - Number of active VMs
+                        'context_switches' - Context switch count
+            lens: Which lens(es) to apply:
+                 'fourier' - Frequency domain (rhythm detection)
+                 'wavelet' - Time-frequency (transient events)
+                 'laplace' - Stability analysis
+                 'ztransform' - Noise filtering
+                 'all' - Apply all four lenses (comprehensive)
+        
+        Returns:
+            Analysis results dictionary or error information
+        
+        Example:
+            >>> # Must enable analysis first
+            >>> hypervisor.enable_performance_analysis(profiler)
+            >>> 
+            >>> # Analyze ATP dynamics
+            >>> results = hypervisor.analyze_system_dynamics('atp_level', 'all')
+            >>> print(f"Period: {results['fourier'].dominant_period:.1f} hours")
+            >>> print(f"Stability: {results['laplace'].stability}")
+            >>> 
+            >>> # Just Fourier analysis
+            >>> fourier = hypervisor.analyze_system_dynamics('atp_level', 'fourier')
+            >>> if fourier['fourier'].dominant_period > 20:
+            ...     print("Circadian rhythm detected")
+        """
+        if not self._analysis_enabled or not self.profiler:
+            return {
+                'error': 'Analysis not enabled',
+                'hint': 'Call enable_performance_analysis(profiler) first'
+            }
+        
+        # Use profiler's analysis methods
+        if lens == 'all':
+            return self.profiler.analyze_metric_all(metric_name)
+        elif lens == 'fourier':
+            result = self.profiler.analyze_metric_fourier(metric_name)
+            return {'fourier': result} if not isinstance(result, dict) or 'error' not in result else result
+        elif lens == 'wavelet':
+            result = self.profiler.analyze_metric_wavelet(metric_name)
+            return {'wavelet': result} if not isinstance(result, dict) or 'error' not in result else result
+        elif lens == 'laplace':
+            result = self.profiler.analyze_metric_laplace(metric_name)
+            return {'laplace': result} if not isinstance(result, dict) or 'error' not in result else result
+        elif lens == 'ztransform':
+            result = self.profiler.analyze_metric_ztransform(metric_name)
+            return {'ztransform': result} if not isinstance(result, dict) or 'error' not in result else result
+        else:
+            return {'error': f'Unknown lens: {lens}', 
+                    'hint': 'Valid lenses: fourier, wavelet, laplace, ztransform, all'}
+    
+    def validate_time_simulator(self) -> Dict[str, Any]:
+        """
+        Validate TimeSimulator accuracy using Fourier analysis.
+        
+        Collects light_intensity over 72 hours and verifies 24-hour period
+        using Lomb-Scargle periodogram. This validates that the TimeSimulator
+        generates accurate circadian cycles.
+        
+        Returns:
+            Validation results with detected vs expected period
+        
+        Example:
+            >>> hypervisor.enable_performance_analysis(profiler)
+            >>> validation = hypervisor.validate_time_simulator()
+            >>> if validation['passed']:
+            ...     print(f"TimeSimulator accuracy: {validation['accuracy_percent']:.1f}%")
+            ... else:
+            ...     print(f"FAILED: detected {validation['detected_period_hours']:.2f}h")
+        """
+        if not self._analysis_enabled or not self.profiler:
+            return {
+                'error': 'Analysis not enabled',
+                'hint': 'Call enable_performance_analysis(profiler) first'
+            }
+        
+        # Import analyzer
+        from ..analysis.system_analyzer import SystemAnalyzer
+        import numpy as np
+        
+        # Create analyzer with appropriate sampling rate
+        analyzer = SystemAnalyzer(sampling_rate=1.0/300.0)  # Sample every 5 minutes
+        
+        duration_hours = 72  # 72 hours = 3 full days
+        sampling_interval_minutes = 5
+        
+        samples = []
+        timestamps_hours = []
+        
+        self.logger.info(f"Validating TimeSimulator (collecting {duration_hours}h of data)...")
+        
+        # Collect TimeSimulator data
+        for hour in range(duration_hours):
+            for minute in range(0, 60, sampling_interval_minutes):
+                state = self.time_simulator.get_current_state()
+                samples.append(state.light_intensity)
+                timestamps_hours.append(hour + minute/60.0)
+        
+        samples = np.array(samples)
+        timestamps_seconds = np.array(timestamps_hours) * 3600.0
+        
+        # Analyze with Fourier lens
+        result = analyzer.fourier_lens(samples, timestamps_seconds)
+        
+        expected_period = 24.0  # hours
+        detected_period = result.dominant_period
+        accuracy = (1.0 - abs(detected_period - expected_period) / expected_period) * 100
+        
+        passed = 23.9 < detected_period < 24.1 and result.significance > 0.95
+        
+        return {
+            'expected_period_hours': expected_period,
+            'detected_period_hours': detected_period,
+            'accuracy_percent': accuracy,
+            'significance': result.significance,
+            'passed': passed,
+            'samples_collected': len(samples),
+            'duration_hours': duration_hours
+        }
 
 
 class ResourceMonitor:
@@ -474,3 +644,7 @@ class RoundRobinScheduler:
                 return running_vms[0]
                 
         return current_vm
+
+
+# ========== FOUR-LENS ANALYSIS INTEGRATION (v2.1) ==========
+# The methods below extend BioXenHypervisor with analysis capabilities

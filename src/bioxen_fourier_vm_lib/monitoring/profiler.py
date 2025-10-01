@@ -3,14 +3,21 @@ Performance monitoring and profiling for BioXen hypervisor
 
 This module provides tools for monitoring resource usage, scheduling fairness,
 and identifying performance bottlenecks in the biological hypervisor.
+
+Enhanced with four-lens analysis capabilities (v2.1):
+- Fourier (Lomb-Scargle) for rhythm detection
+- Wavelet for transient event detection
+- Laplace for stability assessment
+- Z-Transform for noise filtering
 """
 
 import time
 import threading
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
 import statistics
+import numpy as np
 
 @dataclass
 class ResourceMetrics:
@@ -42,7 +49,16 @@ class SchedulingMetrics:
     max_wait_time: float
 
 class PerformanceProfiler:
-    """Real-time performance profiler for BioXen hypervisor"""
+    """
+    Real-time performance profiler for BioXen hypervisor
+    
+    Enhanced with four-lens analysis capabilities (v2.1):
+    - Analyzes time-series metrics (ATP, ribosome utilization, etc.)
+    - Detects circadian rhythms via Fourier analysis
+    - Identifies transient events via Wavelet analysis
+    - Assesses system stability via Laplace analysis
+    - Filters noise via Z-Transform analysis
+    """
     
     def __init__(self, hypervisor, monitoring_interval: float = 5.0):
         self.hypervisor = hypervisor
@@ -59,6 +75,15 @@ class PerformanceProfiler:
         self.context_switch_count = 0
         self.last_context_switch_time = time.time()
         self.resource_contention_events = 0
+        
+        # ✅ NEW: Four-lens analyzer integration (v2.1)
+        try:
+            from ..analysis.system_analyzer import SystemAnalyzer
+            self.analyzer = SystemAnalyzer(sampling_rate=1.0/monitoring_interval)
+            self._analysis_enabled = True
+        except ImportError:
+            self.analyzer = None
+            self._analysis_enabled = False
         
     def start_monitoring(self):
         """Start the performance monitoring thread"""
@@ -525,6 +550,214 @@ class BenchmarkSuite:
         """Generate a comprehensive benchmark report"""
         if not self.results:
             return "No benchmark results available"
+        
+    
+    # ========== FOUR-LENS ANALYSIS METHODS (v2.1) ==========
+    
+    def extract_time_series(self, metric_name: str = 'atp_level') -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Extract time series from stored metrics for analysis.
+        
+        Args:
+            metric_name: Metric to extract ('atp_level', 'ribosome_utilization', 
+                        'memory_usage', 'active_vms', 'context_switches')
+        
+        Returns:
+            (values, timestamps) tuple as numpy arrays
+        
+        Example:
+            >>> values, timestamps = profiler.extract_time_series('atp_level')
+            >>> print(f"Collected {len(values)} samples over {timestamps[-1]-timestamps[0]:.1f}s")
+        """
+        timestamps = []
+        values = []
+        
+        for metric in self.system_metrics:
+            if hasattr(metric, metric_name):
+                timestamps.append(metric.timestamp)
+                values.append(getattr(metric, metric_name))
+        
+        return np.array(values), np.array(timestamps)
+    
+    def analyze_metric_fourier(self, metric_name: str = 'atp_level') -> Dict[str, Any]:
+        """
+        Analyze a metric using Fourier lens (Lomb-Scargle).
+        
+        Detects periodic rhythms in the metric time series.
+        
+        Args:
+            metric_name: Metric to analyze
+        
+        Returns:
+            FourierResult or error dictionary
+        
+        Example:
+            >>> result = profiler.analyze_metric_fourier('atp_level')
+            >>> if 20 < result.dominant_period < 28:
+            ...     print("Circadian rhythm detected!")
+        """
+        if not self._analysis_enabled or not self.analyzer:
+            return {'error': 'Analysis not enabled', 'hint': 'SystemAnalyzer not available'}
+        
+        values, timestamps = self.extract_time_series(metric_name)
+        
+        if len(values) < 50:
+            return {'error': 'Insufficient data', 'samples': len(values), 'required': 50}
+        
+        try:
+            return self.analyzer.fourier_lens(values, timestamps)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def analyze_metric_wavelet(self, metric_name: str = 'atp_level') -> Dict[str, Any]:
+        """
+        Analyze a metric using Wavelet lens.
+        
+        Detects transient events and time-localized features.
+        
+        Args:
+            metric_name: Metric to analyze
+        
+        Returns:
+            WaveletResult or error dictionary
+        
+        Example:
+            >>> result = profiler.analyze_metric_wavelet('atp_level')
+            >>> print(f"Detected {len(result.transient_events)} stress responses")
+        """
+        if not self._analysis_enabled or not self.analyzer:
+            return {'error': 'Analysis not enabled', 'hint': 'SystemAnalyzer not available'}
+        
+        values, _ = self.extract_time_series(metric_name)
+        
+        if len(values) < 64:
+            return {'error': 'Insufficient data', 'samples': len(values), 'required': 64}
+        
+        try:
+            return self.analyzer.wavelet_lens(values)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def analyze_metric_laplace(self, metric_name: str = 'atp_level') -> Dict[str, Any]:
+        """
+        Analyze a metric using Laplace lens.
+        
+        Assesses system stability based on pole locations.
+        
+        Args:
+            metric_name: Metric to analyze
+        
+        Returns:
+            LaplaceResult or error dictionary
+        
+        Example:
+            >>> result = profiler.analyze_metric_laplace('atp_level')
+            >>> if result.stability == 'unstable':
+            ...     print("WARNING: System homeostasis compromised!")
+        """
+        if not self._analysis_enabled or not self.analyzer:
+            return {'error': 'Analysis not enabled', 'hint': 'SystemAnalyzer not available'}
+        
+        values, _ = self.extract_time_series(metric_name)
+        
+        if len(values) < 50:
+            return {'error': 'Insufficient data', 'samples': len(values), 'required': 50}
+        
+        try:
+            return self.analyzer.laplace_lens(values)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def analyze_metric_ztransform(self, metric_name: str = 'atp_level') -> Dict[str, Any]:
+        """
+        Analyze a metric using Z-Transform lens (digital filtering).
+        
+        Removes noise while preserving signal features.
+        
+        Args:
+            metric_name: Metric to analyze
+        
+        Returns:
+            ZTransformResult or error dictionary
+        
+        Example:
+            >>> result = profiler.analyze_metric_ztransform('atp_level')
+            >>> clean_signal = result.filtered_signal
+            >>> print(f"Noise reduced by {result.noise_reduction_percent:.1f}%")
+        """
+        if not self._analysis_enabled or not self.analyzer:
+            return {'error': 'Analysis not enabled', 'hint': 'SystemAnalyzer not available'}
+        
+        values, _ = self.extract_time_series(metric_name)
+        
+        if len(values) < 50:
+            return {'error': 'Insufficient data', 'samples': len(values), 'required': 50}
+        
+        try:
+            return self.analyzer.z_transform_lens(values)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def analyze_metric_all(self, metric_name: str = 'atp_level') -> Dict[str, Any]:
+        """
+        Apply all four lenses to a metric.
+        
+        Provides comprehensive analysis with:
+        - Fourier: Detect periodic rhythms
+        - Wavelet: Detect transient events
+        - Laplace: Assess system stability
+        - Z-Transform: Filter noise
+        
+        Args:
+            metric_name: Metric to analyze
+        
+        Returns:
+            Dictionary with results from all lenses or error information
+        
+        Example:
+            >>> results = profiler.analyze_metric_all('atp_level')
+            >>> print(f"Period: {results['fourier'].dominant_period:.1f}h")
+            >>> print(f"Events: {len(results['wavelet'].transient_events)}")
+            >>> print(f"Stability: {results['laplace'].stability}")
+            >>> print(f"Noise reduction: {results['ztransform'].noise_reduction_percent:.1f}%")
+        """
+        if not self._analysis_enabled or not self.analyzer:
+            return {
+                'error': 'Analysis not enabled',
+                'hint': 'SystemAnalyzer not available - check imports'
+            }
+        
+        values, timestamps = self.extract_time_series(metric_name)
+        
+        # Validate signal
+        validation = self.analyzer.validate_signal(values)
+        if not validation['all_passed']:
+            return {
+                'error': 'Validation failed',
+                'checks': validation,
+                'samples': len(values),
+                'hint': 'Signal quality issues detected'
+            }
+        
+        results = {
+            'validation': validation,
+            'metric': metric_name,
+            'samples': len(values),
+            'duration_seconds': timestamps[-1] - timestamps[0] if len(timestamps) > 0 else 0
+        }
+        
+        # Apply all lenses
+        try:
+            results['fourier'] = self.analyzer.fourier_lens(values, timestamps)
+            results['wavelet'] = self.analyzer.wavelet_lens(values)
+            results['laplace'] = self.analyzer.laplace_lens(values)
+            results['ztransform'] = self.analyzer.z_transform_lens(values)
+        except Exception as e:
+            results['error'] = str(e)
+            import traceback
+            results['traceback'] = traceback.format_exc()
+        
+        return results
         
         report = ["BioXen Hypervisor Benchmark Report", "=" * 40, ""]
         
