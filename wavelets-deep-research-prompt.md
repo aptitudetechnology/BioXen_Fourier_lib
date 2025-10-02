@@ -1,467 +1,177 @@
-# Google Deep Research Prompt: Advanced Wavelet Analysis for Biological Systems
-**Comprehensive Research Query for Cutting-Edge Wavelet Applications in Biology**
+# MVP: Wavelet Analysis for Biological Systems - Essential Research Query
+
+**Quick-Start Research for Biological Signal Processing Implementation**
 
 ---
 
-**Research Context:** Developing next-generation biological signal analysis platform using advanced wavelet transforms. Need comprehensive understanding of state-of-the-art wavelet methods, biological applications, and implementation strategies for real-world biological data analysis.
+## 🎯 CORE OBJECTIVE
 
-**Current Implementation Status:** 
-- ✅ Multi-Resolution Analysis (MRA) with DWT decomposition
-- ✅ Automatic wavelet selection across 15+ families  
-- ✅ Biological denoising preserving circadian rhythms
-- 🎯 Next: Transfer functions, consensus validation, advanced features
+Build a functional biological signal analysis tool using wavelet transforms that outperforms basic filtering methods for circadian rhythm detection and biological noise removal.
 
 ---
 
-## 🔬 PRIMARY RESEARCH QUESTIONS
+## 🔬 TOP 3 PRIORITY RESEARCH QUESTIONS
 
-### **1. State-of-the-Art Wavelet Methods in Biology (2020-2025)**
+### **1. Proven Wavelet Methods for Biological Signals (2022-2025)**
 
-**Core Query:**
-*"What are the most recent advances in wavelet transform applications for biological signal analysis, particularly for circadian rhythms, cell cycle analysis, and metabolic oscillations? Focus on peer-reviewed research from 2020-2025."*
+**Essential Query:**
+*"What are the most validated wavelet transform methods for analyzing circadian rhythms and biological oscillations? Which methods have been proven in peer-reviewed studies?"*
 
-**Specific Focus Areas:**
-- **Circadian Biology**: Latest wavelet methods for circadian rhythm analysis beyond traditional cosinor
-- **Cell Cycle Dynamics**: Wavelet approaches for non-stationary cell cycle progression analysis
-- **Metabolic Oscillations**: ATP, NADH, glucose oscillation analysis using wavelets
-- **Stress Response Detection**: Transient biological event detection methodologies
-- **Multi-Scale Biology**: Simultaneous analysis of cellular, tissue, and organ-level dynamics
+**Focus On:**
+- Circadian rhythm detection (24-hour cycles)
+- Biological noise removal that preserves signal features
+- Wavelet family selection (which wavelets work best for biology?)
 
-**Key Search Terms:**
+**Key Search:**
 ```
-"wavelet transform" AND "circadian rhythm" AND (2020..2025)
-"continuous wavelet transform" AND "cell cycle" AND "time-frequency"
-"discrete wavelet transform" AND "biological signals" AND "denoising"
-"wavelet coherence" AND "metabolic oscillations"
-"multi-resolution analysis" AND "biological systems"
+"wavelet transform" AND "circadian rhythm" AND validation
+"wavelet denoising" AND "biological signals" 
+"Morlet wavelet" AND "biological oscillations"
 ```
 
-### **2. Wavelet-Based System Identification in Biology**
+### **2. Wavelet Coherence & Cross-Signal Analysis**
 
-**Core Query:**
-*"How are wavelet transforms being used for biological system identification, transfer function estimation, and cross-system analysis in living systems? What are the latest methods for wavelet-based causality analysis?"*
+**Essential Query:**
+*"How do I implement wavelet coherence to find relationships between two biological signals? What are the standard methods for biological applications?"*
 
-**Specific Focus Areas:**
-- **Cross-Wavelet Analysis**: Latest methods for analyzing relationships between biological signals
-- **Wavelet Coherence**: Applications to biological system coupling and synchronization
-- **Transfer Function Estimation**: Wavelet-based system identification in biological contexts
-- **Granger Causality**: Multi-scale causal analysis using wavelets
-- **Network Reconstruction**: Biological network inference using wavelet methods
+**Focus On:**
+- Cross-wavelet transform basics
+- Wavelet coherence for signal correlation
+- Transfer function estimation between biological signals
+- Practical implementation examples
 
-**Key Search Terms:**
+**Key Search:**
 ```
-"cross-wavelet transform" AND "biological systems"
-"wavelet coherence" AND "gene expression" OR "metabolic networks"
-"wavelet-based system identification" AND "biological"
-"multi-scale Granger causality" AND "biological networks"
-"transfer function" AND "wavelet" AND "biological systems"
+"wavelet coherence" AND "biological" AND implementation
+"cross-wavelet transform" AND tutorial
+"wavelet coherence" AND "gene expression" OR "metabolic"
 ```
 
-### **3. Advanced Wavelet Denoising for Biological Applications**
+### **3. Implementation: Python Libraries & Code Examples**
 
-**Core Query:**
-*"What are the most effective wavelet denoising methods specifically validated for biological signals? How do different wavelet families perform for preserving biological information while removing noise?"*
+**Essential Query:**
+*"What are the best Python tools for biological wavelet analysis? Where can I find working code examples?"*
 
-**Specific Focus Areas:**
-- **Biological Signal Preservation**: Methods that preserve biological rhythms during denoising
-- **Adaptive Thresholding**: Dynamic threshold selection for biological noise characteristics
-- **Wavelet Selection for Denoising**: Optimal wavelet families for different biological signal types
-- **Performance Metrics**: Biological-relevant metrics for evaluating denoising quality
-- **Real-Time Applications**: Online wavelet denoising for continuous biological monitoring
+**Focus On:**
+- PyWavelets for biological applications
+- SciPy wavelet functions
+- GitHub repositories with biological examples
+- Performance considerations for real data
 
-**Key Search Terms:**
+**Key Search:**
 ```
-"wavelet denoising" AND "biological signals" AND "performance evaluation"
-"adaptive wavelet thresholding" AND "biomedical signals"
-"wavelet family selection" AND "biological signal processing"
-"circadian rhythm preservation" AND "wavelet denoising"
-"real-time wavelet denoising" AND "biological monitoring"
-```
-
-### **4. Machine Learning Integration with Wavelet Analysis**
-
-**Core Query:**
-*"How are machine learning and AI methods being integrated with wavelet transforms for biological pattern recognition, prediction, and automated analysis? What are the latest neural network architectures combining wavelets and deep learning?"*
-
-**Specific Focus Areas:**
-- **Wavelet Neural Networks**: Architecture combining wavelets with neural networks
-- **Automated Wavelet Selection**: AI-driven wavelet family and parameter optimization
-- **Biological Pattern Recognition**: Deep learning with wavelet features for biological classification
-- **Predictive Modeling**: Wavelet-based forecasting of biological states
-- **Anomaly Detection**: AI-powered wavelet-based detection of biological abnormalities
-
-**Key Search Terms:**
-```
-"wavelet neural networks" AND "biological pattern recognition"
-"automated wavelet selection" AND "machine learning"
-"deep learning" AND "wavelet transform" AND "biological signals"
-"wavelet-based prediction" AND "biological systems"
-"anomaly detection" AND "wavelet" AND "biological monitoring"
-```
-
-### **5. Multi-Dimensional and Advanced Wavelet Methods**
-
-**Core Query:**
-*"What are the latest developments in multi-dimensional wavelets, wavelet packets, and advanced wavelet transforms for biological applications? How are these being applied to spatial-temporal biological data?"*
-
-**Specific Focus Areas:**
-- **2D/3D Wavelets**: Spatial-temporal analysis of biological images and volumes
-- **Wavelet Packets**: Higher resolution frequency analysis for biological signals  
-- **Dual-Tree Complex Wavelets**: Shift-invariant analysis for robust biological processing
-- **Lifting Scheme**: Custom wavelets for irregular biological sampling
-- **Directional Wavelets**: Analysis of oriented biological structures and flows
-
-**Key Search Terms:**
-```
-"wavelet packet decomposition" AND "biological signal analysis"
-"dual-tree complex wavelet" AND "biomedical applications"
-"2D wavelet transform" AND "biological imaging"
-"lifting scheme wavelets" AND "irregular sampling" AND "biological"
-"directional wavelets" AND "biological structures"
+PyWavelets biological signal processing tutorial
+"wavelet coherence" AND Python AND example
+GitHub wavelet biological signal analysis
 ```
 
 ---
 
-## 🧬 BIOLOGICAL APPLICATION-SPECIFIC RESEARCH
+## 📊 COMPARISON RESEARCH (VALIDATION)
 
-### **6. Circadian Rhythm Analysis**
+### **4. Wavelets vs. Traditional Methods**
 
-**Deep Research Query:**
-*"What are the most accurate and robust wavelet methods for analyzing circadian rhythms in different biological systems? How do these compare to traditional cosinor analysis and what advantages do wavelets provide?"*
+**Essential Query:**
+*"Where have wavelets been shown to outperform Fourier analysis or bandpass filtering for biological signals? What are the quantitative improvements?"*
 
-**Specific Questions:**
-- Which wavelet families are optimal for 24-hour rhythm detection?
-- How do wavelets handle circadian period variations and phase shifts?
-- What are the latest methods for circadian amplitude and period estimation using wavelets?
-- How do wavelets perform for ultradian (< 24h) and infradian (> 24h) rhythm detection?
-- What validation studies compare wavelet vs. cosinor vs. Lomb-Scargle for circadian analysis?
+**Focus On:**
+- Head-to-head comparisons in published papers
+- Performance metrics (sensitivity, specificity, SNR improvement)
+- When wavelets are worth the extra complexity
 
-**Key Literature to Find:**
-- Van Dongen et al. studies on wavelets vs. cosinor for circadian analysis
-- Recent circadian genomics papers using wavelet analysis
-- Chronobiology journals with wavelet methodology papers
-- Comparative studies of rhythm detection methods
-
-### **7. Cell Cycle and Developmental Biology**
-
-**Deep Research Query:**
-*"How are wavelets being used to analyze non-stationary biological processes like cell cycle progression, development, and differentiation where frequency content changes over time?"*
-
-**Specific Questions:**
-- How do wavelets track frequency changes during cell cycle progression (G1→S→G2→M)?
-- What methods exist for analyzing developmental time series with changing dynamics?
-- How are wavelets used for single-cell time series analysis?
-- What approaches handle variable cell cycle lengths and phase durations?
-- How do wavelets detect cell cycle checkpoints and transitions?
-
-**Key Applications:**
-- Single-cell RNA-seq time series analysis
-- Live-cell imaging data processing
-- Developmental gene expression profiling
-- Cell cycle synchronization studies
-
-### **8. Metabolic and Biochemical Oscillations**
-
-**Deep Research Query:**
-*"What are the latest wavelet approaches for analyzing metabolic oscillations, glycolytic rhythms, and biochemical pathway dynamics? How do these methods handle the multi-timescale nature of metabolism?"*
-
-**Specific Questions:**
-- How are wavelets applied to ATP/ADP/AMP oscillation analysis?
-- What methods exist for NADH/NAD+ redox oscillation detection?
-- How do wavelets analyze glycolytic oscillations in yeast and other systems?
-- What approaches handle calcium oscillations and other second messenger dynamics?
-- How are wavelets used for metabolomics time series analysis?
-
-**Key Applications:**
-- Metabolic flux analysis
-- Mitochondrial dynamics studies
-- Calcium signaling research
-- Glycolysis/gluconeogenesis oscillations
-
-### **9. Neuroscience and Brain Signal Analysis**
-
-**Deep Research Query:**
-*"How are advanced wavelet methods being applied to neuroscience data including EEG, local field potentials, and neural oscillations? What are the latest developments in wavelet-based brain signal analysis?"*
-
-**Specific Questions:**
-- Which wavelets are optimal for different brain rhythm frequencies (delta, theta, alpha, beta, gamma)?
-- How are wavelets used for analyzing neural synchronization and phase coupling?
-- What methods exist for real-time EEG analysis using wavelets?
-- How do wavelets handle artifact removal in neural signals?
-- What are the latest approaches for wavelet-based brain-computer interfaces?
-
-**Key Applications:**
-- EEG/MEG signal processing
-- Neural oscillation analysis  
-- Brain connectivity studies
-- Seizure detection and prediction
-
-### **10. Cardiovascular and Physiological Monitoring**
-
-**Deep Research Query:**
-*"What are the most effective wavelet methods for cardiovascular signal analysis including heart rate variability, blood pressure dynamics, and respiratory patterns?"*
-
-**Specific Questions:**
-- How are wavelets used for heart rate variability analysis?
-- What methods exist for blood pressure oscillation detection?
-- How do wavelets analyze respiratory-cardiovascular coupling?
-- What approaches handle ECG signal processing and arrhythmia detection?
-- How are wavelets applied to pulse wave analysis?
-
-**Key Applications:**
-- Clinical cardiac monitoring
-- Autonomic nervous system assessment
-- Sleep study analysis
-- Exercise physiology research
-
----
-
-## 🛠️ TECHNICAL IMPLEMENTATION RESEARCH
-
-### **11. Software Libraries and Implementation**
-
-**Research Query:**
-*"What are the most current and robust software libraries, tools, and implementations for biological wavelet analysis? What are the computational considerations for real-world biological applications?"*
-
-**Specific Focus:**
-- **Python Libraries**: Latest PyWavelets features, SciPy wavelet functions, specialized biomedical packages
-- **Performance Optimization**: GPU acceleration, parallel processing, memory optimization for large biological datasets
-- **Real-Time Implementation**: Streaming wavelet analysis, online processing methods
-- **Integration**: How wavelet libraries integrate with biological data analysis pipelines (pandas, NumPy, scikit-learn)
-
-**Key Technologies:**
+**Key Search:**
 ```
-PyWavelets latest features and biological applications
-SciPy.signal wavelet functions and biomedical extensions  
-CuPy/GPU acceleration for wavelet transforms
-Dask/parallel processing for large biological datasets
-Integration with BioPython, scanpy, and other bio packages
-```
-
-### **12. Validation and Performance Metrics**
-
-**Research Query:**
-*"What are the standard validation methods and performance metrics for wavelet-based biological signal analysis? How should wavelet methods be validated against biological ground truth?"*
-
-**Specific Focus:**
-- **Biological Validation**: How to validate wavelet results against known biological processes
-- **Performance Metrics**: Sensitivity, specificity, accuracy metrics specific to biological applications  
-- **Comparative Studies**: Head-to-head comparisons of wavelet methods vs. traditional approaches
-- **Statistical Validation**: Proper statistical testing for wavelet-based biological discoveries
-- **Reproducibility**: Methods for ensuring reproducible wavelet analysis results
-
-**Key Questions:**
-- What constitutes ground truth for circadian rhythm detection validation?
-- How should denoising performance be measured for biological signals?
-- What statistical tests are appropriate for wavelet-based biological analysis?
-- How do you validate transient event detection in biological systems?
-
-### **13. Computational Complexity and Scalability**
-
-**Research Query:**
-*"What are the computational requirements, scalability limitations, and optimization strategies for wavelet analysis of large-scale biological datasets?"*
-
-**Specific Focus:**
-- **Algorithm Complexity**: Time/space complexity of different wavelet algorithms for biological applications
-- **Scalability**: How wavelet methods scale with dataset size, signal length, and number of channels
-- **Memory Requirements**: Memory optimization strategies for large biological datasets
-- **Distributed Processing**: Methods for distributed/cloud-based wavelet analysis
-- **Real-Time Constraints**: Computational requirements for real-time biological monitoring
-
-**Key Considerations:**
-- Single-cell datasets with millions of cells and time points
-- High-frequency physiological monitoring (kHz sampling rates)
-- Multi-channel biological recording systems
-- Cloud-based biological data analysis platforms
-
----
-
-## 📊 COMPARATIVE ANALYSIS RESEARCH
-
-### **14. Wavelet Methods vs. Traditional Approaches**
-
-**Research Query:**
-*"What are the quantitative advantages of wavelet methods compared to traditional biological signal analysis approaches? Under what conditions do wavelets outperform Fourier, filtering, and other classical methods?"*
-
-**Specific Comparisons:**
-- **Wavelets vs. Fourier Transform**: Performance comparison for biological rhythm detection
-- **Wavelets vs. Bandpass Filtering**: Signal preservation and noise removal effectiveness
-- **Wavelets vs. Cosinor Analysis**: Accuracy for circadian rhythm characterization
-- **Wavelets vs. Autocorrelation**: Periodicity detection performance
-- **Wavelets vs. Spectral Analysis**: Time-frequency resolution trade-offs
-
-**Key Metrics:**
-- Detection sensitivity and specificity
-- Signal-to-noise ratio improvement
-- Computational efficiency
-- Robustness to artifacts and noise
-- Biological interpretation accuracy
-
-### **15. Wavelet Family Selection Guidelines**
-
-**Research Query:**
-*"What are the evidence-based guidelines for selecting optimal wavelet families for different types of biological signals and analysis objectives?"*
-
-**Specific Questions:**
-- **Morlet wavelets**: When are they optimal for biological applications?
-- **Daubechies wavelets**: Best applications and parameter selection
-- **Biorthogonal wavelets**: Advantages for biological signal reconstruction
-- **Mexican hat wavelets**: Specific biological use cases
-- **Custom wavelets**: Methods for designing biological-specific wavelets
-
-**Selection Criteria:**
-- Signal characteristics (smooth vs. sharp transitions)
-- Analysis objectives (denoising vs. detection vs. characterization)
-- Computational constraints
-- Reconstruction requirements
-- Biological interpretation needs
-
----
-
-## 🌐 EMERGING TRENDS AND FUTURE DIRECTIONS
-
-### **16. Next-Generation Wavelet Methods**
-
-**Research Query:**
-*"What are the emerging trends, cutting-edge developments, and future directions in wavelet analysis for biological applications? What new methods are being developed for 2025-2030?"*
-
-**Emerging Areas:**
-- **Quantum Wavelets**: Quantum computing applications to wavelet transforms
-- **AI-Designed Wavelets**: Machine learning algorithms that design optimal wavelets
-- **Probabilistic Wavelets**: Uncertainty quantification in wavelet analysis
-- **Multi-Modal Wavelets**: Joint analysis of different biological data types
-- **Causal Wavelets**: Wavelet methods for causal inference in biological systems
-
-**Future Applications:**
-- Real-time biological system control
-- Personalized medicine based on wavelet biomarkers
-- Synthetic biology circuit design using wavelet analysis
-- Multi-omics integration with wavelet methods
-
-### **17. Integration with Other Advanced Methods**
-
-**Research Query:**
-*"How are wavelets being integrated with other advanced analysis methods like machine learning, network analysis, and systems biology approaches?"*
-
-**Integration Areas:**
-- **Wavelets + Graph Neural Networks**: Network analysis of biological systems
-- **Wavelets + Transformer Models**: Attention-based biological sequence analysis
-- **Wavelets + Causal Discovery**: Combined methods for biological network inference
-- **Wavelets + Digital Twins**: Real-time biological system modeling
-- **Wavelets + Federated Learning**: Distributed biological data analysis
-
----
-
-## 📚 SPECIFIC LITERATURE AND DATA SOURCES
-
-### **High-Priority Journals and Conferences**
-```
-Nature Biotechnology - wavelet applications in biotechnology
-Nature Methods - methodological advances in biological analysis
-Bioinformatics - computational methods including wavelets
-PLOS Computational Biology - wavelets in systems biology
-IEEE Transactions on Biomedical Engineering - signal processing methods
-Journal of Biological Rhythms - circadian analysis methods
-Cell Systems - systems biology applications
-PNAS - biological applications of advanced analysis methods
-```
-
-### **Key Research Groups and Authors**
-```
-Circadian rhythm analysis: Russell Foster, Till Roenneberg labs
-Biological signal processing: IEEE EMBS community
-Wavelet theory: Ingrid Daubechies, Stéphane Mallat groups
-Computational biology: systems biology consortiums
-Metabolic oscillations: Bela Novak, John Tyson groups
-```
-
-### **Databases and Resources**
-```
-PubMed: ("wavelet transform" AND "biological") advanced search
-IEEE Xplore: biomedical signal processing with wavelets
-bioRxiv: preprints on wavelet biological applications
-GitHub: open-source wavelet biology implementations
-Kaggle: biological datasets for wavelet method validation
+"wavelet" vs "Fourier" biological rhythm detection
+"wavelet denoising" vs "filtering" performance biological
+circadian "cosinor" vs "wavelet" comparison
 ```
 
 ---
 
-## 🎯 RESEARCH DELIVERABLES AND ACTIONABLE INSIGHTS
+## 🛠️ IMPLEMENTATION ESSENTIALS
 
-### **Expected Research Outcomes**
+### **Must-Have Technical Details:**
 
-1. **Comprehensive Method Comparison**: Quantitative comparison of wavelet vs. traditional methods for biological applications
+1. **Wavelet Selection**
+   - Which wavelet family for smooth biological signals? (likely Morlet, but confirm)
+   - Which wavelet for sharp/transient events? (likely Haar/Daubechies, but validate)
+   - Parameter selection guidelines (scales, decomposition levels)
 
-2. **Implementation Roadmap**: Detailed technical roadmap for implementing advanced wavelet features
+2. **Denoising Implementation**
+   - Threshold selection methods validated for biology
+   - Signal preservation metrics
+   - Before/after examples with biological data
 
-3. **Biological Validation Framework**: Evidence-based approaches for validating wavelet results against biological ground truth
+3. **Coherence Analysis**
+   - Step-by-step coherence calculation
+   - Statistical significance testing
+   - Result interpretation for biological applications
 
-4. **Performance Benchmarks**: Computational and accuracy benchmarks for different wavelet methods on biological data
-
-5. **Best Practice Guidelines**: Evidence-based recommendations for wavelet selection, parameter tuning, and result interpretation
-
-### **Immediate Implementation Priorities**
-
-**High Priority (Implement Next):**
-- Latest wavelet coherence methods for transfer function analysis
-- Advanced denoising algorithms validated on biological signals  
-- Real-time streaming wavelet processing methods
-- Machine learning integration strategies
-
-**Medium Priority (Phase 2):**
-- Multi-dimensional wavelet methods for spatial-temporal data
-- Custom biological wavelet design approaches
-- Advanced statistical validation methods
-- Performance optimization strategies
-
-**Future Priorities (Phase 3):**
-- AI-enhanced wavelet selection and optimization
-- Integration with emerging biological data types
-- Real-time biological system control applications
-- Novel wavelet-based biological discovery methods
+4. **Performance**
+   - Computational complexity for typical biological datasets
+   - Memory requirements
+   - Speed optimization tips
 
 ---
 
-## 🔍 SEARCH STRATEGY AND METHODOLOGY
+## 📚 PRIORITIZED SOURCES
 
-### **Primary Search Approach**
-1. **Systematic Literature Review**: Comprehensive search of major databases
-2. **Expert Consultation**: Identify key researchers and methodologists  
-3. **Software Survey**: Analysis of current tools and implementations
-4. **Benchmark Studies**: Performance comparison on standard biological datasets
-5. **Trend Analysis**: Identification of emerging methods and future directions
+### **Start Here:**
+1. **Recent Reviews (2022-2025)** - Find 1-2 comprehensive review papers on wavelets in biology
+2. **PyWavelets Documentation** - Official examples and tutorials
+3. **Top 5 Cited Papers** - Most-cited wavelet biology papers from last 3 years
+4. **GitHub Examples** - 2-3 repositories with working biological wavelet code
 
-### **Quality Criteria**
-- Peer-reviewed publications in high-impact journals
-- Validated methods with biological ground truth
-- Open-source implementations available
-- Reproducible results with provided data/code
-- Recent publications (2020-2025 preferred)
-
-### **Integration Strategy**
-- Synthesize findings into actionable implementation roadmap
-- Prioritize methods based on biological impact and technical feasibility
-- Develop validation framework for new implementations
-- Create comprehensive comparison matrix of different approaches
+### **Key Journals:**
+- Nature Methods (methodology papers)
+- Bioinformatics (computational implementation)
+- IEEE Transactions on Biomedical Engineering (signal processing)
 
 ---
 
-## 📈 SUCCESS METRICS
+## ✅ SUCCESS CRITERIA
 
-**Research Success Indicators:**
-- ✅ Identification of >20 validated wavelet methods for biological applications
-- ✅ Comprehensive comparison matrix of wavelet vs. traditional methods  
-- ✅ Technical implementation roadmap for next 6 months
-- ✅ Performance benchmarks on standard biological datasets
-- ✅ Best practice guidelines for biological wavelet analysis
+**Research Complete When You Have:**
+- [ ] 3-5 validated wavelet methods for biological signals
+- [ ] Clear wavelet selection guidelines (decision tree: "use X wavelet when Y")
+- [ ] Working Python implementation examples
+- [ ] Quantitative performance benchmarks vs. basic filtering
+- [ ] Step-by-step coherence analysis method
 
-**Implementation Success Indicators:**
-- ✅ Methods outperform current implementation by >20% on key metrics
-- ✅ Validation against biological ground truth shows >95% accuracy
-- ✅ Real-time processing meets biological monitoring requirements
-- ✅ Integration with existing biological analysis pipelines
-- ✅ Positive feedback from biological researchers and practitioners
+**Implementation Ready When You Know:**
+- [ ] Which wavelet to use for circadian analysis
+- [ ] How to implement wavelet coherence in Python
+- [ ] How to validate results against biological ground truth
+- [ ] Expected performance improvements over current methods
 
 ---
 
-**This comprehensive research query should uncover the latest and most effective wavelet methods for advancing biological signal analysis to research-grade capabilities!** 🌊🔬✨
+## 🚀 IMMEDIATE NEXT STEPS
+
+1. **Week 1**: Literature search - find top 10 papers on biological wavelet applications
+2. **Week 2**: Code exploration - test PyWavelets on sample biological data
+3. **Week 3**: Implement coherence analysis following published methods
+4. **Week 4**: Validate on test datasets, compare to baseline methods
+
+---
+
+## 📝 SPECIFIC QUESTIONS TO ANSWER
+
+**Before Implementation:**
+- What's the standard wavelet for 24-hour circadian rhythm detection?
+- How many decomposition levels for typical biological time series?
+- What threshold method is most robust for biological noise?
+
+**For Coherence:**
+- How to calculate statistical significance of coherence values?
+- What scale ranges to use for biological oscillations (minutes to days)?
+- How to interpret phase relationships from coherence analysis?
+
+**For Validation:**
+- What biological datasets are used as benchmarks?
+- How to define "ground truth" for rhythm detection?
+- What metrics prove wavelet methods are better than alternatives?
+
+---
+
+**Target: 2-week research sprint → working implementation with validated performance improvements** 🌊🔬
