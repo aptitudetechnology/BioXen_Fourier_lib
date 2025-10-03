@@ -7,13 +7,103 @@
 
 ---
 
+## �️ Architectural Context
+
+### **BioXen_Fourier_lib ↔ PyCWT-mod Server Integration**
+
+This implementation plan details a **REST API server** that extends BioXen_Fourier_lib's capabilities by providing remote access to pycwt-mod's hardware-accelerated wavelet analysis backends.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    BioXen_Fourier_lib                           │
+│  (Python Library for Multi-Signal Wavelet Analysis)            │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │  BioXen.wavelet_coherence(signal1, signal2)            │  │
+│  │    ├─ Local computation (NumPy/SciPy)                  │  │
+│  │    └─ Remote computation (HTTP/WebSocket API)  ◄───────┼──┼─┐
+│  └─────────────────────────────────────────────────────────┘  │ │
+└─────────────────────────────────────────────────────────────────┘ │
+                                                                    │
+                              REST API                              │
+                         (this implementation)                      │
+                                                                    │
+┌─────────────────────────────────────────────────────────────────┐ │
+│                    PyCWT-mod API Server                         │◄┘
+│  (FastAPI REST/WebSocket Interface)                             │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  Endpoints:                                                │ │
+│  │    • POST /api/v1/wavelet/wct                             │ │
+│  │    • WS   /ws/stream/wct                                  │ │
+│  │    • GET  /api/v1/backends/                               │ │
+│  │    • POST /api/v1/benchmark                               │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                            ▼                                     │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  Backend Selector (pycwt-mod integration)                 │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│       │              │                │                          │
+│       ▼              ▼                ▼                          │
+│  ┌────────┐   ┌──────────┐   ┌──────────────┐                  │
+│  │  CPU   │   │  Joblib  │   │  FPGA/ELM11  │                  │
+│  │ Backend│   │  Parallel│   │  Tang Nano9K │                  │
+│  └────────┘   └──────────┘   └──────────────┘                  │
+│                                      │                           │
+└──────────────────────────────────────┼───────────────────────────┘
+                                       ▼
+                            ┌──────────────────┐
+                            │  Hardware Device │
+                            │  (Serial/USB)    │
+                            └──────────────────┘
+```
+
+### **Key Integration Points:**
+
+1. **BioXen Client Library Extension** (Python):
+   ```python
+   # BioXen_Fourier_lib/bioxen/wavelet/remote.py
+   class RemoteWaveletBackend:
+       def __init__(self, api_url="http://localhost:8000"):
+           self.client = PyCWTClient(api_url)
+       
+       def wavelet_coherence(self, signal1, signal2, **kwargs):
+           return self.client.wavelet_coherence(signal1, signal2, **kwargs)
+   ```
+
+2. **Backend Selection Strategy**:
+   ```python
+   # User can choose local or remote computation
+   from bioxen.wavelet import WaveletAnalyzer
+   
+   # Local computation (NumPy/SciPy)
+   analyzer = WaveletAnalyzer(backend='local')
+   
+   # Remote computation with FPGA acceleration
+   analyzer = WaveletAnalyzer(
+       backend='remote',
+       api_url='http://server:8000',
+       remote_backend='elm11'  # Tang Nano 9K FPGA
+   )
+   ```
+
+3. **Use Cases for Remote API**:
+   - ✅ **Hardware acceleration** without local FPGA installation
+   - ✅ **Batch processing** of large datasets on server infrastructure
+   - ✅ **Real-time streaming** for BCI/adaptive stimulation experiments
+   - ✅ **Cross-platform compatibility** (web apps, R, MATLAB integration)
+   - ✅ **Shared resources** in lab environments (one FPGA server, many clients)
+
+---
+
 ## 🎯 Executive Summary
 
-This implementation plan transforms the PyCWT-mod API specification into a production-ready REST API that exposes hardware-accelerated wavelet coherence analysis (CPU, FPGA, embedded systems) through a RESTful interface. The API will integrate with existing pycwt-mod backends while adding real-time streaming capabilities, performance benchmarking, and comprehensive monitoring.
+This implementation plan transforms the PyCWT-mod API specification into a production-ready REST API server that **extends BioXen_Fourier_lib** by providing remote access to hardware-accelerated wavelet coherence analysis (CPU, FPGA, embedded systems). The API enables BioXen users to leverage pycwt-mod's hardware backends without local installation, while also supporting direct HTTP/WebSocket access from other languages and platforms.
 
 **Timeline:** 6-8 weeks  
 **Complexity:** Medium-High (backend integration, hardware detection, async processing)  
-**Risk Level:** Medium (hardware dependencies, performance validation)
+**Risk Level:** Medium (hardware dependencies, performance validation)  
+**Architecture:** Client-Server (BioXen clients → REST API → pycwt-mod backends → hardware)
 
 ---
 
@@ -1377,43 +1467,282 @@ services:
 
 ---
 
-## 🔗 Integration with Research Documents
+## 🔗 Integration with BioXen_Fourier_lib & Research Documents
+
+### **BioXen Client Library Integration:**
+
+**Step 1: Add Remote Backend to BioXen_Fourier_lib**
+
+Create `BioXen_Fourier_lib/bioxen/wavelet/remote_backend.py`:
+```python
+"""
+Remote wavelet backend for BioXen_Fourier_lib.
+
+Connects to PyCWT-mod API server for hardware-accelerated computation.
+"""
+import requests
+import numpy as np
+from typing import Optional, Tuple
+
+class RemoteWaveletBackend:
+    """
+    Remote computation backend using PyCWT-mod API server.
+    
+    This backend allows BioXen users to leverage FPGA/embedded hardware
+    acceleration without local pycwt-mod installation.
+    """
+    
+    def __init__(self, api_url: str = "http://localhost:8000"):
+        self.api_url = api_url
+        self._verify_connection()
+    
+    def _verify_connection(self):
+        """Check API server availability."""
+        try:
+            response = requests.get(f"{self.api_url}/health", timeout=5)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise ConnectionError(f"Cannot connect to PyCWT-mod server: {e}")
+    
+    def list_backends(self):
+        """Query available hardware backends on server."""
+        response = requests.get(f"{self.api_url}/api/v1/backends/")
+        response.raise_for_status()
+        return response.json()["backends"]
+    
+    def wavelet_coherence(
+        self,
+        signal1: np.ndarray,
+        signal2: np.ndarray,
+        dt: float,
+        backend: str = "sequential",
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray]]:
+        """
+        Compute wavelet coherence using remote server.
+        
+        Parameters match BioXen's local wavelet_coherence() signature.
+        """
+        payload = {
+            "signal1": signal1.tolist(),
+            "signal2": signal2.tolist(),
+            "dt": dt,
+            "backend": backend,
+            **kwargs
+        }
+        
+        response = requests.post(
+            f"{self.api_url}/api/v1/wavelet/wct",
+            json=payload,
+            timeout=300  # 5 minutes for large computations
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        # Convert back to NumPy arrays
+        return (
+            np.array(result["WCT"]),
+            np.array(result["aWCT"]),
+            np.array(result["coi"]),
+            np.array(result["freqs"]),
+            np.array(result["signif"]) if result.get("signif") else None
+        )
+
+
+# BioXen integration point
+class WaveletAnalyzer:
+    """
+    BioXen wavelet analyzer with local and remote backend support.
+    """
+    
+    def __init__(self, backend: str = "local", api_url: Optional[str] = None):
+        """
+        Initialize wavelet analyzer.
+        
+        Args:
+            backend: 'local' for NumPy/SciPy, 'remote' for API server
+            api_url: PyCWT-mod server URL (required if backend='remote')
+        """
+        self.backend_type = backend
+        
+        if backend == "remote":
+            if not api_url:
+                raise ValueError("api_url required for remote backend")
+            self.remote = RemoteWaveletBackend(api_url)
+        else:
+            self.remote = None
+    
+    def coherence(self, signal1, signal2, dt, **kwargs):
+        """
+        Compute wavelet coherence.
+        
+        Routes to local or remote backend based on configuration.
+        """
+        if self.backend_type == "remote":
+            return self.remote.wavelet_coherence(signal1, signal2, dt, **kwargs)
+        else:
+            # Local computation using NumPy/SciPy
+            from bioxen.wavelet.local import compute_coherence_local
+            return compute_coherence_local(signal1, signal2, dt, **kwargs)
+```
+
+**Step 2: User-Facing BioXen API**
+```python
+# Example: BioXen user leveraging remote FPGA acceleration
+from bioxen.wavelet import WaveletAnalyzer
+import numpy as np
+
+# Generate biological signals
+eeg_channel1 = np.random.randn(10000)  # 10 seconds at 1kHz
+eeg_channel2 = np.random.randn(10000)
+
+# Option 1: Local computation
+analyzer_local = WaveletAnalyzer(backend='local')
+wct, phase, coi, freqs, signif = analyzer_local.coherence(
+    eeg_channel1, eeg_channel2, dt=0.001
+)
+
+# Option 2: Remote computation with FPGA acceleration
+analyzer_remote = WaveletAnalyzer(
+    backend='remote',
+    api_url='http://lab-server.local:8000'
+)
+wct, phase, coi, freqs, signif = analyzer_remote.coherence(
+    eeg_channel1, eeg_channel2, 
+    dt=0.001,
+    backend='elm11'  # Request Tang Nano 9K FPGA
+)
+print(f"✓ Computed with hardware acceleration on remote server")
+```
+
+---
 
 ### **Enables MVP Research (wavelets-deep-research-prompt2-mvp.md):**
+
+**BioXen integration for automated benchmarking:**
 ```python
 # Question 1: pycwt Performance Characterization
+from bioxen.wavelet import WaveletAnalyzer
+import numpy as np
+
+analyzer = WaveletAnalyzer(backend='remote', api_url='http://localhost:8000')
+
+# Automated performance testing across scales
 for n in [100, 1000, 10000, 100000]:
-    response = requests.post("/api/v1/benchmark", json={
+    signal1 = np.sin(np.linspace(0, 10, n))
+    signal2 = np.cos(np.linspace(0, 10, n))
+    
+    # Direct API call for benchmarking
+    response = requests.post("http://localhost:8000/api/v1/benchmark", json={
         "signal_length": n,
         "mc_count": 300,
-        "backends": ["sequential"]
+        "backends": ["sequential", "joblib", "elm11"]
     })
-    print(f"N={n}: {response.json()['results']['sequential']['computation_time']}s")
+    
+    results = response.json()['results']
+    print(f"N={n}:")
+    print(f"  Sequential: {results['sequential']['computation_time']:.3f}s")
+    print(f"  Joblib:     {results['joblib']['computation_time']:.3f}s ({results['joblib']['speedup']:.2f}×)")
+    print(f"  FPGA:       {results['elm11']['computation_time']:.3f}s ({results['elm11']['speedup']:.2f}×)")
 ```
 
-### **Enables FPGA Research:**
+---
+
+### **Enables FPGA Research (FFT-based-performance-bottleneck-massive-datasets-prompt.FPGA.md):**
+
+**Real-time streaming for BCI/adaptive stimulation:**
 ```python
-# Real-time latency testing
+# BioXen + WebSocket for closed-loop experiments
+from bioxen.wavelet.streaming import StreamingWaveletAnalyzer
 import websocket
+import json
 
-ws = websocket.WebSocket()
-ws.connect("ws://localhost:8000/ws/stream/wct")
-ws.send(json.dumps({"type": "config", "dt": 0.001, "backend": "elm11"}))
+# Connect to streaming endpoint
+analyzer = StreamingWaveletAnalyzer(
+    ws_url='ws://localhost:8000/ws/stream/wct',
+    backend='elm11'  # FPGA for <1ms latency
+)
 
-# Send EEG chunks, measure response time
+# Configure for 128-channel EEG at 1kHz
+analyzer.configure(dt=0.001, window_size=256)
+
+# Process continuous EEG stream
+for chunk in eeg_data_generator():
+    channel1, channel2 = chunk[0], chunk[1]
+    
+    # Get coherence with minimal latency
+    wct_result = analyzer.process_chunk(channel1, channel2)
+    
+    # Latency measured on server
+    print(f"Latency: {wct_result['latency_ms']:.2f}ms")
+    
+    # Trigger adaptive stimulation if needed
+    if wct_result['coherence'] > threshold:
+        trigger_stimulation()
 ```
+
+---
 
 ### **Enables Comparative Analysis:**
-```python
-# Compare all backends automatically
-response = requests.post("/api/v1/benchmark", json={
-    "signal_length": 10000,
-    "backends": ["sequential", "joblib", "elm11"],
-    "mc_count": 300
-})
 
-for backend, data in response.json()["results"].items():
-    print(f"{backend}: {data['speedup']:.2f}× speedup")
+**Multi-backend performance validation:**
+```python
+# BioXen wrapper for automated backend comparison
+from bioxen.research.benchmark import compare_backends
+
+# Compare all available backends (local + remote)
+results = compare_backends(
+    signal_length=10000,
+    mc_count=300,
+    backends={
+        'local_numpy': {'backend': 'local'},
+        'remote_cpu': {'backend': 'remote', 'remote_backend': 'sequential'},
+        'remote_parallel': {'backend': 'remote', 'remote_backend': 'joblib'},
+        'remote_fpga': {'backend': 'remote', 'remote_backend': 'elm11'}
+    },
+    api_url='http://localhost:8000'
+)
+
+for name, data in results.items():
+    print(f"{name}: {data['speedup']:.2f}× (latency: {data['latency_ms']:.2f}ms)")
+```
+
+---
+
+### **Lab Environment Deployment:**
+
+**Typical BioXen + PyCWT-mod server setup:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  Research Lab Network                        │
+│                                                              │
+│  ┌──────────────┐      ┌──────────────┐      ┌──────────┐ │
+│  │ Researcher 1 │      │ Researcher 2 │      │ Researcher│ │
+│  │ Laptop       │      │ Laptop       │      │ 3 Desktop│ │
+│  │              │      │              │      │          │ │
+│  │ BioXen       │      │ BioXen       │      │ BioXen   │ │
+│  │ (client)     │      │ (client)     │      │ (client) │ │
+│  └──────┬───────┘      └──────┬───────┘      └─────┬────┘ │
+│         │                     │                     │       │
+│         └─────────────────────┼─────────────────────┘       │
+│                               │                             │
+│                               ▼                             │
+│                  ┌────────────────────────┐                │
+│                  │  Lab Server            │                │
+│                  │  lab-server.local:8000 │                │
+│                  │                        │                │
+│                  │  PyCWT-mod API         │                │
+│                  │  + Tang Nano 9K FPGA   │                │
+│                  │  + Redis queue         │                │
+│                  └────────────────────────┘                │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+Configuration:
+1. Server runs: docker-compose up -d
+2. Clients use: WaveletAnalyzer(backend='remote', api_url='http://lab-server.local:8000')
+3. Shared FPGA resource, multiple users benefit
 ```
 
 ---
@@ -1475,15 +1804,90 @@ for backend, data in response.json()["results"].items():
 
 ## 🎓 Conclusion
 
-This implementation plan provides a complete roadmap from the API specification to a production-ready REST API that:
+This implementation plan provides a complete roadmap from the API specification to a production-ready REST API server that **extends BioXen_Fourier_lib** with remote hardware-accelerated wavelet analysis capabilities.
 
-- ✅ Exposes all pycwt-mod capabilities via HTTP/WebSocket
-- ✅ Supports hardware acceleration (FPGA, embedded, GPU future)
-- ✅ Enables research validation (MVP, FPGA, Phase 2)
-- ✅ Provides client libraries for multiple languages
-- ✅ Includes comprehensive testing and documentation
-- ✅ Ready for Docker deployment
+### **Key Architectural Benefits:**
+
+1. **BioXen Extension Architecture:**
+   - ✅ BioXen users access FPGA acceleration without local hardware
+   - ✅ Transparent backend switching (local ↔ remote)
+   - ✅ Shared lab resources (one FPGA server, multiple clients)
+   - ✅ Consistent API across local and remote computation
+
+2. **Technical Capabilities:**
+   - ✅ Exposes all pycwt-mod backends via HTTP/WebSocket
+   - ✅ Supports hardware acceleration (FPGA, embedded, GPU future)
+   - ✅ Enables research validation (MVP, FPGA, Phase 2)
+   - ✅ Real-time streaming for closed-loop experiments
+   - ✅ Automated benchmarking and performance comparison
+
+3. **Cross-Platform Integration:**
+   - ✅ Python client library (BioXen integration)
+   - ✅ JavaScript/Node.js client (web applications)
+   - ✅ R and MATLAB integration (research workflows)
+   - ✅ Direct HTTP/cURL access (any language)
+
+4. **Production Readiness:**
+   - ✅ Comprehensive testing and documentation
+   - ✅ Docker deployment with device passthrough
+   - ✅ Job queue for batch processing
+   - ✅ Health monitoring and error handling
+
+### **Deployment Models:**
+
+**Model 1: Individual Researcher**
+- Local BioXen + local API server on same machine
+- Use case: Personal development, testing
+
+**Model 2: Lab Server**
+- Multiple BioXen clients → shared API server with FPGA
+- Use case: Research lab with centralized hardware
+
+**Model 3: Cloud Deployment**
+- BioXen clients → cloud API server → distributed workers
+- Use case: High-throughput analysis, external collaborators
+
+### **Project Timeline:**
+
+| Phase | Duration | Deliverable |
+|-------|----------|-------------|
+| Phase 1-2 | 2 weeks | Core API + Backend management |
+| Phase 3 | 1 week | Wavelet endpoints |
+| Phase 4 | 1 week | Real-time streaming |
+| Phase 5 | 1 week | Hardware detection + benchmarking |
+| Phase 6 | 1 week | Job queue |
+| Phase 7 | 1 week | Testing + docs |
+| Phase 8 | 1 week | Deployment |
+| **Total** | **8 weeks** | **Production API server** |
 
 **Estimated Total Effort:** 6-8 weeks for single developer  
-**Priority:** High (enables external integration and research validation)  
+**Priority:** High (enables BioXen hardware acceleration + research validation)  
 **Next Step:** Phase 1 implementation (Core API Infrastructure)
+
+---
+
+## 📦 Deliverables Summary
+
+### **For BioXen_Fourier_lib Users:**
+- Remote backend class (`bioxen.wavelet.remote_backend.py`)
+- Transparent local/remote switching
+- Example notebooks demonstrating FPGA acceleration
+
+### **For API Server Deployment:**
+- Complete FastAPI application
+- Docker configuration with FPGA passthrough
+- Deployment guides (Docker, systemd, cloud)
+
+### **For Researchers:**
+- Automated benchmark endpoints (validates MVP research)
+- Real-time streaming (validates FPGA latency research)
+- Performance comparison tools (validates comparative analysis)
+
+### **For External Integration:**
+- OpenAPI/Swagger documentation
+- Client libraries (Python, JavaScript, R, MATLAB)
+- Integration examples and tutorials
+
+**Repository:** `BioXen_Fourier_lib/` (contains both library and API server)  
+**Server Location:** `BioXen_Fourier_lib/server/` (new directory)  
+**Client Integration:** `BioXen_Fourier_lib/bioxen/wavelet/remote_backend.py` (new file)
