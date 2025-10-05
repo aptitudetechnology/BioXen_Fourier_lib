@@ -7,16 +7,28 @@ A Python library for virtualizing biological cells using a factory pattern, enab
 
 ## ✨ Features
 
-- **Biological VM Virtualization**: Create synthetic cell simulations
-- **Four-Lens Analysis System**: Multi-method frequency domain analysis optimized for biological signals
-  - **Fourier (Lomb-Scargle)**: Industry standard for irregular sampling in biology
-  - **Wavelet**: Essential for non-stationary signals and time-frequency localization
-  - **Laplace**: Control theory and system stability analysis
-  - **Z-Transform**: Digital signal processing for sampled data
-- **Time Simulation**: Accurate solar/lunar cycles for circadian studies
-- **Hypervisor System**: Manage multiple biological VMs
-- **Factory Pattern API**: Clean, extensible architecture
-- **Interactive Learning Tools**: Web-based demos with decision trees and validation
+### Current Features (Working Today)
+
+- **✅ Biological VM Virtualization**: Create, start, stop, and manage synthetic cell simulations
+- **✅ Four-Lens Analysis System**: Complete implementation of frequency domain analysis
+  - **Fourier (Lomb-Scargle)**: Detect circadian rhythms and periodic patterns
+  - **Wavelet (CWT/DWT)**: Localize transient events with automatic wavelet selection and multi-resolution analysis
+  - **Laplace**: Transfer function analysis and system stability assessment
+  - **Z-Transform**: Digital filtering and noise reduction
+- **✅ Time Simulation**: Accurate solar/lunar cycles for circadian studies
+- **✅ Hypervisor System**: Manage multiple biological VMs with resource allocation
+- **✅ Factory Pattern API**: Clean, extensible architecture for VM creation
+- **✅ Performance Profiler**: Real-time monitoring with time-series data collection
+- **✅ Interactive Learning Tools**: Web-based demos with decision trees and validation
+
+### Planned Features (In Development)
+
+- **🔄 Continuous VM Simulation**: VMs will generate continuous metabolic time-series (ATP, glucose, gene expression)
+- **🔄 VM Self-Regulation**: VMs will use four-lens analysis to detect anomalies and adjust behavior
+- **🔄 Automatic Real-Time Analysis**: Profiler will continuously analyze and trigger alerts
+- **🔄 Hardware Acceleration**: REST API server (PyCWT-mod) for FPGA/GPU-accelerated wavelet analysis
+
+**See:** `docs/DEVELOPMENT_ROADMAP.md` for implementation timeline
 
 ## 📦 Installation
 
@@ -70,7 +82,87 @@ print(f"Seasonal phase: {env_state.seasonal_phase.value}")
 vm.destroy()
 ```
 
-## 📋 API Overview
+## � What Works Today vs. What's Planned
+
+### ✅ Working Now: VM Management & Analysis
+
+You can create and manage biological VMs, and analyze time-series data with the four-lens system:
+
+```python
+# ✅ VM Creation and Management (WORKS)
+from bioxen_fourier_vm_lib.api import create_bio_vm
+
+vm = create_bio_vm('ecoli_001', 'ecoli', 'basic')
+vm.start()
+vm.allocate_resources({'atp': 100, 'ribosomes': 50})
+result = vm.execute_biological_process({'type': 'transcription', 'genes': ['gene_001']})
+status = vm.get_status()
+vm.destroy()
+```
+
+```python
+# ✅ Four-Lens Analysis (WORKS)
+from bioxen_fourier_vm_lib.analysis.system_analyzer import SystemAnalyzer
+import numpy as np
+
+analyzer = SystemAnalyzer(sampling_rate=0.2)
+
+# Example: Analyze ATP levels over time
+atp_data = np.random.normal(100, 10, size=720)  # 1 hour of data
+timestamps = np.arange(len(atp_data)) * 5.0
+
+# Detect circadian rhythms
+fourier = analyzer.fourier_lens(atp_data, timestamps, detect_harmonics=True)
+print(f"Dominant period: {fourier.dominant_period:.1f} hours")
+
+# Detect transient events
+wavelet = analyzer.wavelet_lens(atp_data, dt=5.0)
+print(f"Transient events: {len(wavelet.transient_events)}")
+
+# Assess system stability
+laplace = analyzer.laplace_lens(atp_data, dt=5.0)
+print(f"System stability: {laplace.stability}")
+
+# Filter noise
+ztransform = analyzer.z_transform_lens(atp_data, dt=5.0)
+print(f"Noise reduced by: {ztransform.noise_reduction_percent:.1f}%")
+```
+
+### 🔄 Planned: Continuous Simulation & Self-Regulation
+
+The vision is for VMs to continuously simulate metabolic processes and self-regulate using analysis:
+
+```python
+# 🔄 PLANNED (not yet implemented)
+vm = create_bio_vm('cell', 'ecoli', 'basic')
+
+# Continuous simulation with metabolic tracking
+vm.start_continuous_simulation(duration_hours=48)
+
+# Get historical metabolic data
+history = vm.get_metabolic_history()
+# Returns: {'timestamps': [...], 'atp': [...], 'glucose': [...], 'gene_expression': {...}}
+
+# VM analyzes its own state and self-regulates
+analysis = vm.analyze_metabolic_state()
+if analysis.circadian_drift_detected:
+    vm.adjust_clock_genes()  # Automatic homeostasis!
+
+# Profiler with automatic continuous analysis
+from bioxen_fourier_vm_lib.monitoring.profiler import PerformanceProfiler
+
+profiler = PerformanceProfiler(hypervisor, monitoring_interval=5.0, analysis_interval=60.0)
+profiler.start_monitoring()  # Will analyze data every 60 seconds automatically
+
+# Get analysis results
+recent_analysis = profiler.get_latest_analysis()
+print(f"System stability: {recent_analysis['laplace'].stability}")
+```
+
+**Status:** See `docs/IMPLEMENTATION_STATUS.md` for detailed audit of what exists  
+**Roadmap:** See `docs/DEVELOPMENT_ROADMAP.md` for implementation plan (Phases 1-6)
+
+## �📋 API Overview
 
 ### Core Functions
 - `create_bio_vm(vm_id, biological_type, vm_type, config=None)`: Create a biological VM

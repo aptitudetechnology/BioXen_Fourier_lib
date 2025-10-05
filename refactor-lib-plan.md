@@ -9,6 +9,53 @@
 
 ---
 
+## ⚠️ IMPORTANT: Prerequisites
+
+> **DO NOT EXECUTE THIS REFACTOR PLAN YET!**
+>
+> This refactor assumes certain features exist and are integrated. Before proceeding,
+> complete **Phase 1-4** of the Development Roadmap to build and validate the core system.
+
+### Required Prerequisites
+
+**Before starting this refactor, you MUST have:**
+
+- [ ] **Phase 1 Complete:** Profiler with automatic real-time analysis
+- [ ] **Phase 2 Complete:** VMs generating continuous time-series data
+- [ ] **Phase 3 Complete:** VM-Analysis integration working (self-regulation)
+- [ ] **Phase 4 Complete:** Performance validation showing need for optimization
+
+**See:** `docs/DEVELOPMENT_ROADMAP.md` for implementation order  
+**See:** `docs/IMPLEMENTATION_STATUS.md` for current state assessment
+
+### When to Execute This Refactor
+
+Execute this plan **ONLY IF:**
+
+1. ✅ The integrated system works (VMs + Analysis + Profiler all functional)
+2. ✅ Phase 4 performance profiling completed
+3. ✅ Bottlenecks identified that justify remote computation
+4. ✅ One or more of these conditions met:
+   - Analysis overhead > 20% of VM execution time
+   - Analysis latency > 500ms
+   - Memory usage unsustainable for long simulations
+   - Hardware acceleration available and justified
+
+### Why Wait?
+
+**Premature optimization risks:**
+- Building infrastructure before validating need
+- Architectural complexity without clear benefits
+- Wasted effort if local computation is sufficient
+- Harder to iterate on tightly coupled systems
+
+**Build first, optimize later:**
+- Get VMs working with integrated analysis (Phases 1-3)
+- Measure actual performance (Phase 4)
+- Refactor only if measurements show need (Phase 5)
+
+---
+
 ## 🎯 Vision
 
 Transform BioXen from a monolithic library into a **modular 4-Lens architecture** where each lens is:
