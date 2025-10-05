@@ -10,7 +10,6 @@ Tests:
 
 import pytest
 import numpy as np
-from fastapi.testclient import TestClient
 
 
 class TestCompleteWorkflow:
