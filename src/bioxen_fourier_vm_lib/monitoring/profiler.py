@@ -76,7 +76,11 @@ class PerformanceProfiler:
         self.last_context_switch_time = time.time()
         self.resource_contention_events = 0
         
-        # ✅ NEW: Four-lens analyzer integration (v2.1)
+        # ✅ Four-lens analyzer integration (v2.1) - IMPLEMENTED
+        # TODO (Phase 1): Add automatic continuous analysis
+        # See docs/DEVELOPMENT_ROADMAP.md Phase 1 for implementation plan
+        # Current state: Analyzer integrated but analysis must be called manually
+        # Phase 1 goal: Automatic periodic analysis with anomaly detection
         try:
             from ..analysis.system_analyzer import SystemAnalyzer
             self.analyzer = SystemAnalyzer(sampling_rate=1.0/monitoring_interval)
@@ -84,6 +88,20 @@ class PerformanceProfiler:
         except ImportError:
             self.analyzer = None
             self._analysis_enabled = False
+        
+        # =========================================================================
+        # TODO (Phase 1): Add these attributes for automatic analysis
+        # =========================================================================
+        # self.analysis_interval = 60.0  # Analyze every 60 seconds
+        # self.analysis_thread = None
+        # self.analysis_results = deque(maxlen=100)  # Store last 100 analyses
+        # self.last_analysis_time = 0.0
+        # self.anomaly_thresholds = {
+        #     'circadian_period_min': 20.0,  # hours
+        #     'circadian_period_max': 28.0,  # hours
+        #     'transient_event_threshold': 5,  # max events per hour
+        #     'instability_alert': True  # Alert on 'unstable' status
+        # }
         
     def start_monitoring(self):
         """Start the performance monitoring thread"""
@@ -102,7 +120,13 @@ class PerformanceProfiler:
             self.monitor_thread.join()
     
     def _monitoring_loop(self):
-        """Main monitoring loop"""
+        """
+        Main monitoring loop - collects data continuously.
+        
+        TODO (Phase 1): Add automatic analysis here
+        Currently: Only data collection
+        Phase 1 goal: Call _run_all_lenses() periodically
+        """
         while self.running:
             try:
                 # Collect system metrics
@@ -113,6 +137,11 @@ class PerformanceProfiler:
                 
                 # Analyze scheduling performance
                 self._analyze_scheduling()
+                
+                # TODO (Phase 1): Add automatic analysis
+                # if time_since_last_analysis > analysis_interval:
+                #     self._run_all_lenses()
+                #     self._check_for_anomalies()
                 
                 time.sleep(self.monitoring_interval)
                 

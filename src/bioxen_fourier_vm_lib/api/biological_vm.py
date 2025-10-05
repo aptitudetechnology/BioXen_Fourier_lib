@@ -52,6 +52,84 @@ class BiologicalVM(ABC):
         """Get current resource usage."""
         return self.hypervisor.get_vm_resource_usage(self.vm_id)
     
+    # =========================================================================
+    # TODO (Phase 2): Continuous Simulation Mode
+    # See docs/DEVELOPMENT_ROADMAP.md Phase 2 for implementation plan
+    # Prerequisites: None (can start immediately after Phase 1)
+    # =========================================================================
+    
+    # def start_continuous_simulation(self, duration_hours: float, update_interval: float = 5.0):
+    #     """
+    #     Start continuous biological simulation.
+    #     
+    #     Args:
+    #         duration_hours: How long to simulate (hours)
+    #         update_interval: Time between state updates (seconds)
+    #     
+    #     Phase 2 implementation will:
+    #     - Create simulation thread
+    #     - Call _simulation_loop() to update metabolic state
+    #     - Store history in rolling buffer
+    #     """
+    #     raise NotImplementedError("Phase 2: Continuous simulation not yet implemented")
+    
+    # def stop_continuous_simulation(self):
+    #     """Stop continuous simulation."""
+    #     raise NotImplementedError("Phase 2: Continuous simulation not yet implemented")
+    
+    # def get_metabolic_history(self, hours: Optional[float] = None) -> Dict[str, List]:
+    #     """
+    #     Get metabolic state history.
+    #     
+    #     Phase 2 implementation will return:
+    #     {
+    #         'timestamps': [...],
+    #         'atp': [...],
+    #         'glucose': [...],
+    #         'amino_acids': [...],
+    #         'gene_expression': {...}
+    #     }
+    #     """
+    #     raise NotImplementedError("Phase 2: Metabolic history not yet implemented")
+    
+    # =========================================================================
+    # TODO (Phase 3): VM Self-Regulation Using Analysis
+    # See docs/DEVELOPMENT_ROADMAP.md Phase 3 for implementation plan
+    # Prerequisites: Phase 1 (profiler analysis) + Phase 2 (continuous simulation)
+    # =========================================================================
+    
+    # def analyze_metabolic_state(self, force: bool = False) -> Dict[str, Any]:
+    #     """
+    #     Analyze current metabolic state using four-lens system.
+    #     
+    #     Phase 3 implementation will:
+    #     - Extract recent metabolic history
+    #     - Run SystemAnalyzer with all four lenses
+    #     - Store results in analysis_history
+    #     - Call _respond_to_analysis() to trigger behavioral adjustments
+    #     
+    #     Returns:
+    #         Dictionary with Fourier, Wavelet, Laplace, Z-Transform results
+    #     """
+    #     raise NotImplementedError("Phase 3: VM self-regulation not yet implemented")
+    
+    # def get_analysis_history(self) -> List[Dict[str, Any]]:
+    #     """Get historical analysis results."""
+    #     raise NotImplementedError("Phase 3: Analysis history not yet implemented")
+    
+    # @abstractmethod
+    # def _respond_to_analysis(self, results: Dict[str, Any]):
+    #     """
+    #     Adjust VM behavior based on analysis results.
+    #     
+    #     Phase 3 implementation will handle:
+    #     - Circadian drift correction
+    #     - Stability management
+    #     - Stress response activation
+    #     - Energy management
+    #     """
+    #     pass
+    
     @abstractmethod
     def _execute_biological_process_impl(self, process_code: str) -> Dict[str, Any]:
         pass

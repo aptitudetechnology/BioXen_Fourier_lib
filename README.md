@@ -5,6 +5,43 @@
 
 A Python library for virtualizing biological cells using a factory pattern, enabling programmatic creation and management of biological virtual machines (VMs) for research and simulation. Features advanced time simulation for circadian rhythm studies and Fourier analysis of metabolic oscillations.
 
+## 🚦 Project Status (October 2025)
+
+**What works today:**
+- ✅ **VM Engine**: Create, manage, and run biological VMs (syn3a, ecoli, minimal_cell)
+- ✅ **SystemAnalyzer**: All 4 lenses fully implemented (1,336 lines - Fourier, Wavelet, Laplace, Z-Transform)
+- ✅ **Basic biological process execution** (transcription, translation)
+- ✅ **Resource management** (ATP, ribosomes, amino acids)
+- ✅ **Performance Profiler**: Time-series data collection from VMs
+
+**What we're building** (see [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md)):
+- 🔄 **Phase 1 (Ready to Start)**: Automatic continuous analysis in profiler
+- 🔄 **Phase 2 (2-3 weeks)**: Continuous simulation mode with metabolic history
+- 🔄 **Phase 3 (Core Goal)**: VM self-regulation using analysis feedback
+- 🔄 **Phase 4 (1-2 weeks)**: Performance validation and optimization decisions
+- 🔄 **Phase 5-6 (Optional)**: Remote computation and hardware acceleration
+
+**Current Focus:** Phase 1 - Adding automatic analysis to the performance profiler.
+
+---
+
+## 🎯 The BioXen Vision
+
+BioXen is building toward **self-regulating biological VMs** that maintain homeostasis through continuous frequency domain analysis:
+
+1. **VMs simulate** cellular processes (metabolism, gene expression, protein synthesis)
+2. **VMs generate** continuous time-series data (ATP levels, metabolite concentrations)
+3. **VMs analyze** their own state using four complementary analytical methods:
+   - **Fourier Lens:** Detect circadian rhythm drift
+   - **Wavelet Lens:** Identify transient stress responses
+   - **Laplace Lens:** Monitor system stability and feedback control
+   - **Z-Transform Lens:** Filter noise and smooth measurements
+4. **VMs adapt** behavior based on analysis (adjust clock genes, regulate metabolism)
+
+This creates biological simulations that **self-regulate like real cells**.
+
+---
+
 ## ✨ Features
 
 ### Current Features (Working Today)
@@ -128,7 +165,7 @@ ztransform = analyzer.z_transform_lens(atp_data, dt=5.0)
 print(f"Noise reduced by: {ztransform.noise_reduction_percent:.1f}%")
 ```
 
-### 🔄 Planned: Continuous Simulation & Self-Regulation
+### 🔄 Coming Soon: Self-Regulating VMs (Phases 2-3)
 
 The vision is for VMs to continuously simulate metabolic processes and self-regulate using analysis:
 
@@ -181,6 +218,34 @@ print(f"System stability: {recent_analysis['laplace'].stability}")
 - `hypervisor.create_vm(vm_id, genome_template)`: Create VM with hypervisor control
 - `hypervisor.start_vm(vm_id)`: Start VM through hypervisor
 - `hypervisor.get_system_resources()`: Monitor system-wide resource usage
+
+---
+
+## 🔬 The Four-Lens Analysis System
+
+BioXen's analysis engine uses four complementary methods because biological signals present unique challenges:
+
+| Challenge | Lens | Method | Best For | Library | Status |
+|-----------|------|--------|----------|---------|--------|
+| Irregular sampling | **Fourier** | Lomb-Scargle periodogram | Circadian rhythms, dominant frequencies | `astropy.timeseries.LombScargle` | ✅ Working |
+| Non-stationary signals | **Wavelet** | CWT/DWT with auto-selection | Transients, stress responses, time-frequency | `pywt` (PyWavelets) | ✅ Working |
+| System stability | **Laplace** | Transfer functions, pole analysis | Feedback control, homeostasis | `scipy.signal`, `python-control` | ✅ Working |
+| Discrete measurements | **Z-Transform** | Digital filters, noise reduction | Sampled data, filtering | `scipy.signal` | ✅ Working |
+
+### Why Four Lenses?
+
+- **Biological signals are non-stationary** (conditions change over time) → Wavelet essential
+- **Biological sampling is irregular** (real-world constraints) → Lomb-Scargle is the standard
+- **Different biological questions** require different analytical approaches
+- **Multi-lens validation** increases confidence in findings
+
+**All four lenses are fully implemented in `SystemAnalyzer`** (1,336 lines) and can be used independently for signal analysis. VM integration (automatic self-regulation) is in active development (Phases 2-3).
+
+**Learn more:**
+- Research background: `research/Frequency Domain Analysis in Biology.md`
+- Interactive demos: `research/interactive-fourier-series/lenses/`
+- Implementation details: `docs/IMPLEMENTATION_STATUS.md`
+- Integration plan: `docs/DEVELOPMENT_ROADMAP.md`
 
 ### Four-Lens Analysis
 
@@ -263,10 +328,44 @@ tide_factor = state.gravitational_tide_factor  # 0.95-1.05
 ```
 - **xcpng**: Advanced XCP-ng infrastructure
 
-## 📚 Documentation
+## �️ Development Roadmap
 
+We're following a phased approach to build self-regulating biological VMs:
+
+- **✅ Phase 0: Foundation** - Complete (documentation alignment, codebase audit)
+- **🔄 Phase 1: Profiler Analysis** (1-2 weeks, Ready to Start)
+  - Automatic continuous analysis in performance profiler
+  - Anomaly detection and alerting
+  - Analysis result history tracking
+- **⏳ Phase 2: Continuous Simulation** (2-3 weeks, Depends on Phase 1)
+  - VMs generate continuous metabolic time-series
+  - Historical data buffers (ATP, glucose, gene expression)
+  - Realistic metabolic dynamics
+- **⏳ Phase 3: VM Self-Regulation** (2-3 weeks, Depends on Phase 1+2)
+  - VMs analyze their own metabolic state
+  - Analysis triggers behavioral adjustments
+  - Feedback loops: circadian correction, stability management, energy regulation
+- **⏳ Phase 4: Performance Validation** (1-2 weeks, Depends on Phase 1+2+3)
+  - Benchmark analysis overhead and latency
+  - Memory profiling and leak detection
+  - Decide: local computation sufficient or need remote?
+- **⏳ Phase 5-6: Architecture Refactor & Remote Computation** (6-10 weeks, Conditional)
+  - Execute ONLY if Phase 4 shows performance bottlenecks
+  - PyCWT-mod REST API server for hardware acceleration
+  - FPGA/GPU support for wavelet analysis
+
+**Current Focus:** Phase 1 - Implementing automatic analysis loop in profiler  
+**See:** [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for detailed task breakdown
+
+---
+
+## �📚 Documentation
+
+- **[Implementation Status](docs/IMPLEMENTATION_STATUS.md)** - What exists vs. what's planned
+- **[Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)** - 6-phase implementation plan
+- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Working examples and recipes
 - [Specification Document](specification-document_bioxen_fourier_vm_lib_ver0.0.0.01.md)
-- [Execution Model](execution-model.md)
+- [Execution Model](fourier-execution-model.md)
 - [Research](research/)
 
 ## 🧪 Research Foundation
