@@ -227,23 +227,43 @@ def metabolic_time_series() -> Dict[str, List]:
 @pytest.fixture
 def gene_expression_series() -> Dict[str, List]:
     """
-    Generate gene expression time series.
+    Generate gene expression time series with circadian components.
     
     Returns:
-        Dict with 'timestamps', 'mrna_levels', 'protein_levels'
+        Dict with 'timestamps', 'values' dict containing gene_a and gene_r
     """
-    t = np.linspace(0, 12, 144)
+    t = np.linspace(0, 48, 576)  # 48 hours
     
-    # mRNA rises quickly, decays
-    mrna = 100 * (1 - np.exp(-t / 2)) * np.exp(-t / 8) + 5 * np.random.randn(len(t))
+    # Gene A (activator) - peaks at dawn
+    gene_a = 100 + 50 * np.sin(2 * np.pi * t / 24.0) + 5 * np.random.randn(len(t))
     
-    # Protein lags behind mRNA
-    protein = 50 * (1 - np.exp(-t / 4)) * np.exp(-t / 12) + 2 * np.random.randn(len(t))
+    # Gene R (repressor) - peaks at dusk (phase shifted)
+    gene_r = 80 + 40 * np.sin(2 * np.pi * t / 24.0 + np.pi) + 5 * np.random.randn(len(t))
     
     return {
         "timestamps": t.tolist(),
-        "mrna_levels": mrna.tolist(),
-        "protein_levels": protein.tolist()
+        "values": {
+            "gene_a": gene_a.tolist(),
+            "gene_r": gene_r.tolist()
+        }
+    }
+
+
+@pytest.fixture
+def noisy_oscillation() -> Dict[str, List[float]]:
+    """
+    Generate noisy oscillation for filter testing.
+    
+    Returns:
+        Dict with 'timestamps' and 'values' (clean signal + noise)
+    """
+    t = np.linspace(0, 48, 576)
+    clean_signal = np.sin(2 * np.pi * t / 24.0)
+    noise = 0.3 * np.random.randn(len(t))
+    
+    return {
+        "timestamps": t.tolist(),
+        "values": (clean_signal + noise).tolist()
     }
 
 

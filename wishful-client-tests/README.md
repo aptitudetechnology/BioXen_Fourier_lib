@@ -6,72 +6,33 @@
 
 ## 📋 Overview
 
-This test suite defines **200+ comprehensive API tests** for BioXen's future REST server implementing:
-- **VM lifecycle management** (creation, state transitions, resources)
-- **Continuous simulation** (48-96 hour runs, metabolic history)
+This test suite defines **~80 comprehensive API tests** for BioXen's future REST server implementing:
+- **Signal analysis** (Fourier, Wavelet, Laplace, Z-Transform)
 - **Model validation** (oscillation analysis, stability checks)
-- **Parameter tuning** (optimization, sweeps, multi-objective)
-- **Four-lens analysis** (Fourier, Wavelet, Laplace, Z-Transform)
-- **Performance monitoring** (profiling, alerts, benchmarking)
+- **Parameter tuning** (optimization, sweeps, sensitivity analysis)
 - **Sensor integration** (BME280, LTR-559 environmental sensors)
 - **Circadian analysis** (entrainment, PRC, temperature compensation)
 
 **Why "Wishful Thinking"?**
 - These APIs don't exist yet (Phase 6+ future work)
-- Tests define the **contract** we want from future APIs
+- Tests define the **contract** we want from future computation APIs
 - Follows TDD approach: write tests first, then implement
 - Mirrors structure of `client-tests/` for PyCWT-mod server
 
+**IMPORTANT:** VM management is handled by the local BioXen library, NOT the REST server. The server provides:
+- Heavy computation services (Fourier/Wavelet/Laplace analysis)
+- Validation algorithms (oscillation detection, stability checks)
+- Optimization services (parameter tuning, sensitivity analysis)
+
+You send time-series data → Server computes results → You get results back
+
 ---
 
-## 🎯 Test Modules (9 Total, 200+ Tests)
+## 🎯 Test Modules (6 Total, ~80 Tests)
 
-### Core VM & Simulation
+### Computation Services
 
-#### 1. `test_vm_lifecycle.py` (30+ tests)
-VM creation, state transitions, resource management.
-
-**Test Classes:**
-- `TestVMCreation` - Create VMs (E. coli, yeast, Syn3A, cyanobacteria)
-- `TestVMLifecycle` - Start, stop, pause, resume, destroy
-- `TestResourceAllocation` - ATP, ribosomes, amino acids
-- `TestVMStatus` - Status queries, list VMs, filter by type
-- `TestVMConfiguration` - Get/update VM config
-
-#### 2. `test_continuous_simulation.py` (25+ tests)
-Long-duration simulations (48-96 hours), metabolic history, realistic dynamics.
-
-**Test Classes:**
-- `TestLongSimulations` - 48-96 hour continuous runs
-- `TestMetabolicHistory` - History retrieval, time ranges, downsampling
-- `TestGeneExpressionTracking` - Track genes over time
-- `TestRealisticDynamics` - Growth curves, oscillations, Q10
-- `TestSimulationControl` - Pause, resume, stop, progress
-
-#### 3. `test_model_validation.py` (25+ tests)
-Oscillation validation, numerical stability, deviation detection.
-
-**Test Classes:**
-- `TestOscillationValidation` - Period, amplitude, phase relationships
-- `TestNumericalStability` - Laplace pole analysis, timestep stability
-- `TestDeviationDetection` - Period drift, amplitude decay, phase drift
-- `TestQualityScores` - Simulation quality scoring
-- `TestBiologicalRealism` - Growth rates, metabolite ranges
-
-#### 4. `test_parameter_tuning.py` (25+ tests)
-Rate constant tuning, timestep optimization, parameter sweeps.
-
-**Test Classes:**
-- `TestRateConstantTuning` - Single/multi-parameter tuning
-- `TestTimestepAdjustment` - Fixed, adaptive, optimized timesteps
-- `TestDampingOptimization` - Damping coefficient tuning
-- `TestInitialConditionTuning` - IC optimization, phase finding
-- `TestParameterSweeps` - 1D/2D sweeps, heatmaps, optimization
-- `TestMultiObjectiveOptimization` - Pareto optimization
-
-### Analysis & Monitoring
-
-#### 5. `test_four_lens_analysis.py` (30+ tests)
+#### 1. `test_analysis.py` (25+ tests)
 Multi-domain signal analysis (Fourier, Wavelet, Laplace, Z-Transform).
 
 **Test Classes:**
@@ -79,22 +40,55 @@ Multi-domain signal analysis (Fourier, Wavelet, Laplace, Z-Transform).
 - `TestWaveletAnalysis` - CWT, transient detection, phase coherence
 - `TestLaplaceAnalysis` - Pole-zero, stability, frequency response
 - `TestZTransformAnalysis` - Digital filters, discrete-time analysis
-- `TestMultiLensComparison` - Four-lens reports, domain comparison
+- `TestMultiDomainAnalysis` - Four-lens reports, domain comparison
 
-#### 6. `test_performance_monitoring.py` (25+ tests)
-Profiler streaming, alerts, historical results, benchmarking.
+**API Pattern:**
+```python
+POST /api/v1/analysis/fourier
+POST /api/v1/analysis/wavelet
+POST /api/v1/analysis/laplace
+POST /api/v1/analysis/ztransform
+```
+
+#### 2. `test_validation.py` (25+ tests)
+Oscillation validation, numerical stability, deviation detection.
 
 **Test Classes:**
-- `TestProfilerStreaming` - Real-time profiler data streaming
-- `TestValidationAlerts` - Period deviation, amplitude decay alerts
-- `TestHistoricalResults` - Simulation history, comparisons
-- `TestBenchmarking` - Benchmark suites, VM comparison, overhead
-- `TestResourceMonitoring` - CPU, memory, disk monitoring
-- `TestMetricsExport` - Prometheus, Grafana, custom metrics
+- `TestOscillationValidation` - Period, amplitude, phase relationships
+- `TestNumericalStability` - Laplace pole analysis, timestep stability
+- `TestDeviationDetection` - Period drift, amplitude decay, phase drift
+- `TestQualityScoring` - Simulation quality metrics
+- `TestBatchValidation` - Validate multiple signals
 
-### Sensor & Circadian
+**API Pattern:**
+```python
+POST /api/v1/validate/oscillation
+POST /api/v1/validate/stability
+POST /api/v1/validate/deviation
+```
 
-#### 7. `test_sensor_hardware.py` (15 tests)
+#### 3. `test_tuning.py` (25+ tests)
+Rate constant tuning, parameter sweeps, sensitivity analysis, optimization.
+
+**Test Classes:**
+- `TestRateConstantTuning` - Single/multi-parameter tuning with biological constraints
+- `TestTimestepOptimization` - Adaptive timestep optimization
+- `TestParameterSweeps` - 1D/2D sweeps, grid search
+- `TestSensitivityAnalysis` - Local/global sensitivity, Sobol indices
+- `TestOptimizationAlgorithms` - Gradient descent, genetic, Bayesian
+- `TestBiologicalConstraints` - E. coli constraints, thermodynamic feasibility
+
+**API Pattern:**
+```python
+POST /api/v1/tune/rate-constants
+POST /api/v1/tune/timestep
+POST /api/v1/tune/sweep
+POST /api/v1/tune/sensitivity
+```
+
+### Hardware Integration
+
+#### 4. `test_sensor_hardware.py` (15 tests)
 Hardware sensor detection, calibration, and data acquisition.
 
 **Test Classes:**
@@ -103,7 +97,7 @@ Hardware sensor detection, calibration, and data acquisition.
 - `TestSensorCalibration` - Calibration procedures
 - `TestSensorDataQuality` - Noise, drift, consistency validation
 
-#### 8. `test_circadian_entrainment.py` (20 tests)
+#### 5. `test_circadian_entrainment.py` (20 tests)
 Circadian rhythm validation for organisms WITH clock genes.
 
 **Test Classes:**
@@ -112,14 +106,11 @@ Circadian rhythm validation for organisms WITH clock genes.
 - `TestPhaseResponseCurves` - PRC experiments at CT0, CT14, CT22
 - `TestFreeRunningPeriod` - Measure tau in constant conditions
 
-#### 9. `test_temperature_compensation.py` (12 tests)
-Temperature effects on biological oscillations.
-
-**Test Classes:**
-- `TestTemperatureCompensation` - Q10 analysis (Q10 ≈ 1 for circadian)
-- `TestHeatShockResponse` - 37°C → 42°C heat shock
-- `TestTemperatureCycles` - Temperature cycling experiments
-- `TestArrheniusKinetics` - Activation energy analysis
+**API Pattern:**
+```python
+GET /api/v1/sensors/ltr559/light  # Hardware sensor
+POST /api/v1/validate/circadian-entrainment  # Computation
+```
 
 **Important:** Only tests organisms that HAVE circadian clock genes!
 - ✅ Yeast (with FRQ/WC homologs)
@@ -128,7 +119,7 @@ Temperature effects on biological oscillations.
 - ❌ E. coli (no circadian genes)
 - ❌ Syn3A (no circadian genes)
 
-### 3. `test_temperature_compensation.py` (12 tests)
+#### 6. `test_temperature_compensation.py` (12 tests)
 Temperature compensation and heat shock responses.
 
 **Test Classes:**
@@ -136,6 +127,12 @@ Temperature compensation and heat shock responses.
 - `TestHeatShockResponse` - Heat/cold shock protein induction
 - `TestTemperatureCycles` - Temperature as zeitgeber
 - `TestArrheniusKinetics` - Metabolic rate temperature dependence
+
+**API Pattern:**
+```python
+GET /api/v1/sensors/bme280/temperature  # Hardware sensor
+POST /api/v1/validate/temperature-compensation  # Computation
+```
 
 **Key Tests:**
 ```python
