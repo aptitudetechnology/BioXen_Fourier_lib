@@ -6,24 +6,95 @@
 
 ## 📋 Overview
 
-This test suite defines comprehensive API tests for BioXen's future REST server implementing:
-- Environmental sensor integration (BME280 temperature/humidity/pressure, LTR-559 light)
-- Circadian entrainment validation for organisms with clock genes
-- Temperature compensation studies (Q10 analysis)
-- Model validation and parameter tuning
-- VM lifecycle and continuous simulation
+This test suite defines **200+ comprehensive API tests** for BioXen's future REST server implementing:
+- **VM lifecycle management** (creation, state transitions, resources)
+- **Continuous simulation** (48-96 hour runs, metabolic history)
+- **Model validation** (oscillation analysis, stability checks)
+- **Parameter tuning** (optimization, sweeps, multi-objective)
+- **Four-lens analysis** (Fourier, Wavelet, Laplace, Z-Transform)
+- **Performance monitoring** (profiling, alerts, benchmarking)
+- **Sensor integration** (BME280, LTR-559 environmental sensors)
+- **Circadian analysis** (entrainment, PRC, temperature compensation)
 
 **Why "Wishful Thinking"?**
-- These APIs don't exist yet (Phase 5-6 future work)
+- These APIs don't exist yet (Phase 6+ future work)
 - Tests define the **contract** we want from future APIs
 - Follows TDD approach: write tests first, then implement
 - Mirrors structure of `client-tests/` for PyCWT-mod server
 
 ---
 
-## 🎯 Test Modules
+## 🎯 Test Modules (9 Total, 200+ Tests)
 
-### 1. `test_sensor_hardware.py` (15 tests)
+### Core VM & Simulation
+
+#### 1. `test_vm_lifecycle.py` (30+ tests)
+VM creation, state transitions, resource management.
+
+**Test Classes:**
+- `TestVMCreation` - Create VMs (E. coli, yeast, Syn3A, cyanobacteria)
+- `TestVMLifecycle` - Start, stop, pause, resume, destroy
+- `TestResourceAllocation` - ATP, ribosomes, amino acids
+- `TestVMStatus` - Status queries, list VMs, filter by type
+- `TestVMConfiguration` - Get/update VM config
+
+#### 2. `test_continuous_simulation.py` (25+ tests)
+Long-duration simulations (48-96 hours), metabolic history, realistic dynamics.
+
+**Test Classes:**
+- `TestLongSimulations` - 48-96 hour continuous runs
+- `TestMetabolicHistory` - History retrieval, time ranges, downsampling
+- `TestGeneExpressionTracking` - Track genes over time
+- `TestRealisticDynamics` - Growth curves, oscillations, Q10
+- `TestSimulationControl` - Pause, resume, stop, progress
+
+#### 3. `test_model_validation.py` (25+ tests)
+Oscillation validation, numerical stability, deviation detection.
+
+**Test Classes:**
+- `TestOscillationValidation` - Period, amplitude, phase relationships
+- `TestNumericalStability` - Laplace pole analysis, timestep stability
+- `TestDeviationDetection` - Period drift, amplitude decay, phase drift
+- `TestQualityScores` - Simulation quality scoring
+- `TestBiologicalRealism` - Growth rates, metabolite ranges
+
+#### 4. `test_parameter_tuning.py` (25+ tests)
+Rate constant tuning, timestep optimization, parameter sweeps.
+
+**Test Classes:**
+- `TestRateConstantTuning` - Single/multi-parameter tuning
+- `TestTimestepAdjustment` - Fixed, adaptive, optimized timesteps
+- `TestDampingOptimization` - Damping coefficient tuning
+- `TestInitialConditionTuning` - IC optimization, phase finding
+- `TestParameterSweeps` - 1D/2D sweeps, heatmaps, optimization
+- `TestMultiObjectiveOptimization` - Pareto optimization
+
+### Analysis & Monitoring
+
+#### 5. `test_four_lens_analysis.py` (30+ tests)
+Multi-domain signal analysis (Fourier, Wavelet, Laplace, Z-Transform).
+
+**Test Classes:**
+- `TestFourierAnalysis` - FFT, PSD, harmonics, circadian period detection
+- `TestWaveletAnalysis` - CWT, transient detection, phase coherence
+- `TestLaplaceAnalysis` - Pole-zero, stability, frequency response
+- `TestZTransformAnalysis` - Digital filters, discrete-time analysis
+- `TestMultiLensComparison` - Four-lens reports, domain comparison
+
+#### 6. `test_performance_monitoring.py` (25+ tests)
+Profiler streaming, alerts, historical results, benchmarking.
+
+**Test Classes:**
+- `TestProfilerStreaming` - Real-time profiler data streaming
+- `TestValidationAlerts` - Period deviation, amplitude decay alerts
+- `TestHistoricalResults` - Simulation history, comparisons
+- `TestBenchmarking` - Benchmark suites, VM comparison, overhead
+- `TestResourceMonitoring` - CPU, memory, disk monitoring
+- `TestMetricsExport` - Prometheus, Grafana, custom metrics
+
+### Sensor & Circadian
+
+#### 7. `test_sensor_hardware.py` (15 tests)
 Hardware sensor detection, calibration, and data acquisition.
 
 **Test Classes:**
@@ -31,32 +102,24 @@ Hardware sensor detection, calibration, and data acquisition.
 - `TestLTR559Hardware` - Light intensity and proximity sensor
 - `TestSensorCalibration` - Calibration procedures
 - `TestSensorDataQuality` - Noise, drift, consistency validation
-- `TestMultiSensorIntegration` - Synchronized multi-sensor reading
 
-**Key Tests:**
-```python
-def test_detect_bme280_sensor(test_client)
-def test_read_temperature(test_client)
-def test_read_light_intensity(test_client)
-def test_calibrate_light_sensor_dark(test_client)
-```
-
-### 2. `test_circadian_entrainment.py` (20 tests)
+#### 8. `test_circadian_entrainment.py` (20 tests)
 Circadian rhythm validation for organisms WITH clock genes.
 
 **Test Classes:**
-- `TestLightDarkCycles` - Light cycle generation (12L:12D, 16L:8D, skeleton)
+- `TestLightDarkCycles` - Light cycle generation (12L:12D, 16L:8D)
 - `TestCircadianEntrainment` - Entrainment validation
-- `TestPhaseResponseCurves` - PRC experiments (classic circadian biology)
+- `TestPhaseResponseCurves` - PRC experiments at CT0, CT14, CT22
 - `TestFreeRunningPeriod` - Measure tau in constant conditions
-- `TestPhotoperiodExperiments` - Photoperiodic responses
 
-**Key Tests:**
-```python
-def test_yeast_entrainment_to_12L_12D(test_client)
-def test_phase_delay_light_pulse_at_CT14(test_client)
-def test_measure_tau_in_constant_darkness(test_client)
-```
+#### 9. `test_temperature_compensation.py` (12 tests)
+Temperature effects on biological oscillations.
+
+**Test Classes:**
+- `TestTemperatureCompensation` - Q10 analysis (Q10 ≈ 1 for circadian)
+- `TestHeatShockResponse` - 37°C → 42°C heat shock
+- `TestTemperatureCycles` - Temperature cycling experiments
+- `TestArrheniusKinetics` - Activation energy analysis
 
 **Important:** Only tests organisms that HAVE circadian clock genes!
 - ✅ Yeast (with FRQ/WC homologs)
