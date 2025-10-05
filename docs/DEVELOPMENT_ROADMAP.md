@@ -8,9 +8,11 @@
 
 ## 🎯 Vision
 
-Transform BioXen from a VM management system into a **self-regulating biological simulation platform** where VMs use four-lens frequency domain analysis to maintain homeostasis, detect anomalies, and adapt to environmental changes.
+Transform BioXen from a VM management system into a **computational biology modeling platform** with automated model validation through four-lens frequency domain analysis.
 
-**End Goal:** Biological VMs that continuously monitor their metabolic state, analyze patterns using Fourier/Wavelet/Laplace/Z-Transform lenses, and autonomously adjust their behavior—mimicking real cellular regulation.
+**End Goal:** Biological VMs that continuously simulate cellular processes, validate model accuracy using Fourier/Wavelet/Laplace/Z-Transform analysis, and suggest parameter adjustments to improve simulation quality.
+
+**Important:** This is computational model validation (standard in systems biology), not claiming cells use frequency analysis for self-regulation.
 
 ---
 
@@ -360,18 +362,18 @@ def get_metabolic_history(self, hours: Optional[float] = None) -> Dict[str, List
 
 ---
 
-### Phase 3: VM-Analysis Integration (Self-Regulation)
+### Phase 3: VM-Analysis Integration (Automated Model Validation)
 **Duration:** 2-3 weeks  
 **Status:** ⏳ Blocked (waiting for Phase 2)  
 **Prerequisites:** Phase 1 + Phase 2 complete
 
-Connect VMs to SystemAnalyzer to enable self-regulating behavior.
+Connect VMs to SystemAnalyzer to enable automated model validation and parameter tuning.
 
 #### Goals
-- VMs periodically analyze their metabolic history
-- Analysis results trigger behavioral adjustments
-- Implement feedback loops (analysis → VM behavior)
-- Demonstrate VM homeostasis and adaptation
+- VMs periodically validate their metabolic dynamics against expected behavior
+- Validation results suggest parameter adjustments
+- Implement validation loops (analysis → parameter recommendations)
+- Demonstrate improved model accuracy through iterative tuning
 
 #### Tasks
 
@@ -440,30 +442,31 @@ Define how VMs respond to analysis results:
 
 ```python
 class BasicBiologicalVM(BiologicalVM):
-    def _respond_to_analysis(self, results: Dict[str, Any]):
+    def _validate_and_suggest_adjustments(self, results: Dict[str, Any], expected_data: Dict[str, Any]):
         """
-        Implement self-regulation based on analysis.
+        Validate model against expected dynamics and suggest parameter adjustments.
         
-        Strategies:
-        1. Circadian drift → Adjust clock gene expression
-        2. System instability → Reduce metabolic rate
-        3. High transient activity → Trigger stress response
-        4. Low ATP → Upregulate glycolysis genes
+        Validation Checks:
+        1. Oscillation period mismatch → Suggest rate constant adjustment
+        2. Numerical instability → Suggest timestep reduction
+        3. Unexpected transients → Flag for model review
+        4. Amplitude mismatch → Suggest initial condition adjustment
         """
-        # Strategy 1: Circadian drift correction
+        # Check 1: Validate oscillation period
         fourier = results['fourier']
-        if fourier.dominant_period < 20 or fourier.dominant_period > 28:
-            print(f"[VM {self.vm_id}] Circadian drift detected: {fourier.dominant_period:.1f}h")
-            self._adjust_circadian_clock(target_period=24.0)
+        expected_period = expected_data.get('expected_period', 24.0)
+        if abs(fourier.dominant_period - expected_period) > 2.0:
+            print(f"[VM {self.vm_id}] Period mismatch: got {fourier.dominant_period:.1f}h, expected {expected_period:.1f}h")
+            self._suggest_rate_constant_adjustment(target_period=expected_period)
         
-        # Strategy 2: Stability management
+        # Check 2: Monitor numerical stability
         laplace = results['laplace']
         if laplace.stability == 'unstable':
-            print(f"[VM {self.vm_id}] System unstable, reducing metabolic rate")
-            self._reduce_metabolic_rate(factor=0.8)
+            print(f"[VM {self.vm_id}] Numerical instability detected, suggest smaller timestep")
+            self._suggest_timestep_reduction()
         elif laplace.stability == 'oscillatory' and laplace.damping_ratio < 0.1:
-            print(f"[VM {self.vm_id}] Under-damped oscillations, increasing damping")
-            self._increase_damping()
+            print(f"[VM {self.vm_id}] Under-damped: suggest increasing damping coefficient")
+            self._suggest_damping_increase()
         
         # Strategy 3: Transient response
         wavelet = results['wavelet']
@@ -513,8 +516,8 @@ def _simulation_loop(self, duration_hours, update_interval):
         current_state = self._update_metabolic_state()
         self.metabolic_history.append(current_state)
         
-        # Periodically analyze and self-regulate
-        self.analyze_metabolic_state()  # Will auto-skip if too soon
+        # Periodically validate model
+        self.validate_metabolic_state()  # Will auto-skip if too soon
         
         # Sleep until next update
         time.sleep(update_interval)
@@ -557,12 +560,12 @@ def get_analysis_history(self) -> List[Dict[str, Any]]:
 - [x] Analysis history accessible via API
 
 #### Deliverables
-- Updated `biological_vm.py` with analysis integration
-- Response strategies implemented for all biological types
-- Unit tests for each response strategy
-- Integration tests for full feedback loops
-- Example: Self-regulating VM over 48 hours
-- Documentation of self-regulation mechanisms
+- Updated `biological_vm.py` with validation integration
+- Validation checks implemented for all biological types
+- Unit tests for each validation strategy
+- Integration tests for full validation loops
+- Example: Validated VM simulation over 48 hours with parameter tuning
+- Documentation of validation mechanisms and parameter adjustment guidelines
 
 ---
 
@@ -806,9 +809,9 @@ All tests written, ready to drive implementation:
 - [ ] Document metabolic state model in `docs/`
 
 ### During Phase 3
-- [ ] Update `README.md` to document self-regulation
-- [ ] Add example: Self-regulating VM with feedback
-- [ ] Update `fourier-execution-model.md` with integration details
+- [ ] Update `README.md` to document automated validation
+- [ ] Add example: Validated VM with parameter tuning suggestions
+- [ ] Update `fourier-execution-model.md` with validation integration details
 
 ### During Phase 4
 - [ ] Document performance benchmarks

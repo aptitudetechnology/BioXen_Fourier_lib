@@ -204,20 +204,28 @@ The VM execution model above describes **discrete biological process execution**
 
 **What's being built (Phases 2-3):**
 - 🔄 VMs generating continuous metabolic time-series
-- 🔄 VMs analyzing their own state automatically
-- 🔄 Analysis triggering behavioral adjustments (self-regulation)
+- 🔄 Continuous model validation using frequency-domain analysis
+- 🔄 Automatic parameter tuning based on validation results
 
-### Planned Integration (Phases 2-3)
+### Planned Integration (Phases 2-3): Model Validation Framework
 
-VMs will be enhanced to support **continuous simulation** with **automatic self-regulation** using the four-lens analysis system.
+VMs will be enhanced to support **continuous simulation** with **automatic model validation and parameter tuning** using the four-lens analysis system.
 
-#### Enhanced Workflow with Analysis Integration
+**Important: This is computational model validation, not biological self-regulation**
+- ✅ Validates simulation outputs against expected biological behavior
+- ✅ Detects modeling errors and numerical instabilities
+- ✅ Enables parameter fitting to experimental data
+- ❌ NOT claiming real cells use frequency analysis
+- ❌ NOT artificial life that "self-regulates" like real cells
+
+#### Enhanced Workflow with Model Validation Integration
 
 ```python
 from bioxen_fourier_vm_lib.api import create_bio_vm
+from bioxen_fourier_vm_lib.validation import ModelValidator
 
 # 1. Create VM with continuous simulation capability (Phase 2)
-vm = create_bio_vm('ecoli_sim', 'ecoli', 'basic')
+vm = create_bio_vm('syn3a_sim', 'syn3a', 'basic')
 vm.allocate_resources({'atp': 200, 'ribosomes': 100})
 
 # 2. Start continuous simulation (NEW in Phase 2)
@@ -231,21 +239,21 @@ vm.start_continuous_simulation(
 # - History stored in rolling buffer (last 14 hours @ 5s resolution = ~10,000 samples)
 # - Metabolic dynamics simulated with realistic biochemical equations
 
-# 3. VM periodically analyzes its own state (NEW in Phase 3)
-# Every 5 minutes, VM runs SystemAnalyzer on metabolic history:
-#   - Fourier lens: Detects circadian rhythm drift
-#   - Wavelet lens: Identifies stress transients
-#   - Laplace lens: Monitors system stability
-#   - Z-Transform lens: Filters measurement noise
+# 3. Periodic model validation (NEW in Phase 3)
+# Every 5 minutes, system runs validation checks:
+#   - Fourier lens: Validates oscillatory dynamics match expected behavior
+#   - Wavelet lens: Checks transient responses are biologically plausible
+#   - Laplace lens: Monitors numerical stability of the simulation
+#   - Z-Transform lens: Applies appropriate filtering for discrete-time modeling
 
-# 4. VM adjusts behavior based on analysis (NEW in Phase 3)
-# Analysis triggers automatic responses:
-#   - Circadian drift → Adjust clock gene expression parameters
-#   - System instability → Reduce metabolic rate to stabilize
-#   - Stress transients → Activate stress response genes
-#   - Low ATP → Upregulate glycolysis genes
+# 4. Parameter adjustment based on validation (NEW in Phase 3)
+# Validation results flag modeling issues:
+#   - Unexpected oscillations → Adjust feedback parameters
+#   - Numerical instability → Reduce integration step size or adjust rate constants
+#   - Transient responses too fast/slow → Tune biochemical rate constants
+#   - Model drift from experimental data → Adjust parameters to improve fit
 
-# 5. Access historical data and analysis results
+# 5. Access historical data and validation results
 history = vm.get_metabolic_history(hours=1)
 # Returns: {
 #     'timestamps': [0, 5, 10, 15, ...],  # seconds
@@ -253,20 +261,21 @@ history = vm.get_metabolic_history(hours=1)
 #     'glucose': [50, 48, 46, 44, ...],
 #     'amino_acids': [1000, 995, 990, ...],
 #     'gene_expression': {
-#         'clock_gene': [50, 52, 54, ...],
-#         'metabolic_gene': [40, 41, 39, ...]
+#         'gene_001': [50, 52, 54, ...],
+#         'gene_002': [40, 41, 39, ...]
 #     }
 # }
 
-analysis_history = vm.get_analysis_history()
-# Returns: List of analysis results with timestamps
+validation_history = vm.get_validation_history()
+# Returns: List of validation results with timestamps
 # [
 #     {
 #         'timestamp': 300,
-#         'fourier': FourierResult(...),
-#         'wavelet': WaveletResult(...),
-#         'laplace': LaplaceResult(...),
-#         'ztransform': ZTransformResult(...)
+#         'fourier_validation': FourierValidation(...),
+#         'wavelet_validation': WaveletValidation(...),
+#         'stability_check': StabilityCheck(...),
+#         'passes': True,
+#         'issues': []
 #     },
 #     ...
 # ]
@@ -276,37 +285,58 @@ vm.stop_continuous_simulation()
 vm.destroy()
 ```
 
-#### Self-Regulation Example
+#### Model Validation Example: Syn3A Metabolism
 
 ```python
-# VM detects circadian drift and self-corrects (Phase 3)
-vm = create_bio_vm('ecoli_self_reg', 'ecoli', 'basic')
-vm.start_continuous_simulation(duration_hours=48)
+# Validating Syn3A minimal cell simulation (Phase 3)
+from bioxen_fourier_vm_lib.api import create_bio_vm
+from bioxen_fourier_vm_lib.validation import ModelValidator
 
-# Hour 12: VM analyzes metabolic state
-# [VM ecoli_self_reg] Circadian drift detected: 26.3h (target: 24h)
-# [VM ecoli_self_reg] Fourier analysis: dominant_period=26.3h, significance=0.95
-# [VM ecoli_self_reg] Adjusting clock gene expression parameters...
-# [VM ecoli_self_reg] Clock gene transcription rate: 1.0 → 1.15 (15% increase)
+vm = create_bio_vm('syn3a_validation', 'syn3a', 'basic')
+vm.start_continuous_simulation(duration_hours=24)
 
-# Hour 24: Rhythm restored
-# [VM ecoli_self_reg] Circadian rhythm stable: 24.1h (within tolerance)
-# [VM ecoli_self_reg] System stability: stable, damping_ratio=0.65
+# Create validator with expected behavior specifications
+validator = ModelValidator(vm)
+validator.set_expected_behavior({
+    'atp_steady_state': (1.0, 5.0),  # mM range
+    'has_circadian_oscillations': False,  # Syn3A has no clock
+    'transient_response_time': (2, 5),  # minutes
+    'numerical_stability': True
+})
 
-# Hour 30: Stress event detected
-# [VM ecoli_self_reg] High transient activity detected (8 events in 1 hour)
-# [VM ecoli_self_reg] Wavelet analysis: transients at t=[1850s, 2100s, ...]
-# [VM ecoli_self_reg] Activating stress response genes...
-# [VM ecoli_self_reg] Heat shock protein expression: 10 → 45 (350% increase)
+# Hour 6: First validation check
+validation = validator.run_validation()
 
-# Hour 36: Energy management
-# [VM ecoli_self_reg] Low ATP detected: mean=38.2 (threshold=40)
-# [VM ecoli_self_reg] Z-Transform filtering: noise_reduction=23%
-# [VM ecoli_self_reg] Upregulating glycolysis genes...
-# [VM ecoli_self_reg] Glucose metabolism rate: 1.0 → 1.5 (50% increase)
+if not validation.passes_all_checks():
+    print(f"Model validation issues detected:")
+    for issue in validation.issues:
+        print(f"  - {issue.description}")
+        print(f"    Suggested fix: {issue.suggested_parameter_adjustments}")
+    
+    # Example output:
+    # Model validation issues detected:
+    #   - Unexpected oscillations detected (period=3.2h)
+    #     Suggested fix: Reduce feedback strength in glycolysis pathway
+    #   - Transient response too slow (8.2 min vs expected 2-5 min)
+    #     Suggested fix: Increase enzyme turnover rates by 40-60%
+
+# Hour 12: Compare to experimental data
+experimental_data = load_experimental_data('syn3a_atp_dynamics.csv')
+comparison = validator.compare_to_experimental(
+    simulated=vm.get_metabolic_history()['atp'],
+    experimental=experimental_data['atp']
+)
+
+print(f"Frequency domain similarity: {comparison.spectral_similarity:.2f}")
+print(f"Parameter fit quality: {comparison.fit_quality:.2f}")
+
+# Optional: Auto-tune parameters to match experimental data
+if comparison.fit_quality < 0.8:
+    print("Auto-tuning parameters to improve fit...")
+    vm.tune_parameters_to_match(experimental_data)
 ```
 
-### Enhanced Data Flow with Analysis Integration
+### Enhanced Data Flow with Model Validation Integration
 
 ```
 Genomic Data (.genome file)
@@ -323,67 +353,88 @@ Hypervisor → Resource Allocation
 │ Continuous Simulation Loop (Phase 2)                   │
 │                                                         │
 │  1. Update Metabolic State (every 5s)                  │
-│     - ATP regeneration from glucose                    │
-│     - Ribosome activity and protein synthesis          │
-│     - Gene expression with circadian oscillations      │
+│     - Biochemical reactions (ODEs/stochastic)          │
+│     - ATP/glucose/amino acid dynamics                  │
+│     - Gene expression and protein synthesis            │
 │     - Resource consumption                             │
 │          ↓                                              │
 │  2. Store in History Buffer                            │
 │     - Rolling deque (maxlen=10,000)                    │
-│     - Last ~14 hours of data                           │
+│     - Last ~14 hours of simulation data                │
 │          ↓                                              │
-│  3. Analyze State (every 5 min) (Phase 3) ←───────────┼─── SystemAnalyzer
-│     - Extract time-series from history                 │     (4 lenses)
-│     - Run all four lenses                              │     • Fourier
-│     - Store results in analysis history                │     • Wavelet
+│  3. Model Validation (every 5 min) (Phase 3) ←────────┼─── SystemAnalyzer
+│     - Extract time-series from history                 │     (4 validation
+│     - Run validation checks                            │      methods)
+│     - Compare to expected behavior                     │     • Fourier
+│     - Store validation results                         │     • Wavelet
 │          ↓                                              │     • Laplace
-│  4. Detect Anomalies                                   │     • Z-Transform
-│     - Circadian drift (period ≠ 24h)                   │
-│     - System instability (poles in right half-plane)   │
-│     - Transient events (wavelet peaks)                 │
-│     - Low resources (ATP < threshold)                  │
+│  4. Detect Modeling Issues                             │     • Z-Transform
+│     - Unexpected oscillations (model error)            │
+│     - Numerical instability (integration issues)       │
+│     - Unrealistic transients (wrong rate constants)    │
+│     - Drift from experimental data (parameter error)   │
 │          ↓                                              │
-│  5. Adjust VM Behavior (feedback)                      │
-│     - Tune gene expression parameters                  │
-│     - Adjust metabolic rates                           │
-│     - Activate/deactivate regulatory pathways          │
+│  5. Flag Issues / Adjust Parameters                    │
+│     - Log validation failures                          │
+│     - Suggest parameter corrections                    │
+│     - Optionally: Auto-tune to match targets           │
+│     - Optionally: Adjust integration step size         │
 │          ↓                                              │
 │  6. Loop continues...                                  │
 └─────────────────────────────────────────────────────────┘
     ↓
-Monitoring → Status/Output + Analysis Results + Self-Regulation Events
+Monitoring → Status/Output + Validation Results + Parameter Tuning Log
 ```
 
-### Analysis-Driven Biological Processes
+### Validation-Driven Model Refinement
 
-In the integrated system (Phase 3), analysis results trigger specific biological responses:
+In the integrated system (Phase 3), validation results identify modeling issues and suggest corrections:
 
-| Analysis Result | Detection Method | VM Response | Biological Mechanism |
-|-----------------|------------------|-------------|---------------------|
-| **Circadian drift** (period ≠ 24h) | Fourier lens: dominant_period check | Adjust clock gene parameters | Tune transcription rates to restore 24h rhythm |
-| **System instability** | Laplace lens: pole locations | Reduce metabolic rate | Downregulate energy-intensive processes |
-| **High transient activity** | Wavelet lens: event count | Activate stress response | Upregulate chaperones, heat shock proteins |
-| **Low ATP levels** | Z-Transform lens: filtered mean | Upregulate glycolysis | Increase glucose metabolism genes |
-| **Oscillation under-damping** | Laplace lens: damping ratio | Increase feedback strength | Enhance regulatory feedback loops |
-| **Measurement noise** | Z-Transform lens: noise % | Apply filtering | Use filtered values for decisions |
+| Validation Check | Detection Method | Issue Identified | Suggested Model Adjustment |
+|-----------------|------------------|------------------|---------------------------|
+| **Unexpected oscillations** | Fourier lens: spectral analysis | Spurious periodic behavior | Reduce feedback gain in model equations |
+| **Numerical instability** | Laplace lens: pole locations | Integration stability issues | Reduce step size or adjust stiff solver |
+| **Unrealistic transients** | Wavelet lens: transient analysis | Response dynamics too fast/slow | Tune biochemical rate constants |
+| **Parameter drift** | Fourier lens: spectral comparison | Model deviates from experimental data | Adjust parameters to improve fit |
+| **Over/under-damping** | Laplace lens: damping ratio | Feedback strength incorrect | Tune feedback parameters in model |
+| **Noisy measurements** | Z-Transform lens: noise analysis | Stochastic noise too high/low | Adjust noise terms in stochastic model |
 
 ### Implementation Timeline
 
-- **Phase 1** (1-2 weeks): Automatic continuous analysis in profiler
+- **Phase 1** (1-2 weeks): Automatic continuous validation in profiler
 - **Phase 2** (2-3 weeks): Continuous simulation with metabolic history
-- **Phase 3** (2-3 weeks): VM self-regulation via analysis feedback
+- **Phase 3** (2-3 weeks): Model validation and parameter tuning
 
 **Current Status:** Ready to start Phase 1  
 **See:** [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for detailed implementation plan
 
-### Benefits of Integration
+### Benefits of Model Validation Integration
 
-1. **Homeostasis**: VMs automatically maintain stable metabolic states
-2. **Robustness**: Self-correction when conditions change
-3. **Realism**: Mimics real cellular regulation mechanisms
-4. **Observability**: Complete history of metabolic state and analysis
-5. **Research**: Study how analysis-driven feedback affects biological systems
+1. **Simulation Quality**: Continuously validates model accuracy against expected behavior
+2. **Parameter Estimation**: Fits model parameters to experimental data
+3. **Error Detection**: Identifies modeling errors and numerical issues early
+4. **Model Comparison**: Evaluates which formulations best match biological reality
+5. **Research Support**: Provides rigorous validation for computational biology studies
 
-This enhanced execution model will transform BioXen from a discrete process simulator into a **self-regulating biological system** that uses frequency domain analysis for autonomous homeostasis maintenance.
+### Important Distinctions
+
+This system creates **computational models** of cellular behavior:
+
+- ✅ The VM simulates cellular processes based on genomic data and biochemical equations
+- ✅ The simulation generates synthetic time-series data for validation
+- ✅ Frequency analysis validates simulation accuracy and enables parameter fitting
+- ✅ This is standard computational biology model validation practice
+- ❌ This is NOT claiming real cells use frequency analysis for self-regulation
+- ❌ This is NOT "artificial life" that self-regulates autonomously like real cells
+- ✅ This IS a rigorous validation framework for computational cell models
+
+**Use Cases:**
+- **Model Development**: Validate new ODE/stochastic formulations
+- **Parameter Fitting**: Estimate kinetic constants from experimental data
+- **Simulation Quality**: Ensure numerical stability and biological plausibility
+- **Experimental Design**: Determine required sampling rates and measurement precision
+- **Model Selection**: Compare competing models using frequency-domain metrics
+
+This enhanced execution model transforms BioXen into a **model validation platform** that uses frequency domain analysis for rigorous simulation quality assurance and parameter estimation.
 
 ````

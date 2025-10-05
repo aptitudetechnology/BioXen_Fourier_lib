@@ -15,30 +15,35 @@ A Python library for virtualizing biological cells using a factory pattern, enab
 - ✅ **Performance Profiler**: Time-series data collection from VMs
 
 **What we're building** (see [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md)):
-- 🔄 **Phase 1 (Ready to Start)**: Automatic continuous analysis in profiler
+- 🔄 **Phase 1 (Ready to Start)**: Automatic continuous validation in profiler
 - 🔄 **Phase 2 (2-3 weeks)**: Continuous simulation mode with metabolic history
-- 🔄 **Phase 3 (Core Goal)**: VM self-regulation using analysis feedback
+- 🔄 **Phase 3 (Core Goal)**: Automated model validation and parameter tuning
 - 🔄 **Phase 4 (1-2 weeks)**: Performance validation and optimization decisions
 - 🔄 **Phase 5-6 (Optional)**: Remote computation and hardware acceleration
 
-**Current Focus:** Phase 1 - Adding automatic analysis to the performance profiler.
+**Current Focus:** Phase 1 - Adding automatic validation to the performance profiler.
 
 ---
 
 ## 🎯 The BioXen Vision
 
-BioXen is building toward **self-regulating biological VMs** that maintain homeostasis through continuous frequency domain analysis:
+BioXen is a **computational biology modeling platform** that virtualizes cellular behavior from genomic data and provides rigorous model validation through frequency-domain analysis:
 
-1. **VMs simulate** cellular processes (metabolism, gene expression, protein synthesis)
-2. **VMs generate** continuous time-series data (ATP levels, metabolite concentrations)
-3. **VMs analyze** their own state using four complementary analytical methods:
-   - **Fourier Lens:** Detect circadian rhythm drift
-   - **Wavelet Lens:** Identify transient stress responses
-   - **Laplace Lens:** Monitor system stability and feedback control
-   - **Z-Transform Lens:** Filter noise and smooth measurements
-4. **VMs adapt** behavior based on analysis (adjust clock genes, regulate metabolism)
+1. **VMs simulate** cellular processes using biochemical models (metabolism, gene expression, protein synthesis)
+2. **VMs generate** continuous time-series data (ATP levels, metabolite concentrations, gene expression dynamics)
+3. **Model validation** uses four complementary analytical methods:
+   - **Fourier Analysis:** Validate oscillatory dynamics against experimental data
+   - **Wavelet Analysis:** Check transient responses are biologically plausible
+   - **Laplace Analysis:** Monitor numerical stability and system dynamics
+   - **Z-Transform:** Apply appropriate filtering for discrete-time simulations
+4. **Parameter tuning** based on validation results improves model accuracy
 
-This creates biological simulations that **self-regulate like real cells**.
+This creates a **rigorous validation framework** for computational cell models.
+
+**Important Distinction:**
+- ✅ This is computational model validation (standard practice in systems biology)
+- ❌ NOT claiming real cells use frequency analysis for self-regulation
+- ✅ Useful for parameter estimation, model comparison, and simulation quality assurance
 
 ---
 
@@ -61,8 +66,8 @@ This creates biological simulations that **self-regulate like real cells**.
 ### Planned Features (In Development)
 
 - **🔄 Continuous VM Simulation**: VMs will generate continuous metabolic time-series (ATP, glucose, gene expression)
-- **🔄 VM Self-Regulation**: VMs will use four-lens analysis to detect anomalies and adjust behavior
-- **🔄 Automatic Real-Time Analysis**: Profiler will continuously analyze and trigger alerts
+- **🔄 Automated Model Validation**: VMs will use four-lens analysis to validate model accuracy and suggest parameter adjustments
+- **🔄 Automatic Real-Time Validation**: Profiler will continuously validate and trigger alerts when model deviates from expected behavior
 - **🔄 Hardware Acceleration**: REST API server (PyCWT-mod) for FPGA/GPU-accelerated wavelet analysis
 
 **See:** `docs/DEVELOPMENT_ROADMAP.md` for implementation timeline
@@ -165,9 +170,9 @@ ztransform = analyzer.z_transform_lens(atp_data, dt=5.0)
 print(f"Noise reduced by: {ztransform.noise_reduction_percent:.1f}%")
 ```
 
-### 🔄 Coming Soon: Self-Regulating VMs (Phases 2-3)
+### 🔄 Coming Soon: Automatic Model Validation (Phases 2-3)
 
-The vision is for VMs to continuously simulate metabolic processes and self-regulate using analysis:
+The goal is continuous validation of simulation accuracy and automated parameter tuning:
 
 ```python
 # 🔄 PLANNED (not yet implemented)
@@ -180,20 +185,20 @@ vm.start_continuous_simulation(duration_hours=48)
 history = vm.get_metabolic_history()
 # Returns: {'timestamps': [...], 'atp': [...], 'glucose': [...], 'gene_expression': {...}}
 
-# VM analyzes its own state and self-regulates
-analysis = vm.analyze_metabolic_state()
-if analysis.circadian_drift_detected:
-    vm.adjust_clock_genes()  # Automatic homeostasis!
+# Validate model against expected dynamics
+validation = vm.validate_metabolic_state(expected_data=experimental_reference)
+if validation.oscillation_period_mismatch:
+    vm.suggest_parameter_adjustments()  # Automated parameter tuning!
 
-# Profiler with automatic continuous analysis
+# Profiler with automatic continuous validation
 from bioxen_fourier_vm_lib.monitoring.profiler import PerformanceProfiler
 
 profiler = PerformanceProfiler(hypervisor, monitoring_interval=5.0, analysis_interval=60.0)
-profiler.start_monitoring()  # Will analyze data every 60 seconds automatically
+profiler.start_monitoring()  # Will validate model every 60 seconds automatically
 
-# Get analysis results
-recent_analysis = profiler.get_latest_analysis()
-print(f"System stability: {recent_analysis['laplace'].stability}")
+# Get validation results
+recent_validation = profiler.get_latest_validation()
+print(f"Model stability check: {recent_validation['laplace'].stability}")
 ```
 
 **Status:** See `docs/IMPLEMENTATION_STATUS.md` for detailed audit of what exists  
@@ -239,7 +244,7 @@ BioXen's analysis engine uses four complementary methods because biological sign
 - **Different biological questions** require different analytical approaches
 - **Multi-lens validation** increases confidence in findings
 
-**All four lenses are fully implemented in `SystemAnalyzer`** (1,336 lines) and can be used independently for signal analysis. VM integration (automatic self-regulation) is in active development (Phases 2-3).
+**All four lenses are fully implemented in `SystemAnalyzer`** (1,336 lines) and can be used independently for signal analysis. VM integration (automated model validation) is in active development (Phases 2-3).
 
 **Learn more:**
 - Research background: `research/Frequency Domain Analysis in Biology.md`
@@ -330,21 +335,21 @@ tide_factor = state.gravitational_tide_factor  # 0.95-1.05
 
 ## �️ Development Roadmap
 
-We're following a phased approach to build self-regulating biological VMs:
+We're following a phased approach to build automated model validation:
 
 - **✅ Phase 0: Foundation** - Complete (documentation alignment, codebase audit)
-- **🔄 Phase 1: Profiler Analysis** (1-2 weeks, Ready to Start)
-  - Automatic continuous analysis in performance profiler
-  - Anomaly detection and alerting
-  - Analysis result history tracking
+- **🔄 Phase 1: Profiler Validation** (1-2 weeks, Ready to Start)
+  - Automatic continuous validation in performance profiler
+  - Model deviation detection and alerting
+  - Validation result history tracking
 - **⏳ Phase 2: Continuous Simulation** (2-3 weeks, Depends on Phase 1)
   - VMs generate continuous metabolic time-series
   - Historical data buffers (ATP, glucose, gene expression)
   - Realistic metabolic dynamics
-- **⏳ Phase 3: VM Self-Regulation** (2-3 weeks, Depends on Phase 1+2)
-  - VMs analyze their own metabolic state
-  - Analysis triggers behavioral adjustments
-  - Feedback loops: circadian correction, stability management, energy regulation
+- **⏳ Phase 3: Automated Parameter Tuning** (2-3 weeks, Depends on Phase 1+2)
+  - Validate model accuracy against expected dynamics
+  - Suggest parameter adjustments when validation fails
+  - Parameter optimization: oscillation periods, stability margins, metabolic rates
 - **⏳ Phase 4: Performance Validation** (1-2 weeks, Depends on Phase 1+2+3)
   - Benchmark analysis overhead and latency
   - Memory profiling and leak detection
@@ -354,7 +359,7 @@ We're following a phased approach to build self-regulating biological VMs:
   - PyCWT-mod REST API server for hardware acceleration
   - FPGA/GPU support for wavelet analysis
 
-**Current Focus:** Phase 1 - Implementing automatic analysis loop in profiler  
+**Current Focus:** Phase 1 - Implementing automatic validation loop in profiler  
 **See:** [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for detailed task breakdown
 
 ---
